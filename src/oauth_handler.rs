@@ -107,7 +107,7 @@ impl AuthCallbackHandler for DefaultAuthCallbackHandler {
             }
         });
 
-        info!("Opening authorization page in browser: {auth_url}");
+        println!("Opening authorization page in browser: {auth_url}");
         println!("Please complete the authentication in the opened browser window.");
         webbrowser::open(auth_url).ok();
         info!("Waiting for browser callback");
