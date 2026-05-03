@@ -1,7 +1,7 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{io::Write, net::SocketAddr, sync::Arc};
 
 use async_trait::async_trait;
 use axum::{
@@ -10,6 +10,7 @@ use axum::{
     response::Html,
     routing::get,
 };
+use reqwest::Url;
 use serde::Deserialize;
 use tokio::{
     net::TcpListener,
@@ -119,5 +120,75 @@ impl AuthCallbackHandler for DefaultAuthCallbackHandler {
             })?;
         eprintln!("Authenticaton completed.");
         Ok(params)
+    }
+}
+
+pub struct ConsoleAuthHandler {
+    redirect_uri: String,
+}
+
+#[async_trait]
+impl AuthCallbackHandler for ConsoleAuthHandler {
+    async fn new() -> Result<Box<Self>, TmrConnectError> {
+        Ok(Box::new(ConsoleAuthHandler {
+            redirect_uri: "http://localhost:7878/callback".to_string(),
+        }))
+    }
+
+    fn get_listen_addr(&self) -> &str {
+        &self.redirect_uri
+    }
+
+    async fn wait_for_callback(
+        self,
+        auth_url: &str,
+    ) -> Result<AuthCallback, TmrConnectError> {
+        eprintln!("\nOpen the following URL in your browser to authenticate:\n");
+        eprintln!("  {auth_url}\n");
+        eprintln!("After completing authentication, your browser will redirect to a URL");
+        eprintln!("starting with '{}?...' (the page won't load).", self.redirect_uri);
+        eprint!("\nPaste that full redirect URL here: ");
+        std::io::stdout().flush().ok();
+
+        let redirect_url = tokio::task::spawn_blocking(|| {
+            let mut line = String::new();
+            std::io::stdin().read_line(&mut line).ok();
+            line.trim().to_owned()
+        })
+        .await
+        .map_err(|e| TmrConnectError::AuthError {
+            msg: format!("Failed to read redirect URL from stdin: {e}"),
+            source: None,
+        })?;
+
+        let parsed = Url::parse(&redirect_url).map_err(|e| {
+            TmrConnectError::AuthError {
+                msg: format!("Invalid redirect URL '{redirect_url}': {e}"),
+                source: None,
+            }
+        })?;
+
+        let mut code = None;
+        let mut state = None;
+        for (key, value) in parsed.query_pairs() {
+            match key.as_ref() {
+                "code" => code = Some(value.into_owned()),
+                "state" => state = Some(value.into_owned()),
+                _ => {}
+            }
+        }
+
+        let code =
+            code.ok_or_else(|| TmrConnectError::AuthError {
+                msg: "Missing 'code' parameter in redirect URL".to_string(),
+                source: None,
+            })?;
+        let state =
+            state.ok_or_else(|| TmrConnectError::AuthError {
+                msg: "Missing 'state' parameter in redirect URL".to_string(),
+                source: None,
+            })?;
+
+        Ok(AuthCallback { code, state })
     }
 }
