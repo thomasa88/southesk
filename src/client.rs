@@ -216,10 +216,10 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
         debug!("Auth URL: {}", auth_url);
 
         info!("Waiting for authorization code...");
-        let oauth_handler::AuthCallback {
+        let oauth_handler::AuthGrant {
             code: auth_code,
             state: csrf_token,
-        } = auth_serve.wait_for_callback(&auth_url).await?;
+        } = auth_serve.authenticate(&auth_url).await?;
         info!("Received authorization code: {}", auth_code);
 
         info!("Exchanging authorization code for access token...");

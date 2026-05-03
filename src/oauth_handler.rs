@@ -25,8 +25,12 @@ const CALLBACK_HTML: &str = include_str!("res/default_callback.html");
 #[async_trait]
 pub trait AuthCallbackHandler {
     async fn new() -> Result<Box<Self>, TmrConnectError>;
+    /// The URL that the OAuth server will redirect to after authentication. It
+    /// is passed as part of the OAuth authorization request.
     fn get_listen_addr(&self) -> &str;
-    async fn wait_for_callback(self, auth_url: &str) -> Result<AuthCallback, TmrConnectError>;
+    /// Requests the user to authenticate by visiting the given `auth_url` and
+    /// waits for the OAuth callback to be received.
+    async fn authenticate(self, auth_url: &str) -> Result<AuthGrant, TmrConnectError>;
 }
 
 pub struct DefaultAuthCallbackHandler {
@@ -36,17 +40,21 @@ pub struct DefaultAuthCallbackHandler {
 
 #[derive(Clone)]
 struct AppState {
-    code_sender: Arc<Mutex<Option<oneshot::Sender<AuthCallback>>>>,
+    code_sender: Arc<Mutex<Option<oneshot::Sender<AuthGrant>>>>,
 }
 
+/// The parameters received in the OAuth callback URL, containing the
+/// authorization code and state (CSRF token).
 #[derive(Debug, Deserialize)]
-pub struct AuthCallback {
+pub struct AuthGrant {
+    /// The authorization code to exchange for an access token
     pub code: String,
+    /// CSRF token sent by the client and now returned by the server
     pub state: String,
 }
 
 async fn callback_handler(
-    Query(params): Query<AuthCallback>,
+    Query(params): Query<AuthGrant>,
     State(state): State<AppState>,
 ) -> Html<String> {
     debug!("Received callback: {params:?}");
@@ -86,8 +94,8 @@ impl AuthCallbackHandler for DefaultAuthCallbackHandler {
         &self.listen_addr
     }
 
-    async fn wait_for_callback(self, auth_url: &str) -> Result<AuthCallback, TmrConnectError> {
-        let (code_sender, code_receiver) = oneshot::channel::<AuthCallback>();
+    async fn authenticate(self, auth_url: &str) -> Result<AuthGrant, TmrConnectError> {
+        let (code_sender, code_receiver) = oneshot::channel::<AuthGrant>();
 
         let app_state = AppState {
             code_sender: Arc::new(Mutex::new(Some(code_sender))),
@@ -139,10 +147,10 @@ impl AuthCallbackHandler for ConsoleAuthHandler {
         &self.redirect_uri
     }
 
-    async fn wait_for_callback(
+    async fn authenticate(
         self,
         auth_url: &str,
-    ) -> Result<AuthCallback, TmrConnectError> {
+    ) -> Result<AuthGrant, TmrConnectError> {
         eprintln!("\nOpen the following URL in your browser to authenticate:\n");
         eprintln!("  {auth_url}\n");
         eprintln!("After completing authentication, your browser will redirect to a URL");
@@ -189,6 +197,6 @@ impl AuthCallbackHandler for ConsoleAuthHandler {
                 source: None,
             })?;
 
-        Ok(AuthCallback { code, state })
+        Ok(AuthGrant { code, state })
     }
 }
