@@ -24,16 +24,19 @@ const CALLBACK_HTML: &str = include_str!("res/default_callback.html");
 
 #[async_trait]
 pub trait AuthCallbackHandler {
-    async fn new() -> Result<Box<Self>, TmrConnectError>;
+    /// Starts listening on the redirect URI
+    async fn create() -> Result<Self, TmrConnectError>
+    where
+        Self: Sized;
     /// The URL that the OAuth server will redirect to after authentication. It
     /// is passed as part of the OAuth authorization request.
-    fn get_listen_addr(&self) -> &str;
+    fn redirect_uri(&self) -> &str;
     /// Requests the user to authenticate by visiting the given `auth_url` and
     /// waits for the OAuth callback to be received.
     async fn authenticate(self, auth_url: &str) -> Result<AuthGrant, TmrConnectError>;
 }
 
-pub struct DefaultAuthCallbackHandler {
+pub struct BrowserAuthCallbackHandler {
     listener: TcpListener,
     listen_addr: String,
 }
@@ -65,8 +68,12 @@ async fn callback_handler(
 }
 
 #[async_trait]
-impl AuthCallbackHandler for DefaultAuthCallbackHandler {
-    async fn new() -> Result<Box<Self>, TmrConnectError> {
+impl AuthCallbackHandler for BrowserAuthCallbackHandler {
+    fn redirect_uri(&self) -> &str {
+        &self.listen_addr
+    }
+
+    async fn create() -> Result<Self, TmrConnectError> {
         // 0 means to bind to a random available port
         let addr = SocketAddr::from(([127, 0, 0, 1], 0));
         let listener = TcpListener::bind(addr)
@@ -83,15 +90,10 @@ impl AuthCallbackHandler for DefaultAuthCallbackHandler {
             })?;
         // The MCP server does not like an IP as the host in the callback server (HTTP/2 403)
         let listen_addr = format!("http://localhost:{}/callback", addr.port());
-
-        Ok(Box::new(DefaultAuthCallbackHandler {
+        Ok(BrowserAuthCallbackHandler {
             listener,
             listen_addr,
-        }))
-    }
-
-    fn get_listen_addr(&self) -> &str {
-        &self.listen_addr
+        })
     }
 
     async fn authenticate(self, auth_url: &str) -> Result<AuthGrant, TmrConnectError> {
@@ -107,9 +109,8 @@ impl AuthCallbackHandler for DefaultAuthCallbackHandler {
 
         info!("Listening for callback at: {}", self.listen_addr);
 
-        let listener = self.listener;
         tokio::spawn(async move {
-            let result = axum::serve(listener, app).await;
+            let result = axum::serve(self.listener, app).await;
 
             if let Err(e) = result {
                 error!("Callback server error: {e}");
@@ -132,29 +133,29 @@ impl AuthCallbackHandler for DefaultAuthCallbackHandler {
 }
 
 pub struct ConsoleAuthHandler {
-    redirect_uri: String,
+    redirect_base_url: String,
 }
 
 #[async_trait]
 impl AuthCallbackHandler for ConsoleAuthHandler {
-    async fn new() -> Result<Box<Self>, TmrConnectError> {
-        Ok(Box::new(ConsoleAuthHandler {
-            redirect_uri: "http://localhost:7878/callback".to_string(),
-        }))
+    async fn create() -> Result<Self, TmrConnectError> {
+        Ok(ConsoleAuthHandler {
+            redirect_base_url: "http://localhost:7878/callback".to_string(),
+        })
     }
 
-    fn get_listen_addr(&self) -> &str {
-        &self.redirect_uri
+    fn redirect_uri(&self) -> &str {
+        &self.redirect_base_url
     }
 
-    async fn authenticate(
-        self,
-        auth_url: &str,
-    ) -> Result<AuthGrant, TmrConnectError> {
+    async fn authenticate(self, auth_url: &str) -> Result<AuthGrant, TmrConnectError> {
         eprintln!("\nOpen the following URL in your browser to authenticate:\n");
         eprintln!("  {auth_url}\n");
         eprintln!("After completing authentication, your browser will redirect to a URL");
-        eprintln!("starting with '{}?...' (the page won't load).", self.redirect_uri);
+        eprintln!(
+            "starting with '{}?...' (the page won't load).",
+            self.redirect_base_url
+        );
         eprint!("\nPaste that full redirect URL here: ");
         std::io::stdout().flush().ok();
 
@@ -169,11 +170,9 @@ impl AuthCallbackHandler for ConsoleAuthHandler {
             source: None,
         })?;
 
-        let parsed = Url::parse(&redirect_url).map_err(|e| {
-            TmrConnectError::AuthError {
-                msg: format!("Invalid redirect URL '{redirect_url}': {e}"),
-                source: None,
-            }
+        let parsed = Url::parse(&redirect_url).map_err(|e| TmrConnectError::AuthError {
+            msg: format!("Invalid redirect URL '{redirect_url}': {e}"),
+            source: None,
         })?;
 
         let mut code = None;
@@ -186,16 +185,14 @@ impl AuthCallbackHandler for ConsoleAuthHandler {
             }
         }
 
-        let code =
-            code.ok_or_else(|| TmrConnectError::AuthError {
-                msg: "Missing 'code' parameter in redirect URL".to_string(),
-                source: None,
-            })?;
-        let state =
-            state.ok_or_else(|| TmrConnectError::AuthError {
-                msg: "Missing 'state' parameter in redirect URL".to_string(),
-                source: None,
-            })?;
+        let code = code.ok_or_else(|| TmrConnectError::AuthError {
+            msg: "Missing 'code' parameter in redirect URL".to_string(),
+            source: None,
+        })?;
+        let state = state.ok_or_else(|| TmrConnectError::AuthError {
+            msg: "Missing 'state' parameter in redirect URL".to_string(),
+            source: None,
+        })?;
 
         Ok(AuthGrant { code, state })
     }

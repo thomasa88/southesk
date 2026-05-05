@@ -1,8 +1,6 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-use std::marker::PhantomData;
-
 use rmcp::{
     RoleClient, ServiceExt,
     model::{
@@ -21,17 +19,15 @@ use uuid::Uuid;
 use crate::{
     TmrCallError,
     cred_store::CredStore,
-    oauth_handler::{self, AuthCallbackHandler, DefaultAuthCallbackHandler},
+    oauth_handler::{self, AuthCallbackHandler, BrowserAuthCallbackHandler},
     result::TmrConnectError,
     tools,
 };
 
-pub struct TmrClient<CB: AuthCallbackHandler = DefaultAuthCallbackHandler, S: State = Disconnected>
-{
+pub struct TmrClient<S: State = Disconnected> {
     client_name: String,
     lib_dirs: etcetera::app_strategy::Xdg,
     state: S,
-    auth_callback_handler: std::marker::PhantomData<CB>,
 }
 
 pub trait State {}
@@ -46,18 +42,16 @@ const MCP_SERVER_URL: &str = "https://mcp.montrose.io";
 impl State for Disconnected {}
 impl State for Connected {}
 
-impl<CB: AuthCallbackHandler, S: State> TmrClient<CB, S> {}
+impl<S: State> TmrClient<S> {}
 
-impl TmrClient<DefaultAuthCallbackHandler, Disconnected> {
-    pub fn new(
-        client_name: impl Into<String>,
-    ) -> TmrClient<DefaultAuthCallbackHandler, Disconnected> {
+impl TmrClient<Disconnected> {
+    pub fn new(client_name: impl Into<String>) -> TmrClient<Disconnected> {
         Self::new_with_cb(client_name)
     }
 }
 
-impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
-    pub fn new_with_cb(client_name: impl Into<String>) -> TmrClient<CB, Disconnected> {
+impl TmrClient<Disconnected> {
+    pub fn new_with_cb(client_name: impl Into<String>) -> TmrClient<Disconnected> {
         let lib_dirs = etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
             top_level_domain: "".to_string(),
             author: "thomasa88".to_string(),
@@ -68,16 +62,19 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
             client_name: client_name.into(),
             lib_dirs,
             state: Disconnected {},
-            auth_callback_handler: PhantomData,
         }
     }
 }
 
-impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
-    pub async fn connect(
+impl TmrClient<Disconnected> {
+    pub async fn connect(self) -> Result<TmrClient<Connected>, TmrConnectError> {
+        self.connect_with::<BrowserAuthCallbackHandler>().await
+    }
+
+    pub async fn connect_with<CB: AuthCallbackHandler>(
         self,
-    ) -> Result<TmrClient<DefaultAuthCallbackHandler, Connected>, TmrConnectError> {
-        let auth_mgr = self.authenticate().await?;
+    ) -> Result<TmrClient<Connected>, TmrConnectError> {
+        let auth_mgr = self.authenticate::<CB>().await?;
 
         let mut mcp_client_res = self.init_mcp_client(auth_mgr).await;
 
@@ -91,7 +88,7 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
             if Self::is_auth_required_error(dyn_transport_err) {
                 info!("Authentication required error encountered");
                 info!("Starting new authorization flow");
-                let auth_mgr = self.authenticate_new_auth().await?;
+                let auth_mgr = self.authenticate_new_auth::<CB>().await?;
                 mcp_client_res = self.init_mcp_client(auth_mgr).await;
             }
         }
@@ -107,7 +104,6 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
             client_name: self.client_name,
             lib_dirs: self.lib_dirs,
             state: Connected { client: mcp_client },
-            auth_callback_handler: PhantomData,
         })
     }
 
@@ -145,7 +141,9 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
         client_service.serve(transport).await
     }
 
-    async fn authenticate(&self) -> Result<AuthorizationManager, TmrConnectError> {
+    async fn authenticate<CB: AuthCallbackHandler>(
+        &self,
+    ) -> Result<AuthorizationManager, TmrConnectError> {
         debug!("Using MCP server URL: {}", MCP_SERVER_URL);
 
         info!("Establishing authorized connection to MCP server...");
@@ -176,10 +174,12 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
         }
 
         info!("No credentials found in store, starting new authorization flow");
-        self.authenticate_new_auth().await
+        self.authenticate_new_auth::<CB>().await
     }
 
-    async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, TmrConnectError> {
+    async fn authenticate_new_auth<CB: AuthCallbackHandler>(
+        &self,
+    ) -> Result<AuthorizationManager, TmrConnectError> {
         let mut oauth_state = OAuthState::new(MCP_SERVER_URL, None).await.map_err(|e| {
             TmrConnectError::AuthError {
                 msg: "Failed to initialize OAuth state".to_string(),
@@ -192,10 +192,9 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
         let wanted_scopes = &["mcp"];
         debug!("Requesting scopes: {:?}", wanted_scopes);
 
-        let auth_serve = CB::new().await?;
+        let oauth_cb = CB::create().await?;
 
-        auth_serve.get_listen_addr();
-        let redirect_uri = auth_serve.get_listen_addr();
+        let redirect_uri = oauth_cb.redirect_uri();
         debug!("Using redirect URI: {}", redirect_uri);
         oauth_state
             .start_authorization(wanted_scopes, redirect_uri, Some(&self.client_name))
@@ -219,7 +218,7 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
         let oauth_handler::AuthGrant {
             code: auth_code,
             state: csrf_token,
-        } = auth_serve.authenticate(&auth_url).await?;
+        } = oauth_cb.authenticate(&auth_url).await?;
         info!("Received authorization code: {}", auth_code);
 
         info!("Exchanging authorization code for access token...");
@@ -262,7 +261,7 @@ impl<CB: AuthCallbackHandler> TmrClient<CB, Disconnected> {
     }
 }
 
-impl<CB: AuthCallbackHandler> TmrClient<CB, Connected> {
+impl TmrClient<Connected> {
     /// Fetches and logs available tools and prompts from the server
     /// Used for TmrClient development.
     pub async fn introspect(&self) -> String {

@@ -9,7 +9,7 @@ pub use rust_decimal::Decimal;
 pub use uuid::Uuid;
 
 mod client;
+mod cred_store;
+pub mod oauth_handler;
 mod result;
 pub mod tools;
-pub mod oauth_handler;
-mod cred_store;
