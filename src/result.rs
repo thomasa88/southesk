@@ -10,7 +10,7 @@ pub enum TmrCallError {
     #[error("Failed to parse response: {msg}")]
     ParseError {
         msg: String,
-        source: Option<anyhow::Error>,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
     #[error("Invalid arguments")]
     InvalidArguments(String),
@@ -30,11 +30,11 @@ pub enum TmrConnectError {
     #[error("Authentication failed: {msg}")]
     AuthError {
         msg: String,
-        source: Option<anyhow::Error>,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
     #[error("Connection failed: {msg}")]
     ConnectionError {
         msg: String,
-        source: Option<anyhow::Error>,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
 }
