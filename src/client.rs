@@ -13,6 +13,7 @@ use rmcp::{
     },
 };
 use serde::de::DeserializeOwned;
+use std::fmt::Write;
 use tracing::{debug, info};
 use uuid::Uuid;
 
@@ -266,37 +267,39 @@ impl TmrClient<Connected> {
     /// Used for TmrClient development.
     pub async fn introspect(&self) -> String {
         let mut result = String::new();
-        result += &format!("Fetching available tools from server...\n");
+        writeln!(result, "Fetching available tools from server...").unwrap();
 
         match self.state.client.peer().list_all_tools().await {
             Ok(tools) => {
-                result += &format!("Available tools: {}\n", tools.len());
+                writeln!(result, "Available tools: {}", tools.len()).unwrap();
                 for tool in tools {
-                    result += &format!(
+                    writeln!(
+                        result,
                         "- {} ({})\n{:#?}\n{:#?}\n",
                         tool.name,
                         tool.description.unwrap_or_default(),
                         tool.input_schema,
                         tool.output_schema,
-                    );
+                    )
+                    .unwrap();
                 }
             }
             Err(e) => {
-                result += &format!("Error fetching tools: {e}\n");
+                writeln!(result, "Error fetching tools: {e}").unwrap();
             }
         }
 
-        result += &format!("Fetching available prompts from server...\n");
+        writeln!(result, "Fetching available prompts from server...").unwrap();
 
         match self.state.client.peer().list_all_prompts().await {
             Ok(prompts) => {
-                result += &format!("Available prompts: {}\n", prompts.len());
+                writeln!(result, "Available prompts: {}", prompts.len()).unwrap();
                 for prompt in prompts {
-                    result += &format!("- {}\n", prompt.name);
+                    writeln!(result, "- {}", prompt.name).unwrap();
                 }
             }
             Err(e) => {
-                result += &format!("Error fetching prompts: {e}\n");
+                writeln!(result, "Error fetching prompts: {e}").unwrap();
             }
         }
         result
