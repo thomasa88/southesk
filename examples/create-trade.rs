@@ -24,7 +24,7 @@ async fn main() -> anyhow::Result<()> {
     let montrose = montrose.connect().await?;
 
     let accounts = montrose.get_user_accounts().await?;
-    let trade_account = accounts.get(0).context("No accounts")?;
+    let trade_account = accounts.first().context("No accounts")?;
 
     info!(
         "Using account {}",

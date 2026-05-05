@@ -40,7 +40,7 @@ fn usage() {
     println!(
         "Margin specifies how much cash to leave in the account after the trade, to account for fees and currency conversion costs. Specifying a negative value sets the total amount to invest, instead of the margin."
     );
-    println!("");
+    println!();
     println!(
         "No trade will be initiated if the amount to invest is more than the available cash in the account."
     );
@@ -127,12 +127,12 @@ async fn main() -> anyhow::Result<()> {
         account.account_name.as_deref().unwrap_or_default(),
         account.account_number
     );
-    println!("");
+    println!();
     println!("Will buy the following instruments for a total of {amount_to_buy:.2} {currency}:");
     for trade in &trades {
         println!("{trade}");
     }
-    println!("");
+    println!();
     if amount_to_buy >= available_cash {
         println!("The amount to buy is more than the available cash. No trades will be made.");
         return Ok(());
