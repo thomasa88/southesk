@@ -47,12 +47,6 @@ impl<S: State> TmrClient<S> {}
 
 impl TmrClient<Disconnected> {
     pub fn new(client_name: impl Into<String>) -> TmrClient<Disconnected> {
-        Self::new_with_cb(client_name)
-    }
-}
-
-impl TmrClient<Disconnected> {
-    pub fn new_with_cb(client_name: impl Into<String>) -> TmrClient<Disconnected> {
         let lib_dirs = etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
             top_level_domain: "".to_string(),
             author: "thomasa88".to_string(),
@@ -361,48 +355,12 @@ impl TmrClient<Connected> {
     /// create_trade_ticket when multiple instruments have similar names.
     pub async fn search_instruments(
         &self,
-        query: impl Into<String>,
+        query: &str,
     ) -> Result<Vec<types::SearchInstrumentResultItem>, TmrCallError> {
         let mut arg_map = serde_json::Map::new();
-        arg_map.insert("query".to_string(), query.into().into());
+        arg_map.insert("query".to_string(), query.into());
         self.api_call("search_instruments", Some(arg_map)).await
     }
-
-    //     [src/main.rs:115:9] &res = CallToolResult {
-    //     content: [
-    //         Annotated {
-    //             raw: Text(
-    //                 RawTextContent {
-    //                     text: "{\"url\":\"https://app.montrose.io/trade?ticketId=<uuid>\"}",
-    //                     meta: None,
-    //                 },
-    //             ),
-    //             annotations: None,
-    //         },
-    //     ],
-    //     structured_content: None,
-    //     is_error: None,
-    //     meta: None,
-
-    //     [src/main.rs:115:9] &res = CallToolResult {
-    //     content: [
-    //         Annotated {
-    //             raw: Text(
-    //                 RawTextContent {
-    //                     text: "No instruments found for \"LF GLOBur\".",
-    //                     meta: None,
-    //                 },
-    //             ),
-    //             annotations: None,
-    //         },
-    //     ],
-    //     structured_content: None,
-    //     is_error: Some(
-    //         true,
-    //     ),
-    //     meta: None,
-
-    // client.cancel()?
 
     /// Calls the specified MCP *tool* with the given arguments.
     async fn api_call<T: DeserializeOwned>(

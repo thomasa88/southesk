@@ -146,15 +146,17 @@ async fn main() -> anyhow::Result<()> {
         result_frac: Decimal::ZERO,
         to_buy_amount_sek: Decimal::ZERO,
     };
+    let mut current_frac_sum = Decimal::ZERO;
     for trade in &trades {
+        current_frac_sum += trade.current_frac.unwrap_or(Decimal::ZERO);
         sums.current_amount_sek += trade.current_amount_sek;
-        *sums.current_frac.as_mut().unwrap() += trade.current_frac.unwrap_or(Decimal::ZERO);
         sums.wanted_amount_sek += trade.wanted_amount_sek;
         sums.result_amount_sek += trade.result_amount_sek;
         sums.to_buy_amount_sek += trade.to_buy_amount_sek;
         sums.wanted_frac += trade.wanted_frac;
         sums.result_frac += trade.result_frac;
     }
+    sums.current_frac = Some(current_frac_sum);
 
     println!(
         "Ticker               | Current allocation         | Wanted allocation          | Trade                         | Resulting allocation                  "

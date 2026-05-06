@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 use rust_decimal::dec;
+use tmr_client::Decimal;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -54,8 +55,12 @@ async fn main() -> anyhow::Result<()> {
         );
 
         {
-            let weight =
-                account.summary.available_for_purchase / account.summary.total_value * dec!(100.0);
+            let weight = account
+                .summary
+                .available_for_purchase
+                .checked_div(account.summary.total_value)
+                .unwrap_or(Decimal::ZERO)
+                * dec!(100.0);
             println!("  Position: Cash");
             println!(
                 "    Value: {:.2} {} ({:.2}%)",
@@ -65,8 +70,12 @@ async fn main() -> anyhow::Result<()> {
         let mut positions = account.positions;
         positions.sort_by(|a, b| a.instrument_name.cmp(&b.instrument_name));
         for position in positions {
-            let weight =
-                position.market_value.account_currency / account.summary.total_value * dec!(100.0);
+            let weight = position
+                .market_value
+                .account_currency
+                .checked_div(account.summary.total_value)
+                .unwrap_or(Decimal::ZERO)
+                * dec!(100.0);
             println!("  Position: {}", position.instrument_name);
             println!("    Order book ID: {}", position.orderbook_id);
             println!("    Ticker: {}", position.ticker);

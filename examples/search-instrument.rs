@@ -23,7 +23,7 @@ async fn main() -> anyhow::Result<()> {
         usage();
         return Ok(());
     }
-    let instrument_name_or_ticker = args.get(1).unwrap();
+    let instrument_name_or_ticker = &args[1];
 
     let montrose = tmr_client::TmrClient::new("TMR Client Sample");
     let montrose = montrose.connect().await?;
