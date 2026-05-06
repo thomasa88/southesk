@@ -1,5 +1,5 @@
 Fetching available tools from server...
-Available tools: 3
+Available tools: 4
 - get_holdings (Returns holdings for either one account (when accountId is provided) or all accessible accounts. Use GetUserAccounts first to find valid account IDs.)
 {
     "properties": Object {
@@ -18,7 +18,23 @@ Available tools: 3
     "type": String("object"),
 }
 None
-- create_trade_ticket (Creates a pre-filled trade ticket URL for the Montrose app. Specify side (Buy/Sell), quantity or amount, and an instrument identifier. Instruments can be specified by orderbookId directly, or by ticker/name which will be resolved automatically. Returns a URL that opens the trade ticket in the Montrose app with the order details pre-filled.)
+
+- search_instruments (Searches instruments by ticker or name and returns matching orderbookIds, tickers, and names. Use this tool before CreateTradeTicket when multiple instruments have similar names.)
+{
+    "properties": Object {
+        "query": Object {
+            "description": String("Ticker or instrument name to search for."),
+            "type": String("string"),
+        },
+    },
+    "required": Array [
+        String("query"),
+    ],
+    "type": String("object"),
+}
+None
+
+- create_trade_ticket (Creates a pre-filled trade ticket URL for the Montrose app. Specify side (Buy/Sell), quantity or amount, and an instrument identifier. Use orderbookId directly when known, since it is the safest identifier. If you only know a ticker or name and it may be ambiguous, call SearchInstruments first to find the correct orderbookId, then call CreateTradeTicket. Returns a URL that opens the trade ticket in the Montrose app with the order details pre-filled.)
 {
     "properties": Object {
         "accountId": Object {
@@ -40,7 +56,7 @@ None
         },
         "name": Object {
             "default": Null,
-            "description": String("Optional instrument name (string) to search for the instrument."),
+            "description": String("Optional instrument name (string) to search for the instrument. This is a convenience identifier and may be ambiguous; use SearchInstruments to find the correct orderbookId when needed."),
             "type": Array [
                 String("string"),
                 String("null"),
@@ -48,7 +64,7 @@ None
         },
         "orderbookId": Object {
             "default": Null,
-            "description": String("Optional orderbookId (int) to identify the instrument directly."),
+            "description": String("Optional orderbookId (int) to identify the instrument directly. This is the safest identifier and should be preferred when known or after using SearchInstruments."),
             "type": Array [
                 String("integer"),
                 String("null"),
@@ -81,7 +97,7 @@ None
         },
         "ticker": Object {
             "default": Null,
-            "description": String("Optional ticker (string) to identify the instrument by ticker symbol, e.g. \"VOLV B\"."),
+            "description": String("Optional ticker (string) to identify the instrument by ticker symbol, e.g. \"VOLV B\". This is a convenience identifier and may be ambiguous; use SearchInstruments to find the correct orderbookId when needed."),
             "type": Array [
                 String("string"),
                 String("null"),
@@ -94,11 +110,13 @@ None
     "type": String("object"),
 }
 None
+
 - get_user_accounts (Returns all user accounts with stable account IDs and display names. Use this tool to discover valid account IDs before calling GetHoldings for a specific account.)
 {
     "properties": Object {},
     "type": String("object"),
 }
 None
+
 Fetching available prompts from server...
 Error fetching prompts: Mcp error: -32601: Method 'prompts/list' is not available.

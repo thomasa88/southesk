@@ -4,7 +4,7 @@
 use anyhow::Context;
 use tmr_client::{
     Decimal,
-    tools::{TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
+    types::{TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
 };
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

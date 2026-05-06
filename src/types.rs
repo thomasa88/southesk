@@ -107,11 +107,15 @@ pub enum TradeSize {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TradeInstrument {
-    /// instrument name (string) to search for the instrument.
+    /// Optional instrument name (string) to search for the instrument. This is
+    /// a convenience identifier and may be ambiguous; use SearchInstruments to
+    /// find the correct orderbookId when needed.
     Name(String),
-    /// orderbookId (int) to identify the instrument directly.
+    /// Optional orderbookId (int) to identify the instrument directly. This is the safest identifier and should be preferred when known or after using SearchInstruments.
     OrderbookId(i64),
-    /// ticker (string) to identify the instrument  ticker symbol, e.g. "VOLV B".
+    /// Optional ticker (string) to identify the instrument by ticker symbol,
+    /// e.g. \"VOLV B\". This is a convenience identifier and may be ambiguous;
+    /// use SearchInstruments to find the correct orderbookId when needed.
     Ticker(String),
 }
 
@@ -126,4 +130,15 @@ pub enum TradeSide {
 #[serde(rename_all = "camelCase")]
 pub struct CreateTradeTicketResult {
     pub url: Url,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SearchInstrumentResultItem {
+    /// Instrument name
+    pub name: String,
+    /// Instrument order book ID
+    pub orderbook_id: i64,
+    /// Instrument ticker
+    pub ticker: String,
 }

@@ -10,7 +10,7 @@ use anyhow::{Context, ensure};
 use rust_decimal::dec;
 use tmr_client::{
     Decimal,
-    tools::{TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
+    types::{TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 

@@ -12,4 +12,4 @@ mod client;
 mod cred_store;
 pub mod oauth_handler;
 mod result;
-pub mod tools;
+pub mod types;

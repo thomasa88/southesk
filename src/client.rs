@@ -22,7 +22,7 @@ use crate::{
     cred_store::CredStore,
     oauth_handler::{self, AuthCallbackHandler, BrowserAuthCallbackHandler},
     result::TmrConnectError,
-    tools,
+    types,
 };
 
 pub struct TmrClient<S: State = Disconnected> {
@@ -311,30 +311,32 @@ impl TmrClient<Connected> {
     pub async fn get_holdings(
         &self,
         account_id: Option<Uuid>,
-    ) -> Result<Vec<tools::Account>, TmrCallError> {
+    ) -> Result<Vec<types::Account>, TmrCallError> {
         let mut args = serde_json::Map::new();
         args.insert(
             "accountId".to_string(),
             account_id.map(|id| id.to_string()).into(),
         );
-        self.call("get_holdings", Some(args)).await
+        self.api_call("get_holdings", Some(args)).await
     }
 
     /// Returns all user accounts with stable account IDs and display names. Use
-    /// this tool to discover valid account IDs before calling GetHoldings for a
+    /// this tool to discover valid account IDs before calling get_holdings for a
     /// specific account.
-    pub async fn get_user_accounts(&self) -> Result<Vec<tools::AccountInfo>, TmrCallError> {
-        self.call("get_user_accounts", None).await
+    pub async fn get_user_accounts(&self) -> Result<Vec<types::AccountInfo>, TmrCallError> {
+        self.api_call("get_user_accounts", None).await
     }
 
     /// Creates a pre-filled trade ticket URL for the Montrose app. Specify side
-    /// (Buy/Sell), quantity or amount, and an instrument identifier.
-    /// Instruments can be specified by orderbookId directly, or by ticker/name
-    /// which will be resolved automatically. Returns a URL that opens the trade
-    /// ticket in the Montrose app with the order details pre-filled.
+    /// (Buy/Sell), quantity or amount, and an instrument identifier. Use
+    /// orderbookId directly when known, since it is the safest identifier. If
+    /// you only know a ticker or name and it may be ambiguous, call
+    /// search_instruments first to find the correct orderbookId, then call
+    /// create_trade_ticket. Returns a URL that opens the trade ticket in the
+    /// Montrose app with the order details pre-filled.
     pub async fn create_trade_ticket(
         &self,
-        args: tools::TradeTicketArgs,
+        args: types::TradeTicketArgs,
     ) -> Result<reqwest::Url, TmrCallError> {
         let arg_map = match serde_json::to_value(args) {
             Ok(serde_json::Value::Object(map)) => map,
@@ -349,9 +351,21 @@ impl TmrClient<Connected> {
                 ));
             }
         };
-        self.api_call::<tools::CreateTradeTicketResult>("create_trade_ticket", Some(arg_map))
+        self.api_call::<types::CreateTradeTicketResult>("create_trade_ticket", Some(arg_map))
             .await
             .map(|res| res.url)
+    }
+
+    /// Searches instruments by ticker or name and returns matching
+    /// orderbookIds, tickers, and names. Use this tool before
+    /// create_trade_ticket when multiple instruments have similar names.
+    pub async fn search_instruments(
+        &self,
+        query: impl Into<String>,
+    ) -> Result<Vec<types::SearchInstrumentResultItem>, TmrCallError> {
+        let mut arg_map = serde_json::Map::new();
+        arg_map.insert("query".to_string(), query.into().into());
+        self.api_call("search_instruments", Some(arg_map)).await
     }
 
     //     [src/main.rs:115:9] &res = CallToolResult {
@@ -390,7 +404,8 @@ impl TmrClient<Connected> {
 
     // client.cancel()?
 
-    async fn call<T: DeserializeOwned>(
+    /// Calls the specified MCP *tool* with the given arguments.
+    async fn api_call<T: DeserializeOwned>(
         &self,
         tool: &str,
         args: Option<JsonObject>,
