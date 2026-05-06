@@ -28,6 +28,7 @@ cargo run --example=show-data
 * create-trade: Creates a hardcoded trade request.
 * create-balanced-trade: Creates trade requests with the given asset allocation.
 * create-trade-towards-allocation: Creates trade requests to move the portfolio towards the given asset allocation.
+* search-instrument: Search for an instrument by name or ticker.
 * devel: Used for TMR Client development.
 
 ## Security Warning
