@@ -127,7 +127,7 @@ impl AuthCallbackHandler for BrowserAuthCallbackHandler {
                 msg: format!("Failed to receive callback parameters: {e}"),
                 source: Some(e.into()),
             })?;
-        eprintln!("Authenticaton completed.");
+        eprintln!("Authentication completed.");
         Ok(params)
     }
 }
