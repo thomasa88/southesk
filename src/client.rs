@@ -336,16 +336,20 @@ impl TmrClient<Connected> {
         &self,
         args: tools::TradeTicketArgs,
     ) -> Result<reqwest::Url, TmrCallError> {
-        let json_obj = serde_json::to_value(args)
-            .map_err(|e| {
-                TmrCallError::InvalidArguments(format!("Could not convert args to JSON: {e}"))
-            })?
-            .as_object()
-            .ok_or(TmrCallError::InvalidArguments(
-                "Could not convert args to JSON object".to_string(),
-            ))?
-            .to_owned();
-        self.call::<tools::CreateTradeTicketResult>("create_trade_ticket", Some(json_obj))
+        let arg_map = match serde_json::to_value(args) {
+            Ok(serde_json::Value::Object(map)) => map,
+            Ok(_) => {
+                return Err(TmrCallError::InvalidArguments(
+                    "Could not convert args to JSON object".to_string(),
+                ));
+            }
+            Err(_) => {
+                return Err(TmrCallError::InvalidArguments(
+                    "Could not convert args to JSON".to_string(),
+                ));
+            }
+        };
+        self.api_call::<tools::CreateTradeTicketResult>("create_trade_ticket", Some(arg_map))
             .await
             .map(|res| res.url)
     }
