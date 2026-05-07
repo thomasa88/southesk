@@ -1,64 +1,17 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-use rmcp::model::{
-        CallToolRequestParams, CallToolResult, JsonObject,
-    };
+use rmcp::model::{CallToolRequestParams, CallToolResult, JsonObject};
 use serde::de::DeserializeOwned;
 use std::fmt::Write;
 use tracing::debug;
 use uuid::Uuid;
 
-use crate::{
-    TmrCallError,
-    types,
-};
+use crate::{TmrCallError, types};
 
-use super::{TmrClient, Connected};
+use super::{Connected, TmrClient};
 
 impl TmrClient<Connected> {
-    /// Fetches and logs available tools and prompts from the server
-    /// Used for TmrClient development.
-    pub async fn introspect(&self) -> String {
-        let mut result = String::new();
-        writeln!(result, "Fetching available tools from server...").unwrap();
-
-        match self.state.client.peer().list_all_tools().await {
-            Ok(tools) => {
-                writeln!(result, "Available tools: {}", tools.len()).unwrap();
-                for tool in tools {
-                    writeln!(
-                        result,
-                        "- {} ({})\n{:#?}\n{:#?}\n",
-                        tool.name,
-                        tool.description.unwrap_or_default(),
-                        tool.input_schema,
-                        tool.output_schema,
-                    )
-                    .unwrap();
-                }
-            }
-            Err(e) => {
-                writeln!(result, "Error fetching tools: {e}").unwrap();
-            }
-        }
-
-        writeln!(result, "Fetching available prompts from server...").unwrap();
-
-        match self.state.client.peer().list_all_prompts().await {
-            Ok(prompts) => {
-                writeln!(result, "Available prompts: {}", prompts.len()).unwrap();
-                for prompt in prompts {
-                    writeln!(result, "- {}", prompt.name).unwrap();
-                }
-            }
-            Err(e) => {
-                writeln!(result, "Error fetching prompts: {e}").unwrap();
-            }
-        }
-        result
-    }
-
     /// Returns holdings for either one account (when accountId is provided) or
     /// all accessible accounts. Use get_user_accounts first to find valid account
     /// IDs.
@@ -122,7 +75,7 @@ impl TmrClient<Connected> {
         self.api_call("search_instruments", Some(arg_map)).await
     }
 
-    /// Calls the specified MCP *tool* with the given arguments.
+    /// Calls the specified MCP tool with the given arguments.
     async fn api_call<T: DeserializeOwned>(
         &self,
         tool: &str,
@@ -138,6 +91,48 @@ impl TmrClient<Connected> {
         let res = self.state.client.call_tool(req).await?;
         debug!("Call response: {:#?}", res);
         parse_result::<T>(&res)
+    }
+
+    /// Fetches and prints available tools and prompts from the server.
+    /// Used for TmrClient development.
+    pub async fn introspect(&self) -> String {
+        let mut result = String::new();
+        writeln!(result, "Fetching available tools from server...").unwrap();
+
+        match self.state.client.peer().list_all_tools().await {
+            Ok(tools) => {
+                writeln!(result, "Available tools: {}", tools.len()).unwrap();
+                for tool in tools {
+                    writeln!(
+                        result,
+                        "- {} ({})\n{:#?}\n{:#?}\n",
+                        tool.name,
+                        tool.description.unwrap_or_default(),
+                        tool.input_schema,
+                        tool.output_schema,
+                    )
+                    .unwrap();
+                }
+            }
+            Err(e) => {
+                writeln!(result, "Error fetching tools: {e}").unwrap();
+            }
+        }
+
+        writeln!(result, "Fetching available prompts from server...").unwrap();
+
+        match self.state.client.peer().list_all_prompts().await {
+            Ok(prompts) => {
+                writeln!(result, "Available prompts: {}", prompts.len()).unwrap();
+                for prompt in prompts {
+                    writeln!(result, "- {}", prompt.name).unwrap();
+                }
+            }
+            Err(e) => {
+                writeln!(result, "Error fetching prompts: {e}").unwrap();
+            }
+        }
+        result
     }
 }
 

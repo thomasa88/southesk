@@ -36,6 +36,7 @@ webbrowser = "1.2.0"
 
 [dev-dependencies]
 anyhow = { version = "1.0.102", features = ["backtrace"] }
+tokio-test = "0.4.5"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 [[example]]
