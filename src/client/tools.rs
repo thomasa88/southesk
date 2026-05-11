@@ -6,24 +6,31 @@ use serde::de::DeserializeOwned;
 use std::fmt::Write;
 use tracing::debug;
 
-use crate::{TmrCallError, types};
+use crate::{
+    TmrCallError,
+    types::{
+        Account, AccountInfo, CreateTradeTicketResult, HoldingsSelector,
+        SearchInstrumentResultItem, TradeTicketArgs,
+    },
+};
 
 use super::{Connected, TmrClient};
 
 impl TmrClient<Connected> {
-    /// Returns holdings for either one account (when accountId is provided) or
-    /// all accessible accounts. Use get_user_accounts first to find valid account
-    /// IDs.
+    /// Returns holdings for either one account (when [`HoldingsSelector::AccountId`] is provided) or
+    /// all accessible accounts. Use
+    /// [`get_user_accounts`](Self::get_user_accounts) first to find valid
+    /// account IDs.
     pub async fn get_holdings(
         &self,
-        selection: types::HoldingsSelector,
-    ) -> Result<Vec<types::Account>, TmrCallError> {
+        selection: HoldingsSelector,
+    ) -> Result<Vec<Account>, TmrCallError> {
         let mut args = serde_json::Map::new();
         args.insert(
             "accountId".to_string(),
             match selection {
-                types::HoldingsSelector::AccountId(account_id) => Some(account_id.to_string()),
-                types::HoldingsSelector::All => None,
+                HoldingsSelector::AccountId(account_id) => Some(account_id.to_string()),
+                HoldingsSelector::All => None,
             }
             .into(),
         );
@@ -31,9 +38,9 @@ impl TmrClient<Connected> {
     }
 
     /// Returns all user accounts with stable account IDs and display names. Use
-    /// this tool to discover valid account IDs before calling get_holdings for a
-    /// specific account.
-    pub async fn get_user_accounts(&self) -> Result<Vec<types::AccountInfo>, TmrCallError> {
+    /// this tool to discover valid account IDs before calling
+    /// [`get_holdings`](Self::get_holdings) for a specific account.
+    pub async fn get_user_accounts(&self) -> Result<Vec<AccountInfo>, TmrCallError> {
         self.api_call("get_user_accounts", None).await
     }
 
@@ -41,12 +48,14 @@ impl TmrClient<Connected> {
     /// (Buy/Sell), quantity or amount, and an instrument identifier. Use
     /// orderbookId directly when known, since it is the safest identifier. If
     /// you only know a ticker or name and it may be ambiguous, call
-    /// search_instruments first to find the correct orderbookId, then call
-    /// create_trade_ticket. Returns a URL that opens the trade ticket in the
-    /// Montrose app with the order details pre-filled.
+    /// [`search_instruments`](Self::search_instruments) first to find the
+    /// correct orderbookId, then call
+    /// [`create_trade_ticket`](Self::create_trade_ticket). Returns a URL that
+    /// opens the trade ticket in the Montrose app with the order details
+    /// pre-filled.
     pub async fn create_trade_ticket(
         &self,
-        args: types::TradeTicketArgs,
+        args: TradeTicketArgs,
     ) -> Result<reqwest::Url, TmrCallError> {
         let arg_map = match serde_json::to_value(args) {
             Ok(serde_json::Value::Object(map)) => map,
@@ -61,18 +70,19 @@ impl TmrClient<Connected> {
                 ));
             }
         };
-        self.api_call::<types::CreateTradeTicketResult>("create_trade_ticket", Some(arg_map))
+        self.api_call::<CreateTradeTicketResult>("create_trade_ticket", Some(arg_map))
             .await
             .map(|res| res.url)
     }
 
     /// Searches instruments by ticker or name and returns matching
     /// orderbookIds, tickers, and names. Use this tool before
-    /// create_trade_ticket when multiple instruments have similar names.
+    /// [`create_trade_ticket`](Self::create_trade_ticket) when multiple
+    /// instruments have similar names.
     pub async fn search_instruments(
         &self,
         query: &str,
-    ) -> Result<Vec<types::SearchInstrumentResultItem>, TmrCallError> {
+    ) -> Result<Vec<SearchInstrumentResultItem>, TmrCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("query".to_string(), query.into());
         self.api_call("search_instruments", Some(arg_map)).await
