@@ -5,7 +5,6 @@ use rmcp::model::{CallToolRequestParams, CallToolResult, JsonObject};
 use serde::de::DeserializeOwned;
 use std::fmt::Write;
 use tracing::debug;
-use uuid::Uuid;
 
 use crate::{TmrCallError, types};
 
@@ -17,12 +16,16 @@ impl TmrClient<Connected> {
     /// IDs.
     pub async fn get_holdings(
         &self,
-        account_id: Option<Uuid>,
+        selection: types::HoldingsSelector,
     ) -> Result<Vec<types::Account>, TmrCallError> {
         let mut args = serde_json::Map::new();
         args.insert(
             "accountId".to_string(),
-            account_id.map(|id| id.to_string()).into(),
+            match selection {
+                types::HoldingsSelector::AccountId(account_id) => Some(account_id.to_string()),
+                types::HoldingsSelector::All => None,
+            }
+            .into(),
         );
         self.api_call("get_holdings", Some(args)).await
     }

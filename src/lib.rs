@@ -10,8 +10,8 @@ pub use result::TmrConnectError;
 pub use rust_decimal::Decimal;
 pub use uuid::Uuid;
 
+pub mod auth_callback;
 mod client;
 mod cred_store;
-pub mod auth_callback;
 mod result;
 pub mod types;

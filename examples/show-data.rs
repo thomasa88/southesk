@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 use rust_decimal::dec;
-use tmr_client::Decimal;
+use tmr_client::{Decimal, types::HoldingsSelector};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -32,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
 
     println!();
     println!("-------- Holdings --------");
-    let accounts = montrose.get_holdings(None).await?;
+    let accounts = montrose.get_holdings(HoldingsSelector::All).await?;
     for account in accounts {
         println!(
             "Account: {} {}",

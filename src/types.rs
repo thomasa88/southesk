@@ -9,6 +9,13 @@ use uuid::Uuid;
 
 // TODO: Generate types from tool input and output JSON schemas?
 
+// Serialize+Deserialize on all types, in case the users want to save the results.
+
+pub enum HoldingsSelector {
+    All,
+    AccountId(Uuid),
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
@@ -128,11 +135,11 @@ pub enum TradeSide {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CreateTradeTicketResult {
+pub(crate) struct CreateTradeTicketResult {
     pub url: Url,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchInstrumentResultItem {
     /// Instrument name

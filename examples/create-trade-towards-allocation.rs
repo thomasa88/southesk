@@ -7,7 +7,7 @@ use anyhow::{Context, ensure};
 use rust_decimal::dec;
 use tmr_client::{
     Decimal,
-    types::{TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
+    types::{HoldingsSelector, TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -93,7 +93,7 @@ async fn main() -> anyhow::Result<()> {
         .find(|a| a.account_name.as_ref() == Some(account_name))
         .context("Account not found")?;
 
-    let all_holdings = montrose.get_holdings(Some(account.account_id)).await?;
+    let all_holdings = montrose.get_holdings(HoldingsSelector::AccountId(account.account_id)).await?;
     let holdings = all_holdings
         .first()
         .context("Failed to get holdings for the account")?;
