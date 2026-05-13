@@ -12,9 +12,12 @@ use rmcp::{
 };
 use tracing::{debug, info};
 
+#[cfg(feature = "keyring")]
+use crate::keyring_cred_store::KeyringCredStore;
+#[cfg(not(feature = "keyring"))]
+use crate::plain_cred_store::PlainCredStore;
 use crate::{
     auth_callback::{self, AuthCallbackHandler, BrowserAuthCallbackHandler},
-    cred_store::CredStore,
     result::TmrConnectError,
 };
 
@@ -128,7 +131,7 @@ impl TmrClient<Disconnected> {
                 msg: "Failed to initialize authorization manager".to_string(),
                 source: Some(e.into()),
             })?;
-        auth_mgr.set_credential_store(CredStore::new(&self.lib_dirs));
+        auth_mgr.set_credential_store(self.create_cred_store());
         // The authorization manager automatically does a token refresh if
         // needed. See REFRESH_BUFFER_SECS in rmcp.
         let initialized =
@@ -158,7 +161,7 @@ impl TmrClient<Disconnected> {
                 source: Some(e.into()),
             }
         })?;
-        oauth_state.set_credential_store(CredStore::new(&self.lib_dirs));
+        oauth_state.set_credential_store(self.create_cred_store());
 
         // oauth: Empty scope will let the server select
         let wanted_scopes = &["mcp"];
@@ -230,5 +233,16 @@ impl TmrClient<Disconnected> {
                 })?;
 
         Ok(auth_mgr)
+    }
+
+    fn create_cred_store(&self) -> impl rmcp::transport::CredentialStore + 'static {
+        #[cfg(feature = "keyring")]
+        {
+            KeyringCredStore::new()
+        }
+        #[cfg(not(feature = "keyring"))]
+        {
+            PlainCredStore::new(&self.lib_dirs)
+        }
     }
 }

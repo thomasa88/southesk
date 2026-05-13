@@ -1,6 +1,9 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! A credential store that saves the credentials in a plaintext JSON file in
+//! the user's config directory.
+
 use std::path::PathBuf;
 use tracing::debug;
 
@@ -8,11 +11,11 @@ use async_trait::async_trait;
 use etcetera::AppStrategy;
 use rmcp::transport::{AuthError, StoredCredentials};
 
-pub struct CredStore {
+pub struct PlainCredStore {
     filename: PathBuf,
 }
 
-impl CredStore {
+impl PlainCredStore {
     pub fn new(dirs: &etcetera::app_strategy::Xdg) -> Self {
         let filename = dirs.config_dir().join("credentials.json");
         std::fs::create_dir_all(filename.parent().unwrap()).unwrap();
@@ -21,7 +24,7 @@ impl CredStore {
 }
 
 #[async_trait]
-impl rmcp::transport::CredentialStore for CredStore {
+impl rmcp::transport::CredentialStore for PlainCredStore {
     async fn load(&self) -> Result<Option<StoredCredentials>, AuthError> {
         if !self.filename.exists() {
             return Ok(None);
