@@ -14,21 +14,23 @@ pub struct KeyringCredStore {
 }
 
 impl KeyringCredStore {
-    pub fn new() -> Self {
+    pub fn new() -> Result<Self, AuthError> {
         #[cfg(target_os = "linux")]
         let store = dbus_secret_service_keyring_store::Store::new();
         #[cfg(target_os = "windows")]
         let store = windows_native_keyring_store::Store::new();
         #[cfg(target_os = "macos")]
         let store = apple_native_keyring_store::Store::new();
-        Self {
-            store: store.unwrap(),
-        }
+        Ok(Self {
+            store: store.map_err(|e| {
+                AuthError::InternalError(format!("Failed to initialize keyring store: {e}"))
+            })?,
+        })
     }
 
     fn get_entry(&self) -> Result<keyring_core::Entry, AuthError> {
-        self.store.build("tmr-client", "", None).map_err(|err| {
-            AuthError::InternalError(format!("Failed to build keyring entry specifier: {err}"))
+        self.store.build("tmr-client", "", None).map_err(|e| {
+            AuthError::InternalError(format!("Failed to build keyring entry specifier: {e}"))
         })
     }
 }
@@ -41,7 +43,10 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
             Ok(secret) => secret,
             Err(keyring_core::error::Error::NoEntry) => return Ok(None),
             Err(keyring_core::error::Error::Ambiguous(_)) => {
-                return Err(AuthError::InternalError("Multiple matching entries in keyring when loading. Support not implemented.".to_string()));
+                return Err(AuthError::InternalError(
+                    "Multiple matching entries in keyring when loading. Support not implemented."
+                        .to_string(),
+                ));
             }
             Err(e) => {
                 return Err(AuthError::InternalError(format!(
@@ -49,10 +54,8 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
                 )));
             }
         };
-        let creds: StoredCredentials = serde_json::from_slice(&secret).map_err(|err| {
-            AuthError::InternalError(format!(
-                "Failed to deserialize credentials from JSON: {err}"
-            ))
+        let creds: StoredCredentials = serde_json::from_slice(&secret).map_err(|e| {
+            AuthError::InternalError(format!("Failed to deserialize credentials from JSON: {e}"))
         })?;
         debug!("Loaded credentials from keyring");
         Ok(Some(creds))
@@ -60,8 +63,8 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
 
     async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
         let entry = self.get_entry()?;
-        let secret = serde_json::to_vec(&credentials).map_err(|err| {
-            AuthError::InternalError(format!("Failed to serialize credentials to JSON: {err}"))
+        let secret = serde_json::to_vec(&credentials).map_err(|e| {
+            AuthError::InternalError(format!("Failed to serialize credentials to JSON: {e}"))
         })?;
         use keyring_core::error::Error;
         match entry.set_secret(&secret) {
@@ -69,9 +72,12 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
                 debug!("Saved credentials to keyring");
                 Ok(())
             }
-            Err(Error::Ambiguous(_)) => Err(AuthError::InternalError("Multiple matching entries in keyring when saving. Support not implemented.".to_string())),
-            Err(err) => Err(AuthError::InternalError(format!(
-                "Unhandled keyring error when saving: {err}"
+            Err(Error::Ambiguous(_)) => Err(AuthError::InternalError(
+                "Multiple matching entries in keyring when saving. Support not implemented."
+                    .to_string(),
+            )),
+            Err(e) => Err(AuthError::InternalError(format!(
+                "Unhandled keyring error when saving: {e}"
             ))),
         }
     }
@@ -83,9 +89,12 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
                 debug!("Cleared credentials from keyring");
                 Ok(())
             }
-            Err(Error::Ambiguous(_)) => Err(AuthError::InternalError("Multiple matching entries in keyring when loading. Support not implemented.".to_string())),
-            Err(err) => Err(AuthError::InternalError(format!(
-                "Unhandled keyring error when loading: {err}"
+            Err(Error::Ambiguous(_)) => Err(AuthError::InternalError(
+                "Multiple matching entries in keyring when clearing. Support not implemented."
+                    .to_string(),
+            )),
+            Err(e) => Err(AuthError::InternalError(format!(
+                "Unhandled keyring error when clearing: {e}"
             ))),
         }
     }

@@ -108,6 +108,9 @@ impl TmrClient<Connected> {
 
     /// Fetches and prints available tools and prompts from the server.
     /// Used for TmrClient development.
+    ///
+    /// # Panics
+    /// Panics if writing to the result string fails.
     pub async fn introspect(&self) -> String {
         let mut result = String::new();
         writeln!(result, "Fetching available tools from server...").unwrap();

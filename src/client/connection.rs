@@ -131,7 +131,7 @@ impl TmrClient<Disconnected> {
                 msg: "Failed to initialize authorization manager".to_string(),
                 source: Some(e.into()),
             })?;
-        auth_mgr.set_credential_store(self.create_cred_store());
+        auth_mgr.set_credential_store(self.create_cred_store()?);
         // The authorization manager automatically does a token refresh if
         // needed. See REFRESH_BUFFER_SECS in rmcp.
         let initialized =
@@ -161,7 +161,7 @@ impl TmrClient<Disconnected> {
                 source: Some(e.into()),
             }
         })?;
-        oauth_state.set_credential_store(self.create_cred_store());
+        oauth_state.set_credential_store(self.create_cred_store()?);
 
         // oauth: Empty scope will let the server select
         let wanted_scopes = &["mcp"];
@@ -235,14 +235,19 @@ impl TmrClient<Disconnected> {
         Ok(auth_mgr)
     }
 
-    fn create_cred_store(&self) -> impl rmcp::transport::CredentialStore + 'static {
+    fn create_cred_store(
+        &self,
+    ) -> Result<impl rmcp::transport::CredentialStore + 'static, TmrConnectError> {
         #[cfg(feature = "keyring")]
         {
-            KeyringCredStore::new()
+            KeyringCredStore::new().map_err(|e| TmrConnectError::AuthError {
+                msg: "Failed to initialize keyring credential store".to_string(),
+                source: Some(Box::new(e)),
+            })
         }
         #[cfg(not(feature = "keyring"))]
         {
-            PlainCredStore::new(&self.lib_dirs)
+            Ok(PlainCredStore::new(&self.lib_dirs))
         }
     }
 }
