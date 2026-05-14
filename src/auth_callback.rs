@@ -36,6 +36,8 @@ pub trait AuthCallbackHandler {
     async fn authenticate(self, auth_url: &str) -> Result<AuthGrant, TmrConnectError>;
 }
 
+/// An OAuth callback handler that opens the user's web browser and listens for
+/// the callback on a local HTTP server.
 pub struct BrowserAuthCallbackHandler {
     listener: TcpListener,
     listen_addr: String,
@@ -132,6 +134,10 @@ impl AuthCallbackHandler for BrowserAuthCallbackHandler {
     }
 }
 
+/// An OAuth callback handler that works in a console.
+/// 
+/// It prints the authorization URL and waits for the user to paste the redirect
+/// URL.
 pub struct ConsoleAuthHandler {
     redirect_base_url: String,
 }
