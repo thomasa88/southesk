@@ -11,6 +11,7 @@ use uuid::Uuid;
 
 // Serialize+Deserialize on all types, in case the users want to save the results.
 
+#[derive(Debug, Clone)]
 pub enum HoldingsSelector {
     All,
     AccountId(Uuid),

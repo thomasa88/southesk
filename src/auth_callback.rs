@@ -175,25 +175,15 @@ impl AuthCallbackHandler for ConsoleAuthHandler {
             source: None,
         })?;
 
-        let mut code = None;
-        let mut state = None;
-        for (key, value) in parsed.query_pairs() {
-            match key.as_ref() {
-                "code" => code = Some(value.into_owned()),
-                "state" => state = Some(value.into_owned()),
-                _ => {}
+        let grant = serde_urlencoded::from_str(parsed.query().unwrap_or("")).map_err(|e| {
+            TmrConnectError::AuthError {
+                msg: format!(
+                    "Failed to parse query parameters from redirect URL '{redirect_url}': {e}"
+                ),
+                source: Some(e.into()),
             }
-        }
-
-        let code = code.ok_or_else(|| TmrConnectError::AuthError {
-            msg: "Missing 'code' parameter in redirect URL".to_string(),
-            source: None,
-        })?;
-        let state = state.ok_or_else(|| TmrConnectError::AuthError {
-            msg: "Missing 'state' parameter in redirect URL".to_string(),
-            source: None,
         })?;
 
-        Ok(AuthGrant { code, state })
+        Ok(grant)
     }
 }

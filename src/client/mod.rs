@@ -40,12 +40,10 @@ pub struct TmrClient<S: State = Disconnected> {
 
 pub trait State {}
 
-pub struct Disconnected {}
+pub struct Disconnected;
 pub struct Connected {
     client: RunningService<RoleClient, InitializeRequestParams>,
 }
 
 impl State for Disconnected {}
 impl State for Connected {}
-
-impl<S: State> TmrClient<S> {}
