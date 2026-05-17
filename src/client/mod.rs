@@ -38,12 +38,18 @@ pub struct TmrClient<S: State = Disconnected> {
     state: S,
 }
 
-pub trait State {}
+mod private {
+    pub trait Sealed {}
+}
+pub trait State: private::Sealed {}
 
 pub struct Disconnected;
 pub struct Connected {
     client: RunningService<RoleClient, InitializeRequestParams>,
 }
+
+impl private::Sealed for Disconnected {}
+impl private::Sealed for Connected {}
 
 impl State for Disconnected {}
 impl State for Connected {}
