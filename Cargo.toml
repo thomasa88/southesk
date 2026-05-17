@@ -5,11 +5,13 @@ edition = "2024"
 license = "MIT"
 
 [features]
-default = ["keyring-linux", "keyring-windows", "keyring-macos"]
-keyring-linux = ["keyring", "dep:dbus-secret-service-keyring-store"]
-keyring-windows = ["keyring", "dep:windows-native-keyring-store"]
-keyring-macos = ["keyring", "dep:apple-native-keyring-store"]
-keyring = ["dep:keyring-core"]
+default = ["keyring"]
+keyring = [
+    "dep:keyring-core",
+    "dep:dbus-secret-service-keyring-store",
+    "dep:windows-native-keyring-store",
+    "dep:apple-native-keyring-store",
+]
 
 [dependencies]
 async-trait = "0.1.89"
