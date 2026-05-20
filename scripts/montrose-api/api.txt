@@ -1,5 +1,5 @@
 Fetching available tools from server...
-Available tools: 4
+Available tools: 9
 - get_holdings (Returns holdings for either one account (when accountId is provided) or all accessible accounts. Use GetUserAccounts first to find valid account IDs.)
 {
     "properties": Object {
@@ -14,6 +14,29 @@ Available tools: 4
     },
     "required": Array [
         String("accountId"),
+    ],
+    "type": String("object"),
+}
+None
+
+- add_to_watchlist (Adds one or more instruments to an existing watchlist by orderbookId. Use SearchInstruments to find the correct orderbookId for a ticker or name. Instruments already on the watchlist are silently skipped.)
+{
+    "properties": Object {
+        "listId": Object {
+            "description": String("The watchlist ID returned by GetWatchlists."),
+            "type": String("integer"),
+        },
+        "orderbookIds": Object {
+            "description": String("OrderbookIds (int) of the instruments to add. Use SearchInstruments to find the correct orderbookId."),
+            "items": Object {
+                "type": String("integer"),
+            },
+            "type": String("array"),
+        },
+    },
+    "required": Array [
+        String("listId"),
+        String("orderbookIds"),
     ],
     "type": String("object"),
 }
@@ -48,9 +71,17 @@ None
         },
         "amount": Object {
             "default": Null,
-            "description": String("Optional amount to trade, always in SEK (Swedish Krona). For foreign-currency instruments, the app converts the SEK amount to shares automatically. If the user specifies an amount in another currency (e.g. USD, EUR), convert it to SEK first. Exactly one of quantity or amount must be provided."),
+            "description": String("Optional amount to trade. Exactly one of quantity or amount must be provided. If the user explicitly specifies a currency (e.g. \"10 000 SEK\", \"500 USD\"), pass it via the currency parameter; otherwise leave currency unset and the account's main currency will be used."),
             "type": Array [
                 String("number"),
+                String("null"),
+            ],
+        },
+        "currency": Object {
+            "default": Null,
+            "description": String("Optional ISO 4217 currency code (e.g. \"SEK\", \"USD\", \"EUR\") for the amount. Set this only when the user explicitly states a currency. When omitted, the account's main currency is used."),
+            "type": Array [
+                String("string"),
                 String("null"),
             ],
         },
@@ -106,6 +137,66 @@ None
     },
     "required": Array [
         String("side"),
+    ],
+    "type": String("object"),
+}
+None
+
+- get_watchlists (Returns the authenticated user's watchlists with their ID, name, and the number of instruments on each list. Use GetWatchlist with a listId to read the instruments on a specific watchlist.)
+{
+    "properties": Object {},
+    "type": String("object"),
+}
+None
+
+- create_watchlist (Creates a new watchlist with the given name for the authenticated user. If a watchlist with the same name already exists, returns that existing watchlist.)
+{
+    "properties": Object {
+        "name": Object {
+            "description": String("The name of the watchlist to create."),
+            "type": String("string"),
+        },
+    },
+    "required": Array [
+        String("name"),
+    ],
+    "type": String("object"),
+}
+None
+
+- get_watchlist (Returns the instruments on a single watchlist, identified by listId. Each instrument is enriched with its orderbookId, ticker and name. Use GetWatchlists first to discover valid listIds.)
+{
+    "properties": Object {
+        "listId": Object {
+            "description": String("The watchlist ID returned by GetWatchlists."),
+            "type": String("integer"),
+        },
+    },
+    "required": Array [
+        String("listId"),
+    ],
+    "type": String("object"),
+}
+None
+
+- remove_from_watchlist (Removes one or more instruments from a watchlist by orderbookId. OrderbookIds that are not on the watchlist are silently ignored.)
+{
+    "properties": Object {
+        "listId": Object {
+            "description": String("The watchlist ID returned by GetWatchlists."),
+            "type": String("integer"),
+        },
+        "orderbookIds": Object {
+            "description": String("OrderbookIds (int) of the instruments to remove."),
+            "items": Object {
+                "type": String("integer"),
+            },
+            "type": String("array"),
+        },
+    },
+    "required": Array [
+        String("listId"),
+        String("orderbookIds"),
     ],
     "type": String("object"),
 }
