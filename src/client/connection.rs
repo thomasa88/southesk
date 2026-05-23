@@ -16,40 +16,15 @@ use tracing::{debug, info};
 use crate::keyring_cred_store::KeyringCredStore;
 #[cfg(not(feature = "keyring"))]
 use crate::plain_cred_store::PlainCredStore;
-use crate::{
-    auth_callback::{self, AuthCallbackHandler, BrowserAuthCallbackHandler},
-    result::TmrConnectError,
-};
+use crate::{auth_handler, result::TmrConnectError};
 
 use super::{Connected, Disconnected, TmrClient};
 
 const MCP_SERVER_URL: &str = "https://mcp.montrose.io";
 
 impl TmrClient<Disconnected> {
-    pub fn new(client_name: impl Into<String>) -> TmrClient<Disconnected> {
-        let lib_dirs = etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
-            top_level_domain: "".to_string(),
-            author: "thomasa88".to_string(),
-            app_name: "tmr-client".to_string(),
-        })
-        .unwrap();
-        Self {
-            client_name: client_name.into(),
-            lib_dirs,
-            state: Disconnected {},
-        }
-    }
-}
-
-impl TmrClient<Disconnected> {
     pub async fn connect(self) -> Result<TmrClient<Connected>, TmrConnectError> {
-        self.connect_with_cb::<BrowserAuthCallbackHandler>().await
-    }
-
-    pub async fn connect_with_cb<CB: AuthCallbackHandler>(
-        self,
-    ) -> Result<TmrClient<Connected>, TmrConnectError> {
-        let auth_mgr = self.authenticate::<CB>().await?;
+        let auth_mgr = self.authenticate().await?;
 
         let mut mcp_client_res = self.init_mcp_client(auth_mgr).await;
 
@@ -63,7 +38,7 @@ impl TmrClient<Disconnected> {
             if Self::is_auth_required_error(dyn_transport_err) {
                 info!("Authentication required error encountered");
                 info!("Starting new authorization flow");
-                let auth_mgr = self.authenticate_new_auth::<CB>().await?;
+                let auth_mgr = self.authenticate_new_auth().await?;
                 mcp_client_res = self.init_mcp_client(auth_mgr).await;
             }
         }
@@ -78,6 +53,7 @@ impl TmrClient<Disconnected> {
         Ok(TmrClient {
             client_name: self.client_name,
             lib_dirs: self.lib_dirs,
+            auth_handler: self.auth_handler,
             state: Connected { client: mcp_client },
         })
     }
@@ -116,9 +92,7 @@ impl TmrClient<Disconnected> {
         client_service.serve(transport).await
     }
 
-    async fn authenticate<CB: AuthCallbackHandler>(
-        &self,
-    ) -> Result<AuthorizationManager, TmrConnectError> {
+    async fn authenticate(&self) -> Result<AuthorizationManager, TmrConnectError> {
         debug!("Using MCP server URL: {}", MCP_SERVER_URL);
 
         info!("Establishing authorized connection to MCP server...");
@@ -149,12 +123,10 @@ impl TmrClient<Disconnected> {
         }
 
         info!("No credentials found in store, starting new authorization flow");
-        self.authenticate_new_auth::<CB>().await
+        self.authenticate_new_auth().await
     }
 
-    async fn authenticate_new_auth<CB: AuthCallbackHandler>(
-        &self,
-    ) -> Result<AuthorizationManager, TmrConnectError> {
+    async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, TmrConnectError> {
         let mut oauth_state = OAuthState::new(MCP_SERVER_URL, None).await.map_err(|e| {
             TmrConnectError::AuthError {
                 msg: "Failed to initialize OAuth state".to_string(),
@@ -167,9 +139,7 @@ impl TmrClient<Disconnected> {
         let wanted_scopes = &["mcp"];
         debug!("Requesting scopes: {:?}", wanted_scopes);
 
-        let oauth_cb = CB::create().await?;
-
-        let redirect_uri = oauth_cb.redirect_uri();
+        let redirect_uri = self.auth_handler.redirect_uri();
         debug!("Using redirect URI: {}", redirect_uri);
         oauth_state
             .start_authorization(wanted_scopes, redirect_uri, Some(&self.client_name))
@@ -190,10 +160,10 @@ impl TmrClient<Disconnected> {
         debug!("Auth URL: {}", auth_url);
 
         info!("Waiting for authorization code...");
-        let auth_callback::AuthGrant {
+        let auth_handler::AuthGrant {
             code: auth_code,
             state: csrf_token,
-        } = oauth_cb.authenticate(&auth_url).await?;
+        } = self.auth_handler.authenticate(&auth_url).await?;
         info!("Received authorization code: {}", auth_code);
 
         info!("Exchanging authorization code for access token...");

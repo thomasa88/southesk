@@ -83,7 +83,9 @@ async fn main() -> anyhow::Result<()> {
     );
     wanted_trades.sort_by(|a, b| a.ticker.cmp(&b.ticker));
 
-    let montrose = tmr_client::TmrClient::new("TMR Client Sample");
+    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+        .build()
+        .await?;
     let montrose = montrose.connect().await?;
 
     let account = montrose
@@ -93,7 +95,9 @@ async fn main() -> anyhow::Result<()> {
         .find(|a| a.account_name.as_ref() == Some(account_name))
         .context("Account not found")?;
 
-    let all_holdings = montrose.get_holdings(HoldingsSelector::AccountId(account.account_id)).await?;
+    let all_holdings = montrose
+        .get_holdings(HoldingsSelector::AccountId(account.account_id))
+        .await?;
     let holdings = all_holdings
         .first()
         .context("Failed to get holdings for the account")?;

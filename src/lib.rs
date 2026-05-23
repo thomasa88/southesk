@@ -4,13 +4,14 @@
 //! [`TmrClient`] provides the main interface to the library.
 
 pub use client::TmrClient;
+pub use client::TmrClientBuilder;
 pub use result::TmrCallError;
 pub use result::TmrConnectError;
 
 pub use rust_decimal::Decimal;
 pub use uuid::Uuid;
 
-pub mod auth_callback;
+pub mod auth_handler;
 mod client;
 mod result;
 pub mod types;

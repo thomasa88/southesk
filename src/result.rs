@@ -38,3 +38,12 @@ pub enum TmrConnectError {
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
 }
+
+#[derive(Debug, thiserror::Error)]
+pub enum TmrBuildError {
+    #[error("Failed to build client: {msg}")]
+    BuildError {
+        msg: String,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
+    },
+}

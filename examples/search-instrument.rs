@@ -25,7 +25,9 @@ async fn main() -> anyhow::Result<()> {
     }
     let instrument_name_or_ticker = &args[1];
 
-    let montrose = tmr_client::TmrClient::new("TMR Client Sample");
+    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+        .build()
+        .await?;
     let montrose = montrose.connect().await?;
 
     let instruments = montrose

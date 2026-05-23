@@ -16,7 +16,9 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let montrose = tmr_client::TmrClient::new("TMR Client Sample");
+    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+        .build()
+        .await?;
     let montrose = montrose.connect().await?;
 
     println!("-------- Accounts --------");
