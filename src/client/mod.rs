@@ -8,8 +8,8 @@ use crate::{
     result::TmrBuildError,
 };
 
-mod connection;
-mod tools;
+mod disconnected;
+mod connected;
 
 /// The Montrose MCP client
 ///
@@ -23,10 +23,10 @@ mod tools;
 ///
 /// # Examples
 /// ```no_run
-/// # use tmr_client::TmrClient;
+/// # use tmr_client::TmrClientBuilder;
 /// # tokio_test::block_on(
 /// # async {
-/// let montrose = TmrClient::new("My Montrose client");
+/// let montrose = TmrClientBuilder::new("My Montrose client").build().await?;
 /// let montrose = montrose.connect().await?;
 ///
 /// let accounts = montrose.get_user_accounts().await?;
