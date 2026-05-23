@@ -17,9 +17,13 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer().with_writer(io::stderr))
         .init();
 
-    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
-        .build()
-        .await?;
+    let arg = std::env::args().nth(1);
+
+    let mut montrose_builder = tmr_client::TmrClientBuilder::new("TMR Client Sample");
+    if arg.as_deref() == Some("--console-auth") {
+        montrose_builder.auth_handler(tmr_client::auth_handler::ConsoleAuth::new());
+    }
+    let montrose = montrose_builder.build().await?;
     let montrose = montrose.connect().await?;
 
     io::stdout().write_all(montrose.introspect().await.as_bytes())?;
