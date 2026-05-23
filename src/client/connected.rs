@@ -9,8 +9,8 @@ use tracing::debug;
 use crate::{
     TmrCallError,
     types::{
-        Account, AccountInfo, CreateTradeTicketResult, HoldingsSelector,
-        SearchInstrumentResultItem, TradeTicketArgs,
+        Account, AccountInfo, CreateTradeTicketResult, HoldingsSelector, RemoveFromWatchlistResult,
+        TradeInstrumentInfo, TradeTicketArgs, Watchlist, WatchlistInfo,
     },
 };
 
@@ -82,28 +82,51 @@ impl TmrClient<Connected> {
     pub async fn search_instruments(
         &self,
         query: &str,
-    ) -> Result<Vec<SearchInstrumentResultItem>, TmrCallError> {
+    ) -> Result<Vec<TradeInstrumentInfo>, TmrCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("query".to_string(), query.into());
         self.api_call("search_instruments", Some(arg_map)).await
     }
 
-    /// Calls the specified MCP tool with the given arguments.
-    async fn api_call<T: DeserializeOwned>(
+    /// Returns the authenticated user's watchlists with their ID, name, and the
+    /// number of instruments on each list. Use [`get_watchlist`](Self::get_watchlist) with a listId to
+    /// read the instruments on a specific watchlist.
+    pub async fn get_watchlists(&self) -> Result<Vec<WatchlistInfo>, TmrCallError> {
+        self.api_call("get_watchlists", None).await
+    }
+
+    /// Returns the instruments on a single watchlist, identified by listId.
+    /// Each instrument is enriched with its orderbookId, ticker and name. Use
+    /// [`get_watchlists`](Self::get_watchlists) first to discover valid listIds.
+    pub async fn get_watchlist(&self, list_id: u64) -> Result<Watchlist, TmrCallError> {
+        let mut arg_map = serde_json::Map::new();
+        arg_map.insert("listId".to_string(), list_id.into());
+        self.api_call("get_watchlist", Some(arg_map)).await
+    }
+
+    /// Creates a new watchlist with the given name for the authenticated user.
+    /// If a watchlist with the same name already exists, returns that existing
+    /// watchlist.
+    #[doc(alias = "create_or_get_watchlist")]
+    pub async fn create_watchlist(&self, name: &str) -> Result<WatchlistInfo, TmrCallError> {
+        let mut arg_map = serde_json::Map::new();
+        arg_map.insert("name".to_string(), name.into());
+        self.api_call("create_watchlist", Some(arg_map)).await
+    }
+
+    /// Removes one or more instruments from a watchlist by orderbookId.
+    /// OrderbookIds that are not on the watchlist are silently ignored.
+    ///
+    /// Returns all passed in orderbookIds - even those that were not found.
+    pub async fn remove_from_watchlist(
         &self,
-        tool: &str,
-        args: Option<JsonObject>,
-    ) -> Result<T, TmrCallError> {
-        let req = CallToolRequestParams::new(tool.to_owned());
-        let req = if let Some(args) = args {
-            req.with_arguments(args)
-        } else {
-            req
-        };
-        debug!("Call request: {:#?}", req);
-        let res = self.state.client.call_tool(req).await?;
-        debug!("Call response: {:#?}", res);
-        parse_result::<T>(&res)
+        list_id: u64,
+        orderbook_ids: &[u64],
+    ) -> Result<RemoveFromWatchlistResult, TmrCallError> {
+        let mut arg_map = serde_json::Map::new();
+        arg_map.insert("listId".to_string(), list_id.into());
+        arg_map.insert("orderbookIds".to_string(), orderbook_ids.into());
+        self.api_call("remove_from_watchlist", Some(arg_map)).await
     }
 
     /// Fetches and prints available tools and prompts from the server.
@@ -149,6 +172,24 @@ impl TmrClient<Connected> {
             }
         }
         result
+    }
+
+    /// Calls the specified MCP tool with the given arguments.
+    async fn api_call<T: DeserializeOwned>(
+        &self,
+        tool: &str,
+        args: Option<JsonObject>,
+    ) -> Result<T, TmrCallError> {
+        let req = CallToolRequestParams::new(tool.to_owned());
+        let req = if let Some(args) = args {
+            req.with_arguments(args)
+        } else {
+            req
+        };
+        debug!("Call request: {:#?}", req);
+        let res = self.state.client.call_tool(req).await?;
+        debug!("Call response: {:#?}", res);
+        parse_result::<T>(&res)
     }
 }
 

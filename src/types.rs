@@ -93,9 +93,14 @@ pub struct TradeTicketArgs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub price: Option<Decimal>,
 
-    /// How much of the instrument to trade
+    /// How much of the instrument to trade.
     #[serde(flatten)]
     pub size: TradeSize,
+
+    /// Optional ISO 4217 currency code (e.g. "SEK", "USD", "EUR") for the
+    /// amount. Set this only when the user explicitly states a currency. When
+    /// omitted, the account's main currency is used.
+    pub currency: Option<String>,
 
     /// The instrument to trade
     #[serde(flatten)]
@@ -105,9 +110,12 @@ pub struct TradeTicketArgs {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TradeSize {
-    /// SEK amount to trade.
+    /// Amount (money) to trade. If the user explicitly specifies a currency
+    /// (e.g. "10 000 SEK", "500 USD"), pass it via the
+    /// [`TradeTicketArgs::currency`] parameter; otherwise leave currency unset
+    /// and the account's main currency will be used.
     #[serde(rename = "amount")]
-    AmountSek(Decimal),
+    Amount(Decimal),
     /// Number of shares to trade.
     Quantity(Decimal),
 }
@@ -120,7 +128,7 @@ pub enum TradeInstrument {
     /// find the correct orderbookId when needed.
     Name(String),
     /// Optional orderbookId (int) to identify the instrument directly. This is the safest identifier and should be preferred when known or after using [`search_instruments`](crate::TmrClient::search_instruments).
-    OrderbookId(i64),
+    OrderbookId(u64),
     /// Optional ticker (string) to identify the instrument by ticker symbol,
     /// e.g. \"VOLV B\". This is a convenience identifier and may be ambiguous;
     /// use [`search_instruments`](crate::TmrClient::search_instruments) to find the correct orderbookId when needed.
@@ -142,11 +150,35 @@ pub(crate) struct CreateTradeTicketResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SearchInstrumentResultItem {
+pub struct TradeInstrumentInfo {
     /// Instrument name
     pub name: String,
     /// Instrument order book ID
-    pub orderbook_id: i64,
+    pub orderbook_id: u64,
     /// Instrument ticker
     pub ticker: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WatchlistInfo {
+    pub list_id: u64,
+    pub name: String,
+    /// Number of instruments in the watchlist
+    pub orderbook_count: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Watchlist {
+    pub list_id: u64,
+    pub name: String,
+    pub items: Vec<TradeInstrumentInfo>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoveFromWatchlistResult {
+    pub list_id: u64,
+    pub orderbook_ids: Vec<u64>,
 }

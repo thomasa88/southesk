@@ -162,7 +162,8 @@ async fn main() -> anyhow::Result<()> {
             .create_trade_ticket(TradeTicketArgs {
                 side: TradeSide::Buy,
                 account_id: Some(account.account_id),
-                size: TradeSize::AmountSek(trade.amount_sek.expect("Amount should be set")),
+                size: TradeSize::Amount(trade.amount_sek.expect("Amount should be set")),
+                currency: None,
                 instrument: TradeInstrument::Ticker(trade.ticker.to_string()),
                 price: None,
             })

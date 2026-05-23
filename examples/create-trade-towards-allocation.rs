@@ -206,7 +206,8 @@ async fn main() -> anyhow::Result<()> {
             .create_trade_ticket(TradeTicketArgs {
                 side: TradeSide::Buy,
                 account_id: Some(account.account_id),
-                size: TradeSize::AmountSek(trade.to_buy_amount_sek),
+                size: TradeSize::Amount(trade.to_buy_amount_sek),
+                currency: None,
                 instrument: TradeInstrument::Ticker(trade.ticker.to_string()),
                 price: None,
             })

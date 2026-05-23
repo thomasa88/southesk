@@ -41,7 +41,8 @@ async fn main() -> anyhow::Result<()> {
         .create_trade_ticket(TradeTicketArgs {
             side: TradeSide::Buy,
             account_id: Some(trade_account.account_id),
-            size: TradeSize::AmountSek(Decimal::new(100, 0)),
+            size: TradeSize::Amount(Decimal::new(100, 0)),
+            currency: None,
             // instrument: TradeInstrument::Ticker("LF GLOB".to_string()),
             instrument: TradeInstrument::OrderbookId(3361),
             price: None,
