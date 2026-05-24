@@ -8,8 +8,8 @@ use crate::{
     result::TmrBuildError,
 };
 
-mod disconnected;
 mod connected;
+mod disconnected;
 
 /// The Montrose MCP client
 ///
@@ -40,6 +40,7 @@ pub struct TmrClient<S: State = Disconnected> {
     client_name: String,
     lib_dirs: etcetera::app_strategy::Xdg,
     auth_handler: Box<dyn AuthHandler>,
+    cred_user: String,
     state: S,
 }
 
@@ -59,25 +60,42 @@ impl private::Sealed for Connected {}
 impl State for Disconnected {}
 impl State for Connected {}
 
+const DEFAULT_CRED_USER: &str = "";
+
 /// The [`TmrClient`] builder.
 pub struct TmrClientBuilder {
     client_name: String,
     auth_handler: Option<Box<dyn AuthHandler>>,
+    cred_user_override: Option<String>,
 }
 
 impl TmrClientBuilder {
-    pub fn new(name: impl Into<String>) -> Self {
+    /// Creates a new builder for [`TmrClient`].
+    ///
+    /// `client_name` is used to identify the client towards the MCP service. It
+    /// is recommended to name it after your application.
+    pub fn new(client_name: impl Into<String>) -> Self {
         Self {
-            client_name: name.into(),
+            client_name: client_name.into(),
             auth_handler: None,
+            cred_user_override: None,
         }
     }
 
     /// Overrides how the user is requested to authenticate.
-    /// 
+    ///
     /// [`BrowserAuth`] is used by default.
-    pub fn auth_handler(&mut self, handler: impl AuthHandler + 'static) -> &mut Self {
+    pub fn auth_handler(mut self, handler: impl AuthHandler + 'static) -> Self {
         self.auth_handler = Some(Box::new(handler));
+        self
+    }
+
+    /// Overrides the user identifier used for credential storage.
+    ///
+    /// This can be used if the current computer user needs to store credentials for
+    /// multiple Montrose accounts or sessions (e.g. for testing).
+    pub fn cred_user(mut self, user: impl Into<String>) -> Self {
+        self.cred_user_override = Some(user.into());
         self
     }
 
@@ -107,6 +125,9 @@ impl TmrClientBuilder {
             client_name: self.client_name,
             lib_dirs,
             auth_handler,
+            cred_user: self
+                .cred_user_override
+                .unwrap_or(DEFAULT_CRED_USER.to_string()),
             state: Disconnected {},
         })
     }

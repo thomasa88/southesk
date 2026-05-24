@@ -1,9 +1,9 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+use anyhow::ensure;
 use std::time::Duration;
 use tokio::time::sleep;
-use anyhow::ensure;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

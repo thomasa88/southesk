@@ -11,10 +11,16 @@ use rmcp::transport::{AuthError, StoredCredentials};
 
 pub struct KeyringCredStore {
     store: Arc<dyn keyring_core::api::CredentialStoreApi + Send + Sync>,
+    user: String,
 }
 
 impl KeyringCredStore {
-    pub fn new() -> Result<Self, AuthError> {
+    /// Creates a new keyring credential store.
+    ///
+    /// The `user` parameter can be used to differentiate if the current
+    /// computer user needs to store credentials for multiple Montrose accounts
+    /// or sessions (e.g. for testing).
+    pub fn new(user: impl Into<String>) -> Result<Self, AuthError> {
         #[cfg(target_os = "linux")]
         let store = dbus_secret_service_keyring_store::Store::new();
         #[cfg(target_os = "windows")]
@@ -25,13 +31,16 @@ impl KeyringCredStore {
             store: store.map_err(|e| {
                 AuthError::InternalError(format!("Failed to initialize keyring store: {e}"))
             })?,
+            user: user.into(),
         })
     }
 
     fn get_entry(&self) -> Result<keyring_core::Entry, AuthError> {
-        self.store.build("tmr-client", "", None).map_err(|e| {
-            AuthError::InternalError(format!("Failed to build keyring entry specifier: {e}"))
-        })
+        self.store
+            .build("tmr-client", &self.user, None)
+            .map_err(|e| {
+                AuthError::InternalError(format!("Failed to build keyring entry specifier: {e}"))
+            })
     }
 }
 

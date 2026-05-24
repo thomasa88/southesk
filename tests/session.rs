@@ -12,6 +12,7 @@ async fn access_token_timeout() -> anyhow::Result<()> {
     tracing_subscriber::fmt().init();
 
     let montrose = TmrClientBuilder::new("TMR Client Tests")
+        .cred_user("access_token_timeout_test")
         .build()
         .await?
         .connect()

@@ -16,8 +16,20 @@ pub struct PlainCredStore {
 }
 
 impl PlainCredStore {
-    pub fn new(dirs: &etcetera::app_strategy::Xdg) -> Self {
-        let filename = dirs.config_dir().join("credentials.json");
+    /// Creates a new plaintext credential store in the computer user's config
+    /// directory.
+    ///
+    /// The `user` parameter can be used to differentiate if the current
+    /// computer user needs to store credentials for multiple Montrose accounts
+    /// or sessions (e.g. for testing). The name will be part of the credentials
+    /// filename.
+    pub fn new(dirs: &etcetera::app_strategy::Xdg, user: &str) -> Self {
+        let config_name = if user.is_empty() {
+            "credentials.json".to_string()
+        } else {
+            format!("{user}_credentials.json")
+        };
+        let filename = dirs.config_dir().join(config_name);
         Self { filename }
     }
 }

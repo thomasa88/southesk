@@ -54,6 +54,7 @@ impl TmrClient<Disconnected> {
             client_name: self.client_name,
             lib_dirs: self.lib_dirs,
             auth_handler: self.auth_handler,
+            cred_user: self.cred_user,
             state: Connected { client: mcp_client },
         })
     }
@@ -118,11 +119,17 @@ impl TmrClient<Disconnected> {
                     source: Some(e.into()),
                 })?;
         if initialized {
-            info!("Initialized authorization manager from credential store");
+            info!(
+                "Initialized authorization manager for \"{}\" from credential store",
+                self.cred_user
+            );
             return Ok(auth_mgr);
         }
 
-        info!("No credentials found in store, starting new authorization flow");
+        info!(
+            "No credentials found in store for \"{}\". Starting new authorization flow.",
+            self.cred_user
+        );
         self.authenticate_new_auth().await
     }
 
@@ -210,14 +217,14 @@ impl TmrClient<Disconnected> {
     ) -> Result<impl rmcp::transport::CredentialStore + 'static, TmrConnectError> {
         #[cfg(feature = "keyring")]
         {
-            KeyringCredStore::new().map_err(|e| TmrConnectError::AuthError {
+            KeyringCredStore::new(&self.cred_user).map_err(|e| TmrConnectError::AuthError {
                 msg: "Failed to initialize keyring credential store".to_string(),
                 source: Some(Box::new(e)),
             })
         }
         #[cfg(not(feature = "keyring"))]
         {
-            Ok(PlainCredStore::new(&self.lib_dirs))
+            Ok(PlainCredStore::new(&self.lib_dirs, &self.cred_user))
         }
     }
 }
