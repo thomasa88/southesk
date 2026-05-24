@@ -1891,7 +1891,8 @@ dependencies = [
 [[package]]
 name = "rmcp"
 version = "1.7.0"
-source = "git+https://github.com/thomasa88/rmcp-rust-sdk.git?rev=401ddb43843395aa2da336e5a0d59343d4d2ea5c#401ddb43843395aa2da336e5a0d59343d4d2ea5c"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0810a9f717d9828f475fe1f629f4c305c8464b7f496c3a854b58d29e65f4058e"
 dependencies = [
  "async-trait",
  "chrono",

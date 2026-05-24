@@ -16,6 +16,8 @@ mod client;
 mod result;
 pub mod types;
 
+mod cred_store;
+
 #[cfg(feature = "keyring")]
 mod keyring_cred_store;
 #[cfg(not(feature = "keyring"))]

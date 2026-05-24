@@ -39,6 +39,25 @@ pub enum TmrConnectError {
     },
 }
 
+// impl From<rmcp::transport::AuthError> for TmrConnectError {
+//     fn from(value: rmcp::transport::AuthError) -> Self {
+//         TmrConnectError::AuthError { msg: (), source: value }
+//     }
+// }
+
+pub(crate) trait MapAuthToConnectError<T> {
+    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, TmrConnectError>;
+}
+
+impl<T> MapAuthToConnectError<T> for Result<T, rmcp::transport::AuthError> {
+    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, TmrConnectError> {
+        self.map_err(|e| TmrConnectError::AuthError {
+            msg: msg.into(),
+            source: Some(Box::new(e)),
+        })
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum TmrBuildError {
     #[error("Failed to build client: {msg}")]

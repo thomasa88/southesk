@@ -6,7 +6,8 @@ use rmcp::{
     model::{ClientInfo, InitializeRequestParams},
     service::RunningService,
     transport::{
-        AuthClient, AuthorizationManager, StreamableHttpClientTransport, auth::OAuthState,
+        AuthClient, AuthorizationManager, CredentialStore, StreamableHttpClientTransport,
+        auth::{OAuthClientConfig, OAuthState},
         streamable_http_client::StreamableHttpClientTransportConfig,
     },
 };
@@ -16,7 +17,11 @@ use tracing::{debug, info};
 use crate::keyring_cred_store::KeyringCredStore;
 #[cfg(not(feature = "keyring"))]
 use crate::plain_cred_store::PlainCredStore;
-use crate::{auth_handler, result::TmrConnectError};
+use crate::{
+    auth_handler,
+    cred_store::TmrCredStore,
+    result::{MapAuthToConnectError, TmrConnectError},
+};
 
 use super::{Connected, Disconnected, TmrClient};
 
@@ -97,6 +102,7 @@ impl TmrClient<Disconnected> {
         debug!("Using MCP server URL: {}", MCP_SERVER_URL);
 
         info!("Establishing authorized connection to MCP server...");
+
         // Cannot convert an OAuthState into an AuthorizationManager, as it
         // initially isn't in the Authorized state. So we start with an
         // AuthorizationManager in case we already have usable credentials.
@@ -106,18 +112,19 @@ impl TmrClient<Disconnected> {
                 msg: "Failed to initialize authorization manager".to_string(),
                 source: Some(e.into()),
             })?;
-        auth_mgr.set_credential_store(self.create_cred_store()?);
+
+        let cred_store = self.create_cred_store()?;
+        auth_mgr.set_credential_store(cred_store.clone());
+
         // The authorization manager automatically does a token refresh if
-        // needed. See REFRESH_BUFFER_SECS in rmcp.
-        let initialized =
-            auth_mgr
-                .initialize_from_store()
-                .await
-                .map_err(|e| TmrConnectError::AuthError {
-                    msg: "Failed to initialize authorization manager from credential store"
-                        .to_string(),
-                    source: Some(e.into()),
-                })?;
+        // needed. See AuthorizationManager::REFRESH_BUFFER_SECS.
+        let initialized = Self::init_from_store_with_secret(
+            &mut auth_mgr,
+            &cred_store,
+            self.auth_handler.redirect_uri(),
+        )
+        .await?;
+
         if initialized {
             info!(
                 "Initialized authorization manager for \"{}\" from credential store",
@@ -127,34 +134,72 @@ impl TmrClient<Disconnected> {
         }
 
         info!(
-            "No credentials found in store for \"{}\". Starting new authorization flow.",
+            "No usable credentials found in the credential store for \"{}\". Starting new authorization flow.",
             self.cred_user
         );
         self.authenticate_new_auth().await
     }
 
-    async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, TmrConnectError> {
-        let mut oauth_state = OAuthState::new(MCP_SERVER_URL, None).await.map_err(|e| {
-            TmrConnectError::AuthError {
-                msg: "Failed to initialize OAuth state".to_string(),
-                source: Some(e.into()),
-            }
-        })?;
-        oauth_state.set_credential_store(self.create_cred_store()?);
+    /// Replacement for [`AuthorizationManager::initialize_from_store`] that
+    /// initializes the auth manager with a client secret.
+    async fn init_from_store_with_secret(
+        auth_mgr: &mut AuthorizationManager,
+        cred_store: &impl TmrCredStore,
+        redirect_uri: impl Into<String>,
+    ) -> Result<bool, TmrConnectError> {
+        let creds = cred_store
+            .load()
+            .await
+            .to_connect_err("Error while loading credentials from credential store")?;
+        let client_secret = cred_store
+            .load_client_secret()
+            .await
+            .to_connect_err("Error while loading client secret from credential store")?;
 
+        // Store is missing data. Cannot initialize the auth manager.
+        let (Some(creds), Some(client_secret)) = (creds, client_secret) else {
+            return Ok(false);
+        };
+
+        let oauth_config = OAuthClientConfig::new(creds.client_id, redirect_uri)
+            .with_scopes(creds.granted_scopes)
+            .with_client_secret(client_secret);
+
+        let metadata = auth_mgr
+            .discover_metadata()
+            .await
+            .to_connect_err("Failed to discover authorization server metadata")?;
+        auth_mgr.set_metadata(metadata);
+
+        // auth_mgr.configure_client_credentials(config) does basically the same as configure_client?
+        auth_mgr
+            .configure_client(oauth_config)
+            .to_connect_err("Failed to configure authorization manager with client credentials")?;
+
+        Ok(true)
+    }
+
+    async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, TmrConnectError> {
         // oauth: Empty scope will let the server select
         let wanted_scopes = &["mcp"];
         debug!("Requesting scopes: {:?}", wanted_scopes);
 
         let redirect_uri = self.auth_handler.redirect_uri();
         debug!("Using redirect URI: {}", redirect_uri);
-        oauth_state
-            .start_authorization(wanted_scopes, redirect_uri, Some(&self.client_name))
-            .await
-            .map_err(|e| TmrConnectError::AuthError {
-                msg: "Failed to start authorization".to_string(),
-                source: Some(e.into()),
-            })?;
+
+        let cred_store = self.create_cred_store()?;
+
+        let (mut oauth_state, client_secret) = Self::start_authorization_with_secret(
+            wanted_scopes,
+            redirect_uri,
+            &self.client_name,
+            cred_store.clone(),
+        )
+        .await
+        .map_err(|e| TmrConnectError::AuthError {
+            msg: "Failed to start authorization".to_string(),
+            source: Some(e.into()),
+        })?;
 
         let auth_url =
             oauth_state
@@ -177,29 +222,16 @@ impl TmrClient<Disconnected> {
         oauth_state
             .handle_callback(&auth_code, &csrf_token)
             .await
-            .map_err(|e| TmrConnectError::AuthError {
-                msg: "Failed to handle authorization callback".to_string(),
-                source: Some(e.into()),
-            })?;
-        info!("Successfully obtained access token");
+            .to_connect_err("Failed to handle authorization callback")?;
+
+        // OAuthState::handle_callback is the function that initially stores the credentials using the credential store.
+        // So store the client secret now as well.
+        cred_store
+            .save_client_secret(client_secret.unwrap())
+            .await
+            .unwrap();
 
         info!("Authorization successful! Access token obtained.");
-
-        let (client_id, Some(_token_response)) =
-            oauth_state
-                .get_credentials()
-                .await
-                .map_err(|e| TmrConnectError::AuthError {
-                    msg: "Failed to get credentials from OAuth state".to_string(),
-                    source: Some(e.into()),
-                })?
-        else {
-            return Err(TmrConnectError::AuthError {
-                msg: "No credentials obtained from OAuth state".to_string(),
-                source: None,
-            });
-        };
-        debug!("Obtained client id: {}", client_id);
 
         let auth_mgr =
             oauth_state
@@ -212,9 +244,58 @@ impl TmrClient<Disconnected> {
         Ok(auth_mgr)
     }
 
-    fn create_cred_store(
-        &self,
-    ) -> Result<impl rmcp::transport::CredentialStore + 'static, TmrConnectError> {
+    /// Replacement for [`OAuthState::start_authorization`] that returns the client secret.
+    async fn start_authorization_with_secret<S: CredentialStore + TmrCredStore + 'static>(
+        scopes: &[&str],
+        redirect_uri: &str,
+        client_name: &str,
+        cred_store: S,
+    ) -> Result<(OAuthState, Option<String>), rmcp::transport::AuthError> {
+        // Difference compared to OAuthState::start_authorization:
+        // Cannot start with an existing OAuthState (created with `
+        // OAuthState::new(MCP_SERVER_URL, None).into_authorization_manager()`)
+        // taken as a parameter, because that function only works after the
+        // OAuthState is authorized. So we start by creating an
+        // AuthorizationManager instead.
+        let mut auth_mgr = AuthorizationManager::new(MCP_SERVER_URL).await?;
+
+        auth_mgr.set_credential_store(cred_store.clone());
+
+        debug!("start discovery");
+        let metadata = auth_mgr.discover_metadata().await?;
+        auth_mgr.set_metadata(metadata);
+        let _ = auth_mgr.select_scopes(None, scopes);
+
+        debug!("start session");
+        // Start of AuthorizationSession::new replacement
+        //
+        // AuthorizationSession::new will run register_client, without giving us
+        // access to the client secret. Instead, we perform the steps of `new`
+        // manually.
+        //
+        // register_client will store the client data (including secret) in the
+        // auth managers OAuthClient/oauth2::Client object, so the current auth
+        // manager will have it internally. (The client secret cannot be
+        // retrieved from that object.)
+        let oauth_config = auth_mgr
+            .register_client(client_name, redirect_uri, scopes)
+            .await?;
+        let auth_url = auth_mgr.get_authorization_url(scopes).await?;
+        // for_scope_upgrade lets us create the AuthorizationSession object with
+        // the data from register_client. AuthorizationSession::new would have
+        // run register_client.
+        let session = rmcp::transport::AuthorizationSession::for_scope_upgrade(
+            auth_mgr,
+            auth_url,
+            redirect_uri,
+        );
+        let oauth_state = OAuthState::Session(session);
+        // End of AuthorizationSession::new replacement
+
+        Ok((oauth_state, oauth_config.client_secret))
+    }
+
+    fn create_cred_store(&self) -> Result<impl TmrCredStore + 'static, TmrConnectError> {
         #[cfg(feature = "keyring")]
         {
             KeyringCredStore::new(&self.cred_user).map_err(|e| TmrConnectError::AuthError {

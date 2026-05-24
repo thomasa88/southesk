@@ -3,15 +3,26 @@
 
 //! A credential store that saves the credentials in the system keyring.
 
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::debug;
 
 use async_trait::async_trait;
-use rmcp::transport::{AuthError, StoredCredentials};
+use rmcp::transport::{AuthError, CredentialStore, StoredCredentials};
 
+use crate::cred_store::TmrCredStore;
+
+#[derive(Clone)]
 pub struct KeyringCredStore {
     store: Arc<dyn keyring_core::api::CredentialStoreApi + Send + Sync>,
     user: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+struct CombinedStoredCreds {
+    #[serde(flatten)]
+    rmcp_creds: Option<StoredCredentials>,
+    client_secret: Option<String>,
 }
 
 impl KeyringCredStore {
@@ -42,13 +53,10 @@ impl KeyringCredStore {
                 AuthError::InternalError(format!("Failed to build keyring entry specifier: {e}"))
             })
     }
-}
 
-#[async_trait]
-impl rmcp::transport::CredentialStore for KeyringCredStore {
-    async fn load(&self) -> Result<Option<StoredCredentials>, AuthError> {
+    fn load_creds(&self) -> Result<Option<CombinedStoredCreds>, AuthError> {
         let entry = self.get_entry()?;
-        let secret = match entry.get_secret() {
+        let keyring_secret = match entry.get_secret() {
             Ok(secret) => secret,
             Err(keyring_core::error::Error::NoEntry) => return Ok(None),
             Err(keyring_core::error::Error::Ambiguous(_)) => {
@@ -63,24 +71,20 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
                 )));
             }
         };
-        let creds: StoredCredentials = serde_json::from_slice(&secret).map_err(|e| {
+        let creds: CombinedStoredCreds = serde_json::from_slice(&keyring_secret).map_err(|e| {
             AuthError::InternalError(format!("Failed to deserialize credentials from JSON: {e}"))
         })?;
-        debug!("Loaded credentials from keyring");
         Ok(Some(creds))
     }
 
-    async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
+    fn save_creds(&self, creds: CombinedStoredCreds) -> Result<(), AuthError> {
         let entry = self.get_entry()?;
-        let secret = serde_json::to_vec(&credentials).map_err(|e| {
+        let keyring_secret = serde_json::to_vec(&creds).map_err(|e| {
             AuthError::InternalError(format!("Failed to serialize credentials to JSON: {e}"))
         })?;
         use keyring_core::error::Error;
-        match entry.set_secret(&secret) {
-            Ok(_) => {
-                debug!("Saved credentials to keyring");
-                Ok(())
-            }
+        match entry.set_secret(&keyring_secret) {
+            Ok(_) => Ok(()),
             Err(Error::Ambiguous(_)) => Err(AuthError::InternalError(
                 "Multiple matching entries in keyring when saving. Support not implemented."
                     .to_string(),
@@ -89,6 +93,23 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
                 "Unhandled keyring error when saving: {e}"
             ))),
         }
+    }
+}
+
+#[async_trait]
+impl CredentialStore for KeyringCredStore {
+    async fn load(&self) -> Result<Option<StoredCredentials>, AuthError> {
+        let creds = self.load_creds()?.and_then(|c| c.rmcp_creds);
+        if creds.is_some() {
+            debug!("Loaded credentials from keyring");
+        }
+        Ok(creds)
+    }
+
+    async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
+        let mut creds = self.load_creds()?.unwrap_or_default();
+        creds.rmcp_creds = Some(credentials);
+        self.save_creds(creds)
     }
 
     async fn clear(&self) -> Result<(), AuthError> {
@@ -106,5 +127,22 @@ impl rmcp::transport::CredentialStore for KeyringCredStore {
                 "Unhandled keyring error when clearing: {e}"
             ))),
         }
+    }
+}
+
+impl TmrCredStore for KeyringCredStore {
+    async fn load_client_secret(&self) -> Result<Option<String>, AuthError> {
+        let client_secret = self.load_creds()?.and_then(|c| c.client_secret);
+        debug!("Loaded client secret from keyring");
+        Ok(client_secret)
+    }
+
+    async fn save_client_secret(&self, secret: impl Into<String>) -> Result<(), AuthError> {
+        let mut creds = self.load_creds()?.unwrap_or_default();
+        creds.client_secret = Some(secret.into());
+        dbg!(&creds);
+        self.save_creds(creds)?;
+        debug!("Saved client secret to keyring");
+        Ok(())
     }
 }
