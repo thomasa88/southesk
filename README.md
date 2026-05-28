@@ -13,7 +13,14 @@ This project is not affiliated, endorsed by and does not have any connections to
 The available APIs of the Montrose MCP service has been fetched by asking the service for its available tools.
 Since the API has no versioning and AI agents should be able to adopt to changing APIs,
 one should not expect the API to be stable.
-This means that TMR client can stop working at any moment.
+
+## The Plan
+
+To handle moving underlying APIs, the plan is to implement 3 API levels:
+
+* High level API: A stable API, with core functionality for transactions and trading. It is likely to be more limited than the low level API.
+* Low level API: Maps closely to the underlying MCP API.
+* Raw API: Direct calls to the MCP API. Can be used before TMR Client has implemented support for the API call.
 
 ## Examples
 
