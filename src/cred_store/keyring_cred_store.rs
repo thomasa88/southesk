@@ -3,14 +3,13 @@
 
 //! A credential store that saves the credentials in the system keyring.
 
-use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::debug;
 
 use async_trait::async_trait;
 use rmcp::transport::{AuthError, CredentialStore, StoredCredentials};
 
-use crate::cred_store::TmrCredStore;
+use super::{CombinedStoredCreds, TmrCredStore};
 
 #[derive(Clone)]
 pub struct KeyringCredStore {
@@ -18,20 +17,9 @@ pub struct KeyringCredStore {
     user: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-struct CombinedStoredCreds {
-    #[serde(flatten)]
-    rmcp_creds: Option<StoredCredentials>,
-    client_secret: Option<String>,
-}
-
 impl KeyringCredStore {
     /// Creates a new keyring credential store.
-    ///
-    /// The `user` parameter can be used to differentiate if the current
-    /// computer user needs to store credentials for multiple Montrose accounts
-    /// or sessions (e.g. for testing).
-    pub fn new(user: impl Into<String>) -> Result<Self, AuthError> {
+    pub fn new() -> Result<Self, AuthError> {
         #[cfg(target_os = "linux")]
         let store = dbus_secret_service_keyring_store::Store::new();
         #[cfg(target_os = "windows")]
@@ -42,7 +30,7 @@ impl KeyringCredStore {
             store: store.map_err(|e| {
                 AuthError::InternalError(format!("Failed to initialize keyring store: {e}"))
             })?,
-            user: user.into(),
+            user: "user_not_set".to_string(),
         })
     }
 
@@ -56,7 +44,7 @@ impl KeyringCredStore {
 
     fn load_creds(&self) -> Result<Option<CombinedStoredCreds>, AuthError> {
         let entry = self.get_entry()?;
-        let keyring_secret = match entry.get_secret() {
+        let json = match entry.get_secret() {
             Ok(secret) => secret,
             Err(keyring_core::error::Error::NoEntry) => return Ok(None),
             Err(keyring_core::error::Error::Ambiguous(_)) => {
@@ -71,19 +59,14 @@ impl KeyringCredStore {
                 )));
             }
         };
-        let creds: CombinedStoredCreds = serde_json::from_slice(&keyring_secret).map_err(|e| {
-            AuthError::InternalError(format!("Failed to deserialize credentials from JSON: {e}"))
-        })?;
-        Ok(Some(creds))
+        super::decode_json_creds(json.as_slice())
     }
 
     fn save_creds(&self, creds: CombinedStoredCreds) -> Result<(), AuthError> {
         let entry = self.get_entry()?;
-        let keyring_secret = serde_json::to_vec(&creds).map_err(|e| {
-            AuthError::InternalError(format!("Failed to serialize credentials to JSON: {e}"))
-        })?;
+        let json = super::encode_json_creds(&creds)?;
         use keyring_core::error::Error;
-        match entry.set_secret(&keyring_secret) {
+        match entry.set_secret(&json) {
             Ok(_) => Ok(()),
             Err(Error::Ambiguous(_)) => Err(AuthError::InternalError(
                 "Multiple matching entries in keyring when saving. Support not implemented."
@@ -109,7 +92,9 @@ impl CredentialStore for KeyringCredStore {
     async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.rmcp_creds = Some(credentials);
-        self.save_creds(creds)
+        self.save_creds(creds)?;
+        debug!("Saved credentials to keyring");
+        Ok(())
     }
 
     async fn clear(&self) -> Result<(), AuthError> {
@@ -130,19 +115,28 @@ impl CredentialStore for KeyringCredStore {
     }
 }
 
+#[async_trait]
 impl TmrCredStore for KeyringCredStore {
-    async fn load_client_secret(&self) -> Result<Option<String>, AuthError> {
-        let client_secret = self.load_creds()?.and_then(|c| c.client_secret);
-        debug!("Loaded client secret from keyring");
-        Ok(client_secret)
+    fn set_user(&mut self, user: &str) {
+        self.user = user.into();
     }
 
-    async fn save_client_secret(&self, secret: impl Into<String>) -> Result<(), AuthError> {
+    async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());
         dbg!(&creds);
         self.save_creds(creds)?;
         debug!("Saved client secret to keyring");
         Ok(())
+    }
+
+    async fn load_client_secret(&self) -> Result<Option<String>, AuthError> {
+        let client_secret = self.load_creds()?.and_then(|c| c.client_secret);
+        debug!("Loaded client secret from keyring");
+        Ok(client_secret)
+    }
+
+    fn dyn_clone(&self) -> Box<dyn TmrCredStore> {
+        Box::new((*self).clone())
     }
 }

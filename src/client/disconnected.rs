@@ -13,10 +13,6 @@ use rmcp::{
 };
 use tracing::{debug, info};
 
-#[cfg(feature = "keyring")]
-use crate::keyring_cred_store::KeyringCredStore;
-#[cfg(not(feature = "keyring"))]
-use crate::plain_cred_store::PlainCredStore;
 use crate::{
     auth_handler,
     cred_store::TmrCredStore,
@@ -59,6 +55,7 @@ impl TmrClient<Disconnected> {
             client_name: self.client_name,
             lib_dirs: self.lib_dirs,
             auth_handler: self.auth_handler,
+            cred_store: self.cred_store,
             cred_user: self.cred_user,
             state: Connected { client: mcp_client },
         })
@@ -113,14 +110,13 @@ impl TmrClient<Disconnected> {
                 source: Some(e.into()),
             })?;
 
-        let cred_store = self.create_cred_store()?;
-        auth_mgr.set_credential_store(cred_store.clone());
+        auth_mgr.set_credential_store(self.cred_store.dyn_clone());
 
         // The authorization manager automatically does a token refresh if
         // needed. See AuthorizationManager::REFRESH_BUFFER_SECS.
         let initialized = Self::init_from_store_with_secret(
             &mut auth_mgr,
-            &cred_store,
+            self.cred_store.as_ref(),
             self.auth_handler.redirect_uri(),
         )
         .await?;
@@ -144,7 +140,7 @@ impl TmrClient<Disconnected> {
     /// initializes the auth manager with a client secret.
     async fn init_from_store_with_secret(
         auth_mgr: &mut AuthorizationManager,
-        cred_store: &impl TmrCredStore,
+        cred_store: &dyn TmrCredStore,
         redirect_uri: impl Into<String>,
     ) -> Result<bool, TmrConnectError> {
         let creds = cred_store
@@ -187,19 +183,19 @@ impl TmrClient<Disconnected> {
         let redirect_uri = self.auth_handler.redirect_uri();
         debug!("Using redirect URI: {}", redirect_uri);
 
-        let cred_store = self.create_cred_store()?;
-
         let (mut oauth_state, client_secret) = Self::start_authorization_with_secret(
             wanted_scopes,
             redirect_uri,
             &self.client_name,
-            cred_store.clone(),
+            self.cred_store.dyn_clone(),
         )
         .await
         .map_err(|e| TmrConnectError::AuthError {
             msg: "Failed to start authorization".to_string(),
             source: Some(e.into()),
         })?;
+
+        // todo: check client_secret has value
 
         let auth_url =
             oauth_state
@@ -226,8 +222,8 @@ impl TmrClient<Disconnected> {
 
         // OAuthState::handle_callback is the function that initially stores the credentials using the credential store.
         // So store the client secret now as well.
-        cred_store
-            .save_client_secret(client_secret.unwrap())
+        self.cred_store
+            .save_client_secret(&client_secret.unwrap())
             .await
             .unwrap();
 
@@ -259,7 +255,7 @@ impl TmrClient<Disconnected> {
         // AuthorizationManager instead.
         let mut auth_mgr = AuthorizationManager::new(MCP_SERVER_URL).await?;
 
-        auth_mgr.set_credential_store(cred_store.clone());
+        auth_mgr.set_credential_store(cred_store.dyn_clone());
 
         debug!("start discovery");
         let metadata = auth_mgr.discover_metadata().await?;
@@ -293,19 +289,5 @@ impl TmrClient<Disconnected> {
         // End of AuthorizationSession::new replacement
 
         Ok((oauth_state, oauth_config.client_secret))
-    }
-
-    fn create_cred_store(&self) -> Result<impl TmrCredStore + 'static, TmrConnectError> {
-        #[cfg(feature = "keyring")]
-        {
-            KeyringCredStore::new(&self.cred_user).map_err(|e| TmrConnectError::AuthError {
-                msg: "Failed to initialize keyring credential store".to_string(),
-                source: Some(Box::new(e)),
-            })
-        }
-        #[cfg(not(feature = "keyring"))]
-        {
-            Ok(PlainCredStore::new(&self.lib_dirs, &self.cred_user))
-        }
     }
 }

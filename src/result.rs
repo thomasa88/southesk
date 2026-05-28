@@ -39,12 +39,6 @@ pub enum TmrConnectError {
     },
 }
 
-// impl From<rmcp::transport::AuthError> for TmrConnectError {
-//     fn from(value: rmcp::transport::AuthError) -> Self {
-//         TmrConnectError::AuthError { msg: (), source: value }
-//     }
-// }
-
 pub(crate) trait MapAuthToConnectError<T> {
     fn to_connect_err(self, msg: impl Into<String>) -> Result<T, TmrConnectError>;
 }

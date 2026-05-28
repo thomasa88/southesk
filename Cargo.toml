@@ -5,8 +5,8 @@ edition = "2024"
 license = "MIT"
 
 [features]
-default = ["keyring"]
-keyring = [
+default = ["keyring-creds"]
+keyring-creds = [
     "dep:keyring-core",
     "dep:dbus-secret-service-keyring-store",
     "dep:windows-native-keyring-store",

@@ -5,6 +5,7 @@ use rmcp::{RoleClient, model::InitializeRequestParams, service::RunningService};
 
 use crate::{
     auth_handler::{AuthHandler, BrowserAuth},
+    cred_store::{TmrCredStore, keyring_cred_store::KeyringCredStore},
     result::TmrBuildError,
 };
 
@@ -40,6 +41,8 @@ pub struct TmrClient<S: State = Disconnected> {
     client_name: String,
     lib_dirs: etcetera::app_strategy::Xdg,
     auth_handler: Box<dyn AuthHandler>,
+    // cred_store: Box<dyn TmrCredStore>,
+    cred_store: Box<dyn TmrCredStore>,
     cred_user: String,
     state: S,
 }
@@ -66,7 +69,8 @@ const DEFAULT_CRED_USER: &str = "";
 pub struct TmrClientBuilder {
     client_name: String,
     auth_handler: Option<Box<dyn AuthHandler>>,
-    cred_user_override: Option<String>,
+    cred_user: Option<String>,
+    cred_store: Option<Box<dyn TmrCredStore>>,
 }
 
 impl TmrClientBuilder {
@@ -78,7 +82,8 @@ impl TmrClientBuilder {
         Self {
             client_name: client_name.into(),
             auth_handler: None,
-            cred_user_override: None,
+            cred_user: None,
+            cred_store: None,
         }
     }
 
@@ -95,7 +100,13 @@ impl TmrClientBuilder {
     /// This can be used if the current computer user needs to store credentials for
     /// multiple Montrose accounts or sessions (e.g. for testing).
     pub fn cred_user(mut self, user: impl Into<String>) -> Self {
-        self.cred_user_override = Some(user.into());
+        self.cred_user = Some(user.into());
+        self
+    }
+
+    /// Overrides the credential store used to store the user's OAuth credentials
+    pub fn cred_store(mut self, cred_store: impl TmrCredStore + 'static) -> Self {
+        self.cred_store = Some(Box::new(cred_store));
         self
     }
 
@@ -121,13 +132,33 @@ impl TmrClientBuilder {
             msg: e.to_string(),
             source: Some(Box::new(e)),
         })?;
+
+        let mut cred_store = match self.cred_store {
+            Some(store) => store,
+            None => Box::new({
+                #[cfg(feature = "keyring-creds")]
+                {
+                    KeyringCredStore::new().map_err(|e| TmrBuildError::BuildError {
+                        msg: "Failed to create keyring credential store".to_string(),
+                        source: Some(Box::new(e)),
+                    })?
+                }
+                #[cfg(not(feature = "keyring-creds"))]
+                {
+                    PlaintextCredStore::new(&self.lib_dirs)
+                }
+            }),
+        };
+
+        let cred_user = self.cred_user.unwrap_or(DEFAULT_CRED_USER.to_string());
+        cred_store.set_user(&cred_user);
+
         Ok(TmrClient {
             client_name: self.client_name,
             lib_dirs,
             auth_handler,
-            cred_user: self
-                .cred_user_override
-                .unwrap_or(DEFAULT_CRED_USER.to_string()),
+            cred_store,
+            cred_user,
             state: Disconnected {},
         })
     }

@@ -13,12 +13,6 @@ pub use uuid::Uuid;
 
 pub mod auth_handler;
 mod client;
+pub mod cred_store;
 mod result;
 pub mod types;
-
-mod cred_store;
-
-#[cfg(feature = "keyring")]
-mod keyring_cred_store;
-#[cfg(not(feature = "keyring"))]
-mod plain_cred_store;
