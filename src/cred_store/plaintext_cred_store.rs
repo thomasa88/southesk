@@ -55,7 +55,15 @@ impl PlaintextCredStore {
                 ))
             })?;
         }
-        let file = std::fs::File::create(&self.filename).map_err(|e| {
+        let mut options = std::fs::OpenOptions::new();
+        options.write(true).create(true).truncate(true);
+        #[cfg(not(target_os = "windows"))]
+        {
+            use std::os::unix::fs::OpenOptionsExt;
+            // Only the current user can access the file
+            options.mode(0o600);
+        }
+        let file = options.open(&self.filename).map_err(|e| {
             AuthError::InternalError(format!(
                 "Failed to create credentials file {:?}: {e}",
                 self.filename
