@@ -14,12 +14,17 @@ use super::{CombinedStoredCreds, TmrCredStore};
 #[derive(Clone)]
 pub struct KeyringCredStore {
     store: Arc<dyn keyring_core::api::CredentialStoreApi + Send + Sync>,
+    service: String,
     user: String,
 }
 
 impl KeyringCredStore {
     /// Creates a new keyring credential store.
-    pub fn new() -> Result<Self, AuthError> {
+    ///
+    /// The `service` parameter is used to differentiate entries for different
+    /// applications. `user` can be used to differentiate different Montrose
+    /// accounts.
+    pub fn new(service: impl Into<String>, user: impl Into<String>) -> Result<Self, AuthError> {
         #[cfg(target_os = "linux")]
         let store = dbus_secret_service_keyring_store::Store::new();
         #[cfg(target_os = "windows")]
@@ -30,20 +35,21 @@ impl KeyringCredStore {
             store: store.map_err(|e| {
                 AuthError::InternalError(format!("Failed to initialize keyring store: {e}"))
             })?,
-            user: "user_not_set".to_string(),
+            service: service.into(),
+            user: user.into(),
         })
     }
 
-    fn get_entry(&self) -> Result<keyring_core::Entry, AuthError> {
+    fn get_keyring_entry(&self) -> Result<keyring_core::Entry, AuthError> {
         self.store
-            .build("tmr-client", &self.user, None)
+            .build(&self.service, &self.user, None)
             .map_err(|e| {
                 AuthError::InternalError(format!("Failed to build keyring entry specifier: {e}"))
             })
     }
 
     fn load_creds(&self) -> Result<Option<CombinedStoredCreds>, AuthError> {
-        let entry = self.get_entry()?;
+        let entry = self.get_keyring_entry()?;
         let json = match entry.get_secret() {
             Ok(secret) => secret,
             Err(keyring_core::error::Error::NoEntry) => return Ok(None),
@@ -63,7 +69,7 @@ impl KeyringCredStore {
     }
 
     fn save_creds(&self, creds: CombinedStoredCreds) -> Result<(), AuthError> {
-        let entry = self.get_entry()?;
+        let entry = self.get_keyring_entry()?;
         let json = super::encode_json_creds(&creds)?;
         use keyring_core::error::Error;
         match entry.set_secret(&json) {
@@ -99,7 +105,7 @@ impl CredentialStore for KeyringCredStore {
 
     async fn clear(&self) -> Result<(), AuthError> {
         use keyring_core::error::Error;
-        match self.get_entry()?.delete_credential() {
+        match self.get_keyring_entry()?.delete_credential() {
             Ok(_) | Err(Error::NoEntry) => {
                 debug!("Cleared credentials from keyring");
                 Ok(())
@@ -117,10 +123,6 @@ impl CredentialStore for KeyringCredStore {
 
 #[async_trait]
 impl TmrCredStore for KeyringCredStore {
-    fn set_user(&mut self, user: &str) {
-        self.user = user.into();
-    }
-
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());

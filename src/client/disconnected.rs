@@ -53,10 +53,8 @@ impl TmrClient<Disconnected> {
 
         Ok(TmrClient {
             client_name: self.client_name,
-            lib_dirs: self.lib_dirs,
             auth_handler: self.auth_handler,
             cred_store: self.cred_store,
-            cred_user: self.cred_user,
             state: Connected { client: mcp_client },
         })
     }
@@ -122,16 +120,12 @@ impl TmrClient<Disconnected> {
         .await?;
 
         if initialized {
-            info!(
-                "Initialized authorization manager for \"{}\" from credential store",
-                self.cred_user
-            );
+            info!("Initialized authorization manager from credential store");
             return Ok(auth_mgr);
         }
 
         info!(
-            "No usable credentials found in the credential store for \"{}\". Starting new authorization flow.",
-            self.cred_user
+            "No usable credentials found in the credential store. Starting new authorization flow.",
         );
         self.authenticate_new_auth().await
     }

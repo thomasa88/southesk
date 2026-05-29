@@ -20,11 +20,6 @@ use serde::{Deserialize, Serialize};
 /// implemented using a shared file, for example.
 #[async_trait]
 pub trait TmrCredStore: CredentialStore {
-    /// Sets a user id, used to differentiate if the current computer user needs
-    /// to store credentials for multiple Montrose accounts or sessions (e.g.
-    /// for testing).
-    fn set_user(&mut self, user: &str);
-
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError>;
     async fn load_client_secret(&self) -> Result<Option<String>, AuthError>;
 
@@ -48,10 +43,6 @@ impl CredentialStore for Box<dyn TmrCredStore> {
 
 #[async_trait]
 impl TmrCredStore for Box<dyn TmrCredStore> {
-    fn set_user(&mut self, user: &str) {
-        (**self).set_user(user);
-    }
-
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         (**self).save_client_secret(secret).await
     }

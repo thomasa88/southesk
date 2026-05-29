@@ -39,11 +39,8 @@ mod disconnected;
 /// ```
 pub struct TmrClient<S: State = Disconnected> {
     client_name: String,
-    lib_dirs: etcetera::app_strategy::Xdg,
     auth_handler: Box<dyn AuthHandler>,
-    // cred_store: Box<dyn TmrCredStore>,
     cred_store: Box<dyn TmrCredStore>,
-    cred_user: String,
     state: S,
 }
 
@@ -63,7 +60,7 @@ impl private::Sealed for Connected {}
 impl State for Disconnected {}
 impl State for Connected {}
 
-const DEFAULT_CRED_USER: &str = "";
+const DEFAULT_CRED_USER: &str = "user";
 
 /// The [`TmrClient`] builder.
 pub struct TmrClientBuilder {
@@ -95,10 +92,14 @@ impl TmrClientBuilder {
         self
     }
 
-    /// Overrides the user identifier used for credential storage.
+    /// Sets the user identifier used for the default credential storage.
     ///
-    /// This can be used if the current computer user needs to store credentials for
-    /// multiple Montrose accounts or sessions (e.g. for testing).
+    /// This option can be used if the current computer user needs to store
+    /// credentials for multiple Montrose accounts or sessions (e.g. for
+    /// testing).
+    ///
+    /// This option is not valid if a custom credential store is provided with
+    /// [`TmrClientBuilder::cred_store`].
     pub fn cred_user(mut self, user: impl Into<String>) -> Self {
         self.cred_user = Some(user.into());
         self
@@ -123,42 +124,53 @@ impl TmrClientBuilder {
             ),
         };
 
-        let lib_dirs = etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
-            top_level_domain: "".to_string(),
-            author: "thomasa88".to_string(),
-            app_name: "tmr-client".to_string(),
-        })
-        .map_err(|e| TmrBuildError::BuildError {
-            msg: e.to_string(),
-            source: Some(Box::new(e)),
-        })?;
-
-        let mut cred_store = match self.cred_store {
-            Some(store) => store,
-            None => Box::new({
-                #[cfg(feature = "keyring-creds")]
-                {
-                    KeyringCredStore::new().map_err(|e| TmrBuildError::BuildError {
-                        msg: "Failed to create keyring credential store".to_string(),
-                        source: Some(Box::new(e)),
-                    })?
+        let cred_store = match self.cred_store {
+            Some(store) => {
+                if self.cred_user.is_some() {
+                    return Err(TmrBuildError::BuildError {
+                        msg: "Cannot specify both a custom credential store and a credential user"
+                            .to_string(),
+                        source: None,
+                    });
                 }
-                #[cfg(not(feature = "keyring-creds"))]
-                {
-                    PlaintextCredStore::new(&self.lib_dirs)
-                }
-            }),
+                store
+            }
+            None => {
+                let cred_user = self.cred_user.unwrap_or(DEFAULT_CRED_USER.to_string());
+                Box::new({
+                    #[cfg(feature = "keyring-creds")]
+                    {
+                        KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
+                            TmrBuildError::BuildError {
+                                msg: "Failed to create keyring credential store".to_string(),
+                                source: Some(Box::new(e)),
+                            }
+                        })?
+                    }
+                    #[cfg(not(feature = "keyring-creds"))]
+                    {
+                        let client_dirs =
+                            etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
+                                top_level_domain: "".to_string(),
+                                author: "".to_string(),
+                                app_name: self.client_name.clone(),
+                            })
+                            .map_err(|e| {
+                                TmrBuildError::BuildError {
+                                    msg: e.to_string(),
+                                    source: Some(Box::new(e)),
+                                }
+                            })?;
+                        PlaintextCredStore::new(&client_dirs)
+                    }
+                })
+            }
         };
-
-        let cred_user = self.cred_user.unwrap_or(DEFAULT_CRED_USER.to_string());
-        cred_store.set_user(&cred_user);
 
         Ok(TmrClient {
             client_name: self.client_name,
-            lib_dirs,
             auth_handler,
             cred_store,
-            cred_user,
             state: Disconnected {},
         })
     }
