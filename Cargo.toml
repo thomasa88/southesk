@@ -6,6 +6,7 @@ license = "MIT"
 description = "A Rust client library for the Montrose MCP API."
 repository = "https://github.com/thomasa88/southesk"
 keywords = ["montrose", "trading", "finance", "api", "client"]
+categories = ["finance"]
 exclude = ["scripts/*"]
 
 [features]
