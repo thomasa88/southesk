@@ -98,7 +98,6 @@ impl FullCredStore for PlaintextCredStore {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());
-        dbg!(&creds);
         self.save_creds(creds)?;
         debug!("Saved client secret to {:?}", self.path);
         Ok(())
