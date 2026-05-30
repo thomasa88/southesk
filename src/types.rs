@@ -97,7 +97,7 @@ pub struct TradeTicketArgs {
 
     /// How much of the instrument to trade.
     #[serde(flatten)]
-    pub size: TradeSize,
+    pub volume: TradeVolume,
 
     /// Optional ISO 4217 currency code (e.g. "SEK", "USD", "EUR") for the
     /// amount. Set this only when the user explicitly states a currency. When
@@ -111,7 +111,7 @@ pub struct TradeTicketArgs {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum TradeSize {
+pub enum TradeVolume {
     /// Amount (money) to trade. If the user explicitly specifies a currency
     /// (e.g. "10 000 SEK", "500 USD"), pass it via the
     /// [`TradeTicketArgs::currency`] parameter; otherwise leave currency unset
