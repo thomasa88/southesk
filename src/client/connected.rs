@@ -114,10 +114,9 @@ impl Client<Connected> {
         self.api_call("create_watchlist", Some(arg_map)).await
     }
 
-    /// Removes one or more instruments from a watchlist by orderbookId.
-    /// OrderbookIds that are not on the watchlist are silently ignored.
-    ///
-    /// Returns all passed in orderbookIds - even those that were not found.
+    /// Removes one or more instruments from a watchlist by orderbookId. Returns
+    /// the orderbookIds that were actually removed; orderbookIds that were not
+    /// on the watchlist are silently ignored and excluded from the response.
     pub async fn remove_from_watchlist(
         &self,
         list_id: u64,

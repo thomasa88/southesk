@@ -179,7 +179,7 @@ None
 }
 None
 
-- remove_from_watchlist (Removes one or more instruments from a watchlist by orderbookId. OrderbookIds that are not on the watchlist are silently ignored.)
+- remove_from_watchlist (Removes one or more instruments from a watchlist by orderbookId. Returns the orderbookIds that were actually removed; orderbookIds that were not on the watchlist are silently ignored and excluded from the response.)
 {
     "properties": Object {
         "listId": Object {

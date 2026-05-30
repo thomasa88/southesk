@@ -46,10 +46,10 @@ async fn main() -> anyhow::Result<()> {
         "Expected exactly one instrument matching 'MONTGLOBE'"
     );
     let montglobe = &montglobe_matches[0];
-    montrose
+    let removed = montrose
         .remove_from_watchlist(created_list.list_id, &[montglobe.orderbook_id])
         .await?;
-    println!("Removed MONTGLOBE from watchlist, if it was present");
+    dbg!(&removed);
 
     Ok(())
 }
