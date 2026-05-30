@@ -1,12 +1,12 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-//! [`TmrClient`] provides the main interface to the library.
+//! [`Client`] provides the main interface to the library.
 
-pub use client::TmrClient;
-pub use client::TmrClientBuilder;
-pub use result::TmrCallError;
-pub use result::TmrConnectError;
+pub use client::Client;
+pub use client::ClientBuilder;
+pub use result::ClientCallError;
+pub use result::ClientConnectError;
 
 pub use rust_decimal::Decimal;
 pub use uuid::Uuid;

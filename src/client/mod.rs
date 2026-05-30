@@ -5,8 +5,8 @@ use rmcp::{RoleClient, model::InitializeRequestParams, service::RunningService};
 
 use crate::{
     auth_handler::{AuthHandler, BrowserAuth},
-    cred_store::{SharedCredStore, TmrCredStore, keyring_cred_store::KeyringCredStore},
-    result::TmrBuildError,
+    cred_store::{FullCredStore, SharedCredStore, keyring_cred_store::KeyringCredStore},
+    result::ClientBuildError,
 };
 
 mod connected;
@@ -15,19 +15,19 @@ mod disconnected;
 /// The Montrose MCP client
 ///
 /// The client must first be connected, then the Montrose API functions can be
-/// used. Build a client using [`TmrClientBuilder`].
+/// used. Build a client using [`ClientBuilder`].
 ///
-/// [`TmrClient<Connected>`] provides the available API functions.
+/// [`Client<Connected>`] provides the available API functions.
 ///
 /// The user will automatically be requested to authenticate if there is no
 /// valid cached OAuth token.
 ///
 /// # Examples
 /// ```no_run
-/// # use tmr_client::TmrClientBuilder;
+/// # use client::ClientBuilder;
 /// # tokio_test::block_on(
 /// # async {
-/// let montrose = TmrClientBuilder::new("My Montrose client").build().await?;
+/// let montrose = ClientBuilder::new("My Montrose client").build().await?;
 /// let montrose = montrose.connect().await?;
 ///
 /// let accounts = montrose.get_user_accounts().await?;
@@ -37,7 +37,7 @@ mod disconnected;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// # });
 /// ```
-pub struct TmrClient<S: State = Disconnected> {
+pub struct Client<S: State = Disconnected> {
     client_name: String,
     auth_handler: Box<dyn AuthHandler>,
     cred_store: SharedCredStore,
@@ -62,16 +62,16 @@ impl State for Connected {}
 
 const DEFAULT_CRED_USER: &str = "user";
 
-/// The [`TmrClient`] builder.
-pub struct TmrClientBuilder {
+/// The [`Client`] builder.
+pub struct ClientBuilder {
     client_name: String,
     auth_handler: Option<Box<dyn AuthHandler>>,
     cred_user: Option<String>,
     cred_store: Option<SharedCredStore>,
 }
 
-impl TmrClientBuilder {
-    /// Creates a new builder for [`TmrClient`].
+impl ClientBuilder {
+    /// Creates a new builder for [`Client`].
     ///
     /// `client_name` is used to identify the client towards the MCP service. It
     /// is recommended to name it after your application.
@@ -99,35 +99,34 @@ impl TmrClientBuilder {
     /// testing).
     ///
     /// This option is not valid if a custom credential store is provided with
-    /// [`TmrClientBuilder::cred_store`].
+    /// [`ClientBuilder::cred_store`].
     pub fn cred_user(mut self, user: impl Into<String>) -> Self {
         self.cred_user = Some(user.into());
         self
     }
 
     /// Overrides the credential store used to store the user's OAuth credentials
-    pub fn cred_store(mut self, cred_store: impl TmrCredStore + 'static) -> Self {
+    pub fn cred_store(mut self, cred_store: impl FullCredStore + 'static) -> Self {
         self.cred_store = Some(SharedCredStore::new(cred_store));
         self
     }
 
-    pub async fn build(self) -> Result<TmrClient<Disconnected>, TmrBuildError> {
-        let auth_handler = match self.auth_handler {
-            Some(handler) => handler,
-            None => Box::new(
-                BrowserAuth::new()
-                    .await
-                    .map_err(|e| TmrBuildError::BuildError {
+    pub async fn build(self) -> Result<Client<Disconnected>, ClientBuildError> {
+        let auth_handler =
+            match self.auth_handler {
+                Some(handler) => handler,
+                None => Box::new(BrowserAuth::new().await.map_err(|e| {
+                    ClientBuildError::BuildError {
                         msg: e.to_string(),
                         source: Some(Box::new(e)),
-                    })?,
-            ),
-        };
+                    }
+                })?),
+            };
 
         let cred_store = match self.cred_store {
             Some(store) => {
                 if self.cred_user.is_some() {
-                    return Err(TmrBuildError::BuildError {
+                    return Err(ClientBuildError::BuildError {
                         msg: "Cannot specify both a custom credential store and a credential user"
                             .to_string(),
                         source: None,
@@ -141,7 +140,7 @@ impl TmrClientBuilder {
                     #[cfg(feature = "keyring-creds")]
                     {
                         KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
-                            TmrBuildError::BuildError {
+                            ClientBuildError::BuildError {
                                 msg: "Failed to create keyring credential store".to_string(),
                                 source: Some(Box::new(e)),
                             }
@@ -156,7 +155,7 @@ impl TmrClientBuilder {
                                 app_name: self.client_name.clone(),
                             })
                             .map_err(|e| {
-                                TmrBuildError::BuildError {
+                                ClientBuildError::BuildError {
                                     msg: e.to_string(),
                                     source: Some(Box::new(e)),
                                 }
@@ -167,7 +166,7 @@ impl TmrClientBuilder {
             }
         };
 
-        Ok(TmrClient {
+        Ok(Client {
             client_name: self.client_name,
             auth_handler,
             cred_store,

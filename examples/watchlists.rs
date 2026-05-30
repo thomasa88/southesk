@@ -11,11 +11,11 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "warn,tmr_client=info,show_data=info".to_string().into()),
+                .unwrap_or_else(|_| "warn,southesk=info,show_data=info".to_string().into()),
         )
         .init();
 
-    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+    let montrose = southesk::ClientBuilder::new("southesk sample")
         .build()
         .await?;
     let montrose = montrose.connect().await?;
@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
 
     println!();
     println!("-------- Create watchlist --------");
-    let created_list = montrose.create_watchlist("TMR Client list!").await?;
+    let created_list = montrose.create_watchlist("southesk list!").await?;
     dbg!(&created_list);
 
     println!();

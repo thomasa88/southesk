@@ -11,7 +11,7 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "warn,tmr_client=info,introspect=info".to_string().into()),
+                .unwrap_or_else(|_| "warn,southesk=info,introspect=info".to_string().into()),
         )
         // Log to stderr, so that logs and output can be separated
         .with(tracing_subscriber::fmt::layer().with_writer(io::stderr))
@@ -19,10 +19,10 @@ async fn main() -> anyhow::Result<()> {
 
     let arg = std::env::args().nth(1);
 
-    let mut montrose_builder = tmr_client::TmrClientBuilder::new("TMR Client Sample");
+    let mut montrose_builder = southesk::ClientBuilder::new("southesk sample");
     if arg.as_deref() == Some("--console-auth") {
         montrose_builder =
-            montrose_builder.auth_handler(tmr_client::auth_handler::ConsoleAuth::new());
+            montrose_builder.auth_handler(southesk::auth_handler::ConsoleAuth::new());
     }
     let montrose = montrose_builder.build().await?;
     let montrose = montrose.connect().await?;

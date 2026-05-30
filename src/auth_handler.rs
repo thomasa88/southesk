@@ -18,7 +18,7 @@ use tokio::{
 };
 use tracing::{debug, error, info};
 
-use crate::result::TmrConnectError;
+use crate::result::ClientConnectError;
 
 const BROWSER_CALLBACK_HTML: &str = include_str!("res/default_callback.html");
 
@@ -29,7 +29,7 @@ pub trait AuthHandler {
     fn redirect_uri(&self) -> &str;
     /// Requests the user to authenticate by visiting the given `auth_url` and
     /// waits for the OAuth callback to be received.
-    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, TmrConnectError>;
+    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, ClientConnectError>;
 }
 
 /// An OAuth callback handler that opens the user's web browser and listens for
@@ -67,18 +67,19 @@ async fn browser_callback_handler(
 }
 
 impl BrowserAuth {
-    pub async fn new() -> Result<Self, TmrConnectError> {
+    pub async fn new() -> Result<Self, ClientConnectError> {
         // 0 means to bind to a random available port
         let addr = SocketAddr::from(([127, 0, 0, 1], 0));
-        let listener = TcpListener::bind(addr)
-            .await
-            .map_err(|e| TmrConnectError::AuthError {
-                msg: format!("Failed to bind callback server: {e}"),
-                source: Some(e.into()),
-            })?;
+        let listener =
+            TcpListener::bind(addr)
+                .await
+                .map_err(|e| ClientConnectError::AuthError {
+                    msg: format!("Failed to bind callback server: {e}"),
+                    source: Some(e.into()),
+                })?;
         let addr = listener
             .local_addr()
-            .map_err(|e| TmrConnectError::AuthError {
+            .map_err(|e| ClientConnectError::AuthError {
                 msg: format!("Failed to get address of callback server: {e}"),
                 source: Some(e.into()),
             })?;
@@ -119,14 +120,14 @@ impl AuthHandler for BrowserAuth {
         &self.listen_addr
     }
 
-    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, TmrConnectError> {
+    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, ClientConnectError> {
         let (cb_tx, cb_rx) = oneshot::channel();
         *self.cb_tx.lock().await = Some(cb_tx);
         eprintln!("Opening authorization page in browser: {auth_url}");
         eprintln!("Please complete the authentication in the opened browser window.");
         webbrowser::open(auth_url).ok();
         info!("Waiting for browser callback");
-        let params = cb_rx.await.map_err(|e| TmrConnectError::AuthError {
+        let params = cb_rx.await.map_err(|e| ClientConnectError::AuthError {
             msg: format!("Failed to receive callback parameters: {e}"),
             source: Some(e.into()),
         })?;
@@ -163,7 +164,7 @@ impl AuthHandler for ConsoleAuth {
         &self.redirect_base_url
     }
 
-    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, TmrConnectError> {
+    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, ClientConnectError> {
         eprintln!("\nOpen the following URL in your browser to authenticate:\n");
         eprintln!("  {auth_url}\n");
         eprintln!("After completing authentication, your browser will redirect to a URL");
@@ -180,18 +181,18 @@ impl AuthHandler for ConsoleAuth {
             line.trim().to_owned()
         })
         .await
-        .map_err(|e| TmrConnectError::AuthError {
+        .map_err(|e| ClientConnectError::AuthError {
             msg: format!("Failed to read redirect URL from stdin: {e}"),
             source: None,
         })?;
 
-        let parsed = Url::parse(&redirect_url).map_err(|e| TmrConnectError::AuthError {
+        let parsed = Url::parse(&redirect_url).map_err(|e| ClientConnectError::AuthError {
             msg: format!("Invalid redirect URL '{redirect_url}': {e}"),
             source: None,
         })?;
 
         let grant = serde_urlencoded::from_str(parsed.query().unwrap_or("")).map_err(|e| {
-            TmrConnectError::AuthError {
+            ClientConnectError::AuthError {
                 msg: format!(
                     "Failed to parse query parameters from redirect URL '{redirect_url}': {e}"
                 ),

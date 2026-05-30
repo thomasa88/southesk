@@ -2293,6 +2293,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "southesk"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "apple-native-keyring-store",
+ "async-trait",
+ "axum",
+ "dbus-secret-service-keyring-store",
+ "etcetera",
+ "keyring-core",
+ "oauth2",
+ "reqwest 0.13.2",
+ "rmcp",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "serde_with",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-test",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+ "webbrowser",
+ "windows-native-keyring-store",
+]
+
+[[package]]
 name = "sse-stream"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2496,35 +2525,6 @@ name = "tinyvec_macros"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
-
-[[package]]
-name = "tmr-client"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "apple-native-keyring-store",
- "async-trait",
- "axum",
- "dbus-secret-service-keyring-store",
- "etcetera",
- "keyring-core",
- "oauth2",
- "reqwest 0.13.2",
- "rmcp",
- "rust_decimal",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "serde_with",
- "thiserror 2.0.18",
- "tokio",
- "tokio-test",
- "tracing",
- "tracing-subscriber",
- "uuid",
- "webbrowser",
- "windows-native-keyring-store",
-]
 
 [[package]]
 name = "tokio"

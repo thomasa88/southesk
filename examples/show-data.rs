@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 use rust_decimal::dec;
-use tmr_client::{Decimal, types::HoldingsSelector};
+use southesk::{Decimal, types::HoldingsSelector};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -11,12 +11,12 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "warn,tmr_client=info,show_data=info".to_string().into()),
+                .unwrap_or_else(|_| "warn,southesk=info,show_data=info".to_string().into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+    let montrose = southesk::ClientBuilder::new("southesk sample")
         .build()
         .await?;
     let montrose = montrose.connect().await?;

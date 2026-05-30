@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 use etcetera::AppStrategy;
-use tmr_client::cred_store::plaintext_cred_store::PlaintextCredStore;
+use southesk::cred_store::plaintext_cred_store::PlaintextCredStore;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -10,21 +10,21 @@ async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "warn,tmr_client=info,show_data=info".to_string().into()),
+                .unwrap_or_else(|_| "warn,southesk=info,show_data=info".to_string().into()),
         )
         .init();
 
     let dirs = etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
         top_level_domain: "".to_string(),
         author: "".to_string(),
-        app_name: "tmr-client-sample".to_string(),
+        app_name: "southesk-sample".to_string(),
     })?;
     let creds_file = dirs
         .state_dir()
         .unwrap_or_else(|| dirs.data_dir())
         .join("credentials.json");
 
-    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+    let montrose = southesk::ClientBuilder::new("southesk sample")
         .cred_store(PlaintextCredStore::new(&creds_file))
         .build()
         .await?;

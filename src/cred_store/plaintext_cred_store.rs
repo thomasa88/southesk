@@ -10,7 +10,7 @@ use tracing::debug;
 use async_trait::async_trait;
 use rmcp::transport::{AuthError, StoredCredentials};
 
-use super::{CombinedStoredCreds, TmrCredStore};
+use super::{CombinedStoredCreds, FullCredStore};
 
 #[derive(Debug, Clone)]
 pub struct PlaintextCredStore {
@@ -94,7 +94,7 @@ impl rmcp::transport::CredentialStore for PlaintextCredStore {
 }
 
 #[async_trait]
-impl TmrCredStore for PlaintextCredStore {
+impl FullCredStore for PlaintextCredStore {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 #[derive(Debug, thiserror::Error)]
-pub enum TmrCallError {
+pub enum ClientCallError {
     #[error("MCP service communication error")]
     CommunicationError(#[from] rmcp::ServiceError),
     #[error("Error response from MCP service: {0}")]
@@ -16,8 +16,8 @@ pub enum TmrCallError {
     InvalidArguments(String),
 }
 
-impl TmrCallError {
-    pub fn parse_err(msg: impl Into<String>) -> TmrCallError {
+impl ClientCallError {
+    pub fn parse_err(msg: impl Into<String>) -> ClientCallError {
         Self::ParseError {
             msg: msg.into(),
             source: None,
@@ -26,7 +26,7 @@ impl TmrCallError {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum TmrConnectError {
+pub enum ClientConnectError {
     #[error("Authentication failed: {msg}")]
     AuthError {
         msg: String,
@@ -40,12 +40,12 @@ pub enum TmrConnectError {
 }
 
 pub(crate) trait MapAuthToConnectError<T> {
-    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, TmrConnectError>;
+    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, ClientConnectError>;
 }
 
 impl<T> MapAuthToConnectError<T> for Result<T, rmcp::transport::AuthError> {
-    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, TmrConnectError> {
-        self.map_err(|e| TmrConnectError::AuthError {
+    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, ClientConnectError> {
+        self.map_err(|e| ClientConnectError::AuthError {
             msg: msg.into(),
             source: Some(Box::new(e)),
         })
@@ -53,7 +53,7 @@ impl<T> MapAuthToConnectError<T> for Result<T, rmcp::transport::AuthError> {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum TmrBuildError {
+pub enum ClientBuildError {
     #[error("Failed to build client: {msg}")]
     BuildError {
         msg: String,

@@ -5,7 +5,7 @@ use std::io::{Read, Write};
 
 use anyhow::{Context, ensure};
 use rust_decimal::dec;
-use tmr_client::{
+use southesk::{
     Decimal,
     types::{HoldingsSelector, TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
 };
@@ -83,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
     );
     wanted_trades.sort_by(|a, b| a.ticker.cmp(&b.ticker));
 
-    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+    let montrose = southesk::ClientBuilder::new("southesk sample")
         .build()
         .await?;
     let montrose = montrose.connect().await?;
@@ -292,7 +292,7 @@ fn rebalance(wanted: &[WantedTrade], amount_to_buy: Decimal) -> Vec<Trade> {
 mod tests {
     use super::*;
     use rust_decimal::prelude::FromPrimitive;
-    use tmr_client::Decimal;
+    use southesk::Decimal;
 
     fn input_table(table: Vec<(impl Into<String>, Decimal, Decimal)>) -> Vec<WantedTrade> {
         table

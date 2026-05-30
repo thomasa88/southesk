@@ -13,12 +13,12 @@ use rmcp::transport::{AuthError, CredentialStore, StoredCredentials};
 use serde::{Deserialize, Serialize};
 
 /// An extension of [`CredentialStore`] that allows saving and loading the
-/// client secret.
+/// OAuth client secret.
 ///
 /// Since the MCP API creates the client secret when the client is registered
 /// and then requires it for token refreshes, it needs to be stored.
 #[async_trait]
-pub trait TmrCredStore: CredentialStore + Debug {
+pub trait FullCredStore: CredentialStore + Debug {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError>;
     async fn load_client_secret(&self) -> Result<Option<String>, AuthError>;
 }
@@ -26,11 +26,11 @@ pub trait TmrCredStore: CredentialStore + Debug {
 /// A credential store wrapper, that allows the provided credential store to be shared.
 #[derive(Debug, Clone)]
 pub struct SharedCredStore {
-    inner: Arc<dyn TmrCredStore>,
+    inner: Arc<dyn FullCredStore>,
 }
 
 impl SharedCredStore {
-    pub fn new(cred_store: impl TmrCredStore + 'static) -> Self {
+    pub fn new(cred_store: impl FullCredStore + 'static) -> Self {
         Self {
             inner: Arc::new(cred_store),
         }
@@ -38,7 +38,7 @@ impl SharedCredStore {
 }
 
 #[async_trait]
-impl TmrCredStore for SharedCredStore {
+impl FullCredStore for SharedCredStore {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         self.inner.save_client_secret(secret).await
     }

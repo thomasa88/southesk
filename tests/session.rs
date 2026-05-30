@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use tmr_client::TmrClientBuilder;
+use southesk::ClientBuilder;
 use tokio::time::sleep;
 use tracing::warn;
 
@@ -11,7 +11,7 @@ async fn access_token_timeout() -> anyhow::Result<()> {
 
     tracing_subscriber::fmt().init();
 
-    let montrose = TmrClientBuilder::new("TMR Client Tests")
+    let montrose = ClientBuilder::new("southesk tests")
         .cred_user("access_token_timeout_test")
         .build()
         .await?

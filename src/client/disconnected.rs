@@ -15,16 +15,16 @@ use tracing::{debug, info};
 
 use crate::{
     auth_handler,
-    cred_store::TmrCredStore,
-    result::{MapAuthToConnectError, TmrConnectError},
+    cred_store::FullCredStore,
+    result::{ClientConnectError, MapAuthToConnectError},
 };
 
-use super::{Connected, Disconnected, TmrClient};
+use super::{Client, Connected, Disconnected};
 
 const MCP_SERVER_URL: &str = "https://mcp.montrose.io";
 
-impl TmrClient<Disconnected> {
-    pub async fn connect(self) -> Result<TmrClient<Connected>, TmrConnectError> {
+impl Client<Disconnected> {
+    pub async fn connect(self) -> Result<Client<Connected>, ClientConnectError> {
         let auth_mgr = self.authenticate().await?;
 
         let mut mcp_client_res = self.init_mcp_client(auth_mgr).await;
@@ -44,14 +44,14 @@ impl TmrClient<Disconnected> {
             }
         }
 
-        let mcp_client = mcp_client_res.map_err(|e| TmrConnectError::ConnectionError {
+        let mcp_client = mcp_client_res.map_err(|e| ClientConnectError::ConnectionError {
             msg: "Failed to connect to MCP server".to_string(),
             source: Some(e.into()),
         })?;
 
         info!("Successfully connected to MCP server");
 
-        Ok(TmrClient {
+        Ok(Client {
             client_name: self.client_name,
             auth_handler: self.auth_handler,
             cred_store: self.cred_store,
@@ -93,7 +93,7 @@ impl TmrClient<Disconnected> {
         client_service.serve(transport).await
     }
 
-    async fn authenticate(&self) -> Result<AuthorizationManager, TmrConnectError> {
+    async fn authenticate(&self) -> Result<AuthorizationManager, ClientConnectError> {
         debug!("Using MCP server URL: {}", MCP_SERVER_URL);
 
         info!("Establishing authorized connection to MCP server...");
@@ -103,7 +103,7 @@ impl TmrClient<Disconnected> {
         // AuthorizationManager in case we already have usable credentials.
         let mut auth_mgr = AuthorizationManager::new(MCP_SERVER_URL)
             .await
-            .map_err(|e| TmrConnectError::AuthError {
+            .map_err(|e| ClientConnectError::AuthError {
                 msg: "Failed to initialize authorization manager".to_string(),
                 source: Some(e.into()),
             })?;
@@ -134,9 +134,9 @@ impl TmrClient<Disconnected> {
     /// initializes the auth manager with a client secret.
     async fn init_from_store_with_secret(
         auth_mgr: &mut AuthorizationManager,
-        cred_store: impl TmrCredStore,
+        cred_store: impl FullCredStore,
         redirect_uri: impl Into<String>,
-    ) -> Result<bool, TmrConnectError> {
+    ) -> Result<bool, ClientConnectError> {
         let creds = cred_store
             .load()
             .await
@@ -169,7 +169,7 @@ impl TmrClient<Disconnected> {
         Ok(true)
     }
 
-    async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, TmrConnectError> {
+    async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, ClientConnectError> {
         // oauth: Empty scope will let the server select
         let wanted_scopes = &["mcp"];
         debug!("Requesting scopes: {:?}", wanted_scopes);
@@ -184,21 +184,19 @@ impl TmrClient<Disconnected> {
             self.cred_store.clone(),
         )
         .await
-        .map_err(|e| TmrConnectError::AuthError {
+        .map_err(|e| ClientConnectError::AuthError {
             msg: "Failed to start authorization".to_string(),
             source: Some(e.into()),
         })?;
 
         // todo: check client_secret has value
 
-        let auth_url =
-            oauth_state
-                .get_authorization_url()
-                .await
-                .map_err(|e| TmrConnectError::AuthError {
-                    msg: "Failed to get authorization URL".to_string(),
-                    source: Some(e.into()),
-                })?;
+        let auth_url = oauth_state.get_authorization_url().await.map_err(|e| {
+            ClientConnectError::AuthError {
+                msg: "Failed to get authorization URL".to_string(),
+                source: Some(e.into()),
+            }
+        })?;
         debug!("Auth URL: {}", auth_url);
 
         info!("Waiting for authorization code...");
@@ -223,19 +221,18 @@ impl TmrClient<Disconnected> {
 
         info!("Authorization successful! Access token obtained.");
 
-        let auth_mgr =
-            oauth_state
-                .into_authorization_manager()
-                .ok_or_else(|| TmrConnectError::AuthError {
-                    msg: "Failed to convert OAuth state into authorization manager".to_string(),
-                    source: None,
-                })?;
+        let auth_mgr = oauth_state.into_authorization_manager().ok_or_else(|| {
+            ClientConnectError::AuthError {
+                msg: "Failed to convert OAuth state into authorization manager".to_string(),
+                source: None,
+            }
+        })?;
 
         Ok(auth_mgr)
     }
 
     /// Replacement for [`OAuthState::start_authorization`] that returns the client secret.
-    async fn start_authorization_with_secret<S: CredentialStore + TmrCredStore + 'static>(
+    async fn start_authorization_with_secret<S: CredentialStore + FullCredStore + 'static>(
         scopes: &[&str],
         redirect_uri: &str,
         client_name: &str,

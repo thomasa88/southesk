@@ -9,7 +9,7 @@ use tracing::debug;
 use async_trait::async_trait;
 use rmcp::transport::{AuthError, CredentialStore, StoredCredentials};
 
-use super::{CombinedStoredCreds, TmrCredStore};
+use super::{CombinedStoredCreds, FullCredStore};
 
 #[derive(Debug, Clone)]
 pub struct KeyringCredStore {
@@ -122,7 +122,7 @@ impl CredentialStore for KeyringCredStore {
 }
 
 #[async_trait]
-impl TmrCredStore for KeyringCredStore {
+impl FullCredStore for KeyringCredStore {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());

@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::{Context, ensure};
 use rust_decimal::dec;
-use tmr_client::{
+use southesk::{
     Decimal,
     types::{HoldingsSelector, TradeInstrument, TradeSide, TradeSize, TradeTicketArgs},
 };
@@ -83,7 +83,7 @@ async fn main() -> anyhow::Result<()> {
         "Total percentage must be 100%"
     );
 
-    let montrose = tmr_client::TmrClientBuilder::new("TMR Client Sample")
+    let montrose = southesk::ClientBuilder::new("southesk sample")
         .build()
         .await?;
     let montrose = montrose.connect().await?;

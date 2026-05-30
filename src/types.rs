@@ -85,7 +85,9 @@ pub struct TradeTicketArgs {
     /// The side of the order: Buy or Sell.
     pub side: TradeSide,
 
-    /// Optional account ID. Use [`get_user_accounts`](crate::TmrClient::get_user_accounts) to find valid account IDs.
+    /// Optional account ID. Use
+    /// [`get_user_accounts`](crate::Client::get_user_accounts) to find valid
+    /// account IDs.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub account_id: Option<Uuid>,
 
@@ -124,14 +126,14 @@ pub enum TradeSize {
 #[serde(rename_all = "camelCase")]
 pub enum TradeInstrument {
     /// Optional instrument name (string) to search for the instrument. This is
-    /// a convenience identifier and may be ambiguous; use [`search_instruments`](crate::TmrClient::search_instruments) to
+    /// a convenience identifier and may be ambiguous; use [`search_instruments`](crate::Client::search_instruments) to
     /// find the correct orderbookId when needed.
     Name(String),
-    /// Optional orderbookId (int) to identify the instrument directly. This is the safest identifier and should be preferred when known or after using [`search_instruments`](crate::TmrClient::search_instruments).
+    /// Optional orderbookId (int) to identify the instrument directly. This is the safest identifier and should be preferred when known or after using [`search_instruments`](crate::Client::search_instruments).
     OrderbookId(u64),
     /// Optional ticker (string) to identify the instrument by ticker symbol,
     /// e.g. \"VOLV B\". This is a convenience identifier and may be ambiguous;
-    /// use [`search_instruments`](crate::TmrClient::search_instruments) to find the correct orderbookId when needed.
+    /// use [`search_instruments`](crate::Client::search_instruments) to find the correct orderbookId when needed.
     Ticker(String),
 }
 

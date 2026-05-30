@@ -7,16 +7,16 @@ use std::fmt::Write;
 use tracing::debug;
 
 use crate::{
-    TmrCallError,
+    ClientCallError,
     types::{
         Account, AccountInfo, CreateTradeTicketResult, HoldingsSelector, RemoveFromWatchlistResult,
         TradeInstrumentInfo, TradeTicketArgs, Watchlist, WatchlistInfo,
     },
 };
 
-use super::{Connected, TmrClient};
+use super::{Client, Connected};
 
-impl TmrClient<Connected> {
+impl Client<Connected> {
     /// Returns holdings for either one account (when [`HoldingsSelector::AccountId`] is provided) or
     /// all accessible accounts. Use
     /// [`get_user_accounts`](Self::get_user_accounts) first to find valid
@@ -24,7 +24,7 @@ impl TmrClient<Connected> {
     pub async fn get_holdings(
         &self,
         selection: HoldingsSelector,
-    ) -> Result<Vec<Account>, TmrCallError> {
+    ) -> Result<Vec<Account>, ClientCallError> {
         let mut args = serde_json::Map::new();
         args.insert(
             "accountId".to_string(),
@@ -40,7 +40,7 @@ impl TmrClient<Connected> {
     /// Returns all user accounts with stable account IDs and display names. Use
     /// this tool to discover valid account IDs before calling
     /// [`get_holdings`](Self::get_holdings) for a specific account.
-    pub async fn get_user_accounts(&self) -> Result<Vec<AccountInfo>, TmrCallError> {
+    pub async fn get_user_accounts(&self) -> Result<Vec<AccountInfo>, ClientCallError> {
         self.api_call("get_user_accounts", None).await
     }
 
@@ -56,16 +56,16 @@ impl TmrClient<Connected> {
     pub async fn create_trade_ticket(
         &self,
         args: TradeTicketArgs,
-    ) -> Result<reqwest::Url, TmrCallError> {
+    ) -> Result<reqwest::Url, ClientCallError> {
         let arg_map = match serde_json::to_value(args) {
             Ok(serde_json::Value::Object(map)) => map,
             Ok(_) => {
-                return Err(TmrCallError::InvalidArguments(
+                return Err(ClientCallError::InvalidArguments(
                     "Could not convert args to JSON object".to_string(),
                 ));
             }
             Err(_) => {
-                return Err(TmrCallError::InvalidArguments(
+                return Err(ClientCallError::InvalidArguments(
                     "Could not convert args to JSON".to_string(),
                 ));
             }
@@ -82,7 +82,7 @@ impl TmrClient<Connected> {
     pub async fn search_instruments(
         &self,
         query: &str,
-    ) -> Result<Vec<TradeInstrumentInfo>, TmrCallError> {
+    ) -> Result<Vec<TradeInstrumentInfo>, ClientCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("query".to_string(), query.into());
         self.api_call("search_instruments", Some(arg_map)).await
@@ -91,14 +91,14 @@ impl TmrClient<Connected> {
     /// Returns the authenticated user's watchlists with their ID, name, and the
     /// number of instruments on each list. Use [`get_watchlist`](Self::get_watchlist) with a listId to
     /// read the instruments on a specific watchlist.
-    pub async fn get_watchlists(&self) -> Result<Vec<WatchlistInfo>, TmrCallError> {
+    pub async fn get_watchlists(&self) -> Result<Vec<WatchlistInfo>, ClientCallError> {
         self.api_call("get_watchlists", None).await
     }
 
     /// Returns the instruments on a single watchlist, identified by listId.
     /// Each instrument is enriched with its orderbookId, ticker and name. Use
     /// [`get_watchlists`](Self::get_watchlists) first to discover valid listIds.
-    pub async fn get_watchlist(&self, list_id: u64) -> Result<Watchlist, TmrCallError> {
+    pub async fn get_watchlist(&self, list_id: u64) -> Result<Watchlist, ClientCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("listId".to_string(), list_id.into());
         self.api_call("get_watchlist", Some(arg_map)).await
@@ -108,7 +108,7 @@ impl TmrClient<Connected> {
     /// If a watchlist with the same name already exists, returns that existing
     /// watchlist.
     #[doc(alias = "create_or_get_watchlist")]
-    pub async fn create_watchlist(&self, name: &str) -> Result<WatchlistInfo, TmrCallError> {
+    pub async fn create_watchlist(&self, name: &str) -> Result<WatchlistInfo, ClientCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("name".to_string(), name.into());
         self.api_call("create_watchlist", Some(arg_map)).await
@@ -122,7 +122,7 @@ impl TmrClient<Connected> {
         &self,
         list_id: u64,
         orderbook_ids: &[u64],
-    ) -> Result<RemoveFromWatchlistResult, TmrCallError> {
+    ) -> Result<RemoveFromWatchlistResult, ClientCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("listId".to_string(), list_id.into());
         arg_map.insert("orderbookIds".to_string(), orderbook_ids.into());
@@ -130,7 +130,7 @@ impl TmrClient<Connected> {
     }
 
     /// Fetches and prints available tools and prompts from the server.
-    /// Used for TmrClient development.
+    /// Used for southesk development.
     ///
     /// # Panics
     /// Panics if writing to the result string fails.
@@ -179,7 +179,7 @@ impl TmrClient<Connected> {
         &self,
         tool: &str,
         args: Option<JsonObject>,
-    ) -> Result<T, TmrCallError> {
+    ) -> Result<T, ClientCallError> {
         let req = CallToolRequestParams::new(tool.to_owned());
         let req = if let Some(args) = args {
             req.with_arguments(args)
@@ -193,19 +193,21 @@ impl TmrClient<Connected> {
     }
 }
 
-fn parse_result<T: DeserializeOwned>(res: &CallToolResult) -> Result<T, TmrCallError> {
+fn parse_result<T: DeserializeOwned>(res: &CallToolResult) -> Result<T, ClientCallError> {
     let text = &res
         .content
         .first()
-        .ok_or(TmrCallError::parse_err("No content element in response"))?
+        .ok_or(ClientCallError::parse_err("No content element in response"))?
         .raw
         .as_text()
-        .ok_or(TmrCallError::parse_err("No raw text in response"))?
+        .ok_or(ClientCallError::parse_err("No raw text in response"))?
         .text;
     if res.is_error.unwrap_or(false) {
-        return Err(TmrCallError::McpError(format!("Error from server: {text}")));
+        return Err(ClientCallError::McpError(format!(
+            "Error from server: {text}"
+        )));
     }
-    serde_json::from_str::<T>(text).map_err(|e| TmrCallError::ParseError {
+    serde_json::from_str::<T>(text).map_err(|e| ClientCallError::ParseError {
         msg: format!("Failed to parse response text: {text}"),
         source: Some(e.into()),
     })
