@@ -1,8 +1,12 @@
 [package]
 name = "southesk"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2024"
 license = "MIT"
+description = "A Rust client library for the Montrose MCP API."
+repository = "https://github.com/thomasa88/southesk"
+keywords = ["montrose", "trading", "finance", "api", "client"]
+exclude = ["scripts/*"]
 
 [features]
 default = ["keyring-creds"]
