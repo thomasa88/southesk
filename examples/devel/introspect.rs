@@ -1,6 +1,9 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Used for southesk development. Prints the currently available tools from the
+//! Montrose MCP API.
+
 use std::io::{self, Write};
 
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

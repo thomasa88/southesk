@@ -1,6 +1,9 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Shows how to use the plaintext credential store, which saves the OAuth
+//! client secret in a text file.
+
 use etcetera::AppStrategy;
 use southesk::cred_store::plaintext_cred_store::PlaintextCredStore;
 

@@ -1,10 +1,12 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Creates a hardcoded trade request.
+
 use anyhow::Context;
 use southesk::{
     Decimal,
-    types::{TradeInstrument, TradeSide, TradeVolume, TradeTicketArgs},
+    types::{TradeInstrument, TradeSide, TradeTicketArgs, TradeVolume},
 };
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

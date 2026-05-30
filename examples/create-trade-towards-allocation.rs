@@ -1,13 +1,16 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Creates trade requests to move the portfolio towards the given asset
+//! allocation.
+
 use std::io::{Read, Write};
 
 use anyhow::{Context, ensure};
 use rust_decimal::dec;
 use southesk::{
     Decimal,
-    types::{HoldingsSelector, TradeInstrument, TradeSide, TradeVolume, TradeTicketArgs},
+    types::{HoldingsSelector, TradeInstrument, TradeSide, TradeTicketArgs, TradeVolume},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 

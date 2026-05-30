@@ -1,6 +1,8 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Searches for an instrument by name or ticker.
+
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 fn usage() {

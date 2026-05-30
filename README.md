@@ -24,19 +24,13 @@ To handle moving underlying APIs, the plan is to implement 3 API levels:
 
 ## Examples
 
-A set of examples using `southesk` is available in the `examples` directory.
+A set of examples using `southesk` is available in the [examples](examples) directory.
 They can be run as follows:
 
 ```bash
 cargo run --example=show-data
 ```
 
-* show-data: Show account data
-* create-trade: Creates a hardcoded trade request.
-* create-balanced-trade: Creates trade requests with the given asset allocation.
-* create-trade-towards-allocation: Creates trade requests to move the portfolio towards the given asset allocation.
-* search-instrument: Search for an instrument by name or ticker.
-* devel: Used for southesk development.
 
 ## Security Warning
 

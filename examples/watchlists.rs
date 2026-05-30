@@ -1,6 +1,8 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Shows how to manipulate watchlists.
+
 use anyhow::ensure;
 use std::time::Duration;
 use tokio::time::sleep;

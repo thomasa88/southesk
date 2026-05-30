@@ -1,6 +1,8 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Shows the user's accounts and holdings.
+
 use rust_decimal::dec;
 use southesk::{Decimal, types::HoldingsSelector};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};

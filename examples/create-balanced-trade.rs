@@ -1,6 +1,8 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Creates trade requests with the given asset allocation.
+
 use std::{
     fmt::Display,
     io::{Read, Write},
@@ -10,7 +12,7 @@ use anyhow::{Context, ensure};
 use rust_decimal::dec;
 use southesk::{
     Decimal,
-    types::{HoldingsSelector, TradeInstrument, TradeSide, TradeVolume, TradeTicketArgs},
+    types::{HoldingsSelector, TradeInstrument, TradeSide, TradeTicketArgs, TradeVolume},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
