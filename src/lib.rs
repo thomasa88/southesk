@@ -3,10 +3,8 @@
 
 //! [`Client`] provides the main interface to the library.
 
-pub use client::Client;
-pub use client::ClientBuilder;
-pub use result::ClientCallError;
-pub use result::ClientConnectError;
+pub use client::{Client, ClientBuilder, Connected, Disconnected};
+pub use result::{ClientBuildError, ClientCallError, ClientConnectError};
 
 pub use rust_decimal::Decimal;
 pub use uuid::Uuid;

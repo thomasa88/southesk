@@ -9,15 +9,13 @@ use uuid::Uuid;
 
 // TODO: Generate types from tool input and output JSON schemas?
 
-// Serialize+Deserialize on all types, in case the users want to save the results.
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum HoldingsSelector {
     All,
     AccountId(Uuid),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     pub account_id: Uuid,
@@ -28,7 +26,7 @@ pub struct Account {
     pub positions: Vec<Position>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountSummary {
     /// Value of the investments in the account
@@ -41,7 +39,7 @@ pub struct AccountSummary {
     pub currency: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Position {
     pub instrument_name: String,
@@ -59,7 +57,7 @@ pub struct Position {
     pub fx_rate: Decimal,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstrumentValue {
     /// Value in the account currency
@@ -69,7 +67,7 @@ pub struct InstrumentValue {
 }
 
 #[serde_as]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
     pub account_id: Uuid,
@@ -79,7 +77,7 @@ pub struct AccountInfo {
     pub account_name: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeTicketArgs {
     /// The side of the order: Buy or Sell.
@@ -109,7 +107,7 @@ pub struct TradeTicketArgs {
     pub instrument: TradeInstrument,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TradeVolume {
     /// Amount (money) to trade. If the user explicitly specifies a currency
@@ -122,7 +120,7 @@ pub enum TradeVolume {
     Quantity(Decimal),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TradeInstrument {
     /// Optional instrument name (string) to search for the instrument. This is
@@ -137,20 +135,20 @@ pub enum TradeInstrument {
     Ticker(String),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Default)]
 pub enum TradeSide {
     #[default]
     Buy,
     Sell,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct CreateTradeTicketResult {
     pub url: Url,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeInstrumentInfo {
     /// Instrument name
@@ -161,7 +159,7 @@ pub struct TradeInstrumentInfo {
     pub ticker: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchlistInfo {
     pub list_id: u64,
@@ -170,7 +168,7 @@ pub struct WatchlistInfo {
     pub orderbook_count: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Watchlist {
     pub list_id: u64,
@@ -178,7 +176,7 @@ pub struct Watchlist {
     pub items: Vec<TradeInstrumentInfo>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoveFromWatchlistResult {
     pub list_id: u64,

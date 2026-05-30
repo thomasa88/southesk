@@ -37,6 +37,7 @@ mod disconnected;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// # });
 /// ```
+#[derive(Debug)]
 pub struct Client<S: State = Disconnected> {
     client_name: String,
     auth_handler: Box<dyn AuthHandler>,
@@ -49,7 +50,10 @@ mod private {
 }
 pub trait State: private::Sealed {}
 
+#[derive(Debug)]
 pub struct Disconnected;
+
+#[derive(Debug)]
 pub struct Connected {
     client: RunningService<RoleClient, InitializeRequestParams>,
 }
@@ -63,6 +67,7 @@ impl State for Connected {}
 const DEFAULT_CRED_USER: &str = "user";
 
 /// The [`Client`] builder.
+#[derive(Debug)]
 pub struct ClientBuilder {
     client_name: String,
     auth_handler: Option<Box<dyn AuthHandler>>,

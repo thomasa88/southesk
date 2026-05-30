@@ -11,7 +11,8 @@ use axum::{
     routing::get,
 };
 use reqwest::Url;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::fmt::Debug;
 use tokio::{
     net::TcpListener,
     sync::{Mutex, oneshot},
@@ -23,7 +24,7 @@ use crate::result::ClientConnectError;
 const BROWSER_CALLBACK_HTML: &str = include_str!("res/default_callback.html");
 
 #[async_trait]
-pub trait AuthHandler {
+pub trait AuthHandler: Debug {
     /// The URL that the OAuth server will redirect to after authentication. It
     /// is passed as part of the OAuth authorization request.
     fn redirect_uri(&self) -> &str;
@@ -34,6 +35,7 @@ pub trait AuthHandler {
 
 /// An OAuth callback handler that opens the user's web browser and listens for
 /// the callback on a local HTTP server.
+#[derive(Debug)]
 pub struct BrowserAuth {
     listen_addr: String,
     cb_tx: Arc<Mutex<Option<oneshot::Sender<AuthGrant>>>>,
@@ -46,7 +48,7 @@ struct BrowserAuthAppState {
 
 /// The parameters received in the OAuth callback URL, containing the
 /// authorization code and state (CSRF token).
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AuthGrant {
     /// The authorization code to exchange for an access token
     pub code: String,
@@ -140,6 +142,7 @@ impl AuthHandler for BrowserAuth {
 ///
 /// It prints the authorization URL and waits for the user to paste the redirect
 /// URL.
+#[derive(Debug)]
 pub struct ConsoleAuth {
     redirect_base_url: String,
 }
