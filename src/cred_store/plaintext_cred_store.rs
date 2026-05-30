@@ -109,8 +109,4 @@ impl TmrCredStore for PlaintextCredStore {
         debug!("Loaded client secret from {:?}", self.path);
         Ok(client_secret)
     }
-
-    fn dyn_clone(&self) -> Box<dyn TmrCredStore> {
-        Box::new((*self).clone())
-    }
 }

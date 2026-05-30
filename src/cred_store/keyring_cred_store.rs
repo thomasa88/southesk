@@ -11,7 +11,7 @@ use rmcp::transport::{AuthError, CredentialStore, StoredCredentials};
 
 use super::{CombinedStoredCreds, TmrCredStore};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct KeyringCredStore {
     store: Arc<dyn keyring_core::api::CredentialStoreApi + Send + Sync>,
     service: String,
@@ -136,9 +136,5 @@ impl TmrCredStore for KeyringCredStore {
         let client_secret = self.load_creds()?.and_then(|c| c.client_secret);
         debug!("Loaded client secret from keyring");
         Ok(client_secret)
-    }
-
-    fn dyn_clone(&self) -> Box<dyn TmrCredStore> {
-        Box::new((*self).clone())
     }
 }

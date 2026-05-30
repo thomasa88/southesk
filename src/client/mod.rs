@@ -5,7 +5,7 @@ use rmcp::{RoleClient, model::InitializeRequestParams, service::RunningService};
 
 use crate::{
     auth_handler::{AuthHandler, BrowserAuth},
-    cred_store::{TmrCredStore, keyring_cred_store::KeyringCredStore},
+    cred_store::{SharedCredStore, TmrCredStore, keyring_cred_store::KeyringCredStore},
     result::TmrBuildError,
 };
 
@@ -40,7 +40,7 @@ mod disconnected;
 pub struct TmrClient<S: State = Disconnected> {
     client_name: String,
     auth_handler: Box<dyn AuthHandler>,
-    cred_store: Box<dyn TmrCredStore>,
+    cred_store: SharedCredStore,
     state: S,
 }
 
@@ -67,7 +67,7 @@ pub struct TmrClientBuilder {
     client_name: String,
     auth_handler: Option<Box<dyn AuthHandler>>,
     cred_user: Option<String>,
-    cred_store: Option<Box<dyn TmrCredStore>>,
+    cred_store: Option<SharedCredStore>,
 }
 
 impl TmrClientBuilder {
@@ -107,7 +107,7 @@ impl TmrClientBuilder {
 
     /// Overrides the credential store used to store the user's OAuth credentials
     pub fn cred_store(mut self, cred_store: impl TmrCredStore + 'static) -> Self {
-        self.cred_store = Some(Box::new(cred_store));
+        self.cred_store = Some(SharedCredStore::new(cred_store));
         self
     }
 
@@ -137,7 +137,7 @@ impl TmrClientBuilder {
             }
             None => {
                 let cred_user = self.cred_user.unwrap_or(DEFAULT_CRED_USER.to_string());
-                Box::new({
+                SharedCredStore::new({
                     #[cfg(feature = "keyring-creds")]
                     {
                         KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
@@ -171,7 +171,7 @@ impl TmrClientBuilder {
             client_name: self.client_name,
             auth_handler,
             cred_store,
-            state: Disconnected {},
+            state: Disconnected,
         })
     }
 }

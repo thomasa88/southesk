@@ -5,6 +5,9 @@
 pub mod keyring_cred_store;
 pub mod plaintext_cred_store;
 
+use std::fmt::Debug;
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use rmcp::transport::{AuthError, CredentialStore, StoredCredentials};
 use serde::{Deserialize, Serialize};
@@ -14,45 +17,49 @@ use serde::{Deserialize, Serialize};
 ///
 /// Since the MCP API creates the client secret when the client is registered
 /// and then requires it for token refreshes, it needs to be stored.
-///
-/// The tmr-client implementation assumes that the state is shared between all
-/// credential stores initialized with the same configuration. It can be
-/// implemented using a shared file, for example.
 #[async_trait]
-pub trait TmrCredStore: CredentialStore {
+pub trait TmrCredStore: CredentialStore + Debug {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError>;
     async fn load_client_secret(&self) -> Result<Option<String>, AuthError>;
+}
 
-    fn dyn_clone(&self) -> Box<dyn TmrCredStore>;
+/// A credential store wrapper, that allows the provided credential store to be shared.
+#[derive(Debug, Clone)]
+pub struct SharedCredStore {
+    inner: Arc<dyn TmrCredStore>,
+}
+
+impl SharedCredStore {
+    pub fn new(cred_store: impl TmrCredStore + 'static) -> Self {
+        Self {
+            inner: Arc::new(cred_store),
+        }
+    }
 }
 
 #[async_trait]
-impl CredentialStore for Box<dyn TmrCredStore> {
-    async fn load(&self) -> Result<Option<StoredCredentials>, AuthError> {
-        (**self).load().await
-    }
-
-    async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
-        (**self).save(credentials).await
-    }
-
-    async fn clear(&self) -> Result<(), AuthError> {
-        (**self).clear().await
-    }
-}
-
-#[async_trait]
-impl TmrCredStore for Box<dyn TmrCredStore> {
+impl TmrCredStore for SharedCredStore {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
-        (**self).save_client_secret(secret).await
+        self.inner.save_client_secret(secret).await
     }
 
     async fn load_client_secret(&self) -> Result<Option<String>, AuthError> {
-        (**self).load_client_secret().await
+        self.inner.load_client_secret().await
+    }
+}
+
+#[async_trait]
+impl CredentialStore for SharedCredStore {
+    async fn load(&self) -> Result<Option<StoredCredentials>, AuthError> {
+        self.inner.load().await
     }
 
-    fn dyn_clone(&self) -> Box<dyn TmrCredStore> {
-        (**self).dyn_clone()
+    async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
+        self.inner.save(credentials).await
+    }
+
+    async fn clear(&self) -> Result<(), AuthError> {
+        self.inner.clear().await
     }
 }
 

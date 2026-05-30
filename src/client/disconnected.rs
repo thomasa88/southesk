@@ -108,13 +108,13 @@ impl TmrClient<Disconnected> {
                 source: Some(e.into()),
             })?;
 
-        auth_mgr.set_credential_store(self.cred_store.dyn_clone());
+        auth_mgr.set_credential_store(self.cred_store.clone());
 
         // The authorization manager automatically does a token refresh if
         // needed. See AuthorizationManager::REFRESH_BUFFER_SECS.
         let initialized = Self::init_from_store_with_secret(
             &mut auth_mgr,
-            self.cred_store.as_ref(),
+            self.cred_store.clone(),
             self.auth_handler.redirect_uri(),
         )
         .await?;
@@ -134,7 +134,7 @@ impl TmrClient<Disconnected> {
     /// initializes the auth manager with a client secret.
     async fn init_from_store_with_secret(
         auth_mgr: &mut AuthorizationManager,
-        cred_store: &dyn TmrCredStore,
+        cred_store: impl TmrCredStore,
         redirect_uri: impl Into<String>,
     ) -> Result<bool, TmrConnectError> {
         let creds = cred_store
@@ -181,7 +181,7 @@ impl TmrClient<Disconnected> {
             wanted_scopes,
             redirect_uri,
             &self.client_name,
-            self.cred_store.dyn_clone(),
+            self.cred_store.clone(),
         )
         .await
         .map_err(|e| TmrConnectError::AuthError {
@@ -249,7 +249,7 @@ impl TmrClient<Disconnected> {
         // AuthorizationManager instead.
         let mut auth_mgr = AuthorizationManager::new(MCP_SERVER_URL).await?;
 
-        auth_mgr.set_credential_store(cred_store.dyn_clone());
+        auth_mgr.set_credential_store(cred_store);
 
         debug!("start discovery");
         let metadata = auth_mgr.discover_metadata().await?;
