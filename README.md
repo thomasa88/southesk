@@ -31,6 +31,13 @@ They can be run as follows:
 cargo run --example=show-data
 ```
 
+## Features
+
+Default features:
+
+- `keyring`: Enables support to store OAuth credentials in the OS keyring.
+  The keyring will be used by default if the feature is enabled.
+
 
 ## Security Warning
 

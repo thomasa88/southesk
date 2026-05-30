@@ -1,6 +1,11 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! # southesk
+//!
+//! southesk is a library for creating clients for the [Montrose
+//! MCP](https://www.montrose.io/mcp) API.
+//!
 //! [`Client`] provides the main interface to the library.
 
 pub use client::{Client, ClientBuilder, Connected, Disconnected};

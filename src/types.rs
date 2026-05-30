@@ -1,6 +1,11 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Montrose API types.
+//!
+//! The types correspond to the types used by the Montrose MCP API. Some have
+//! been slightly adapted for better ergonomics in Rust.
+
 use reqwest::Url;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -9,12 +14,15 @@ use uuid::Uuid;
 
 // TODO: Generate types from tool input and output JSON schemas?
 
+/// Used to select which holdings to fetch when calling
+/// [`get_holdings`](crate::Client::get_holdings).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum HoldingsSelector {
     All,
     AccountId(Uuid),
 }
 
+/// Full account information, including holdings.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
@@ -26,6 +34,7 @@ pub struct Account {
     pub positions: Vec<Position>,
 }
 
+/// Summary of the account holdings.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountSummary {
@@ -57,6 +66,7 @@ pub struct Position {
     pub fx_rate: Decimal,
 }
 
+/// Value of an instrument in different currencies.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstrumentValue {
@@ -66,17 +76,23 @@ pub struct InstrumentValue {
     pub instrument_currency: Decimal,
 }
 
+/// Various identifiers that can be used to identify an account.
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountInfo {
+    /// Example: `d075c5d4-222f-4ba9-b973-10bb9aeea705`
     pub account_id: Uuid,
+    /// Example: `1234567`
     pub account_number: String,
-    /// Account name, as set by the user
+    /// Account name, as set by the user. It is not guaranteed to be unique, as
+    /// multiple accounts can have the same name.
     #[serde_as(as = "NoneAsEmptyString")]
     pub account_name: Option<String>,
 }
 
+/// Arguments for creating a trade ticket, used with
+/// [`create_trade_ticket`](crate::Client::create_trade_ticket).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeTicketArgs {
@@ -107,6 +123,7 @@ pub struct TradeTicketArgs {
     pub instrument: TradeInstrument,
 }
 
+/// Specifies how much of an instrument to trade.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TradeVolume {
@@ -120,6 +137,7 @@ pub enum TradeVolume {
     Quantity(Decimal),
 }
 
+/// Specifies the instrument to trade.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum TradeInstrument {
@@ -135,6 +153,7 @@ pub enum TradeInstrument {
     Ticker(String),
 }
 
+// Whether to buy or sell an instrument.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Default)]
 pub enum TradeSide {
     #[default]
@@ -148,6 +167,7 @@ pub(crate) struct CreateTradeTicketResult {
     pub url: Url,
 }
 
+/// Various identifiers that can be used to identify a trade instrument.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeInstrumentInfo {

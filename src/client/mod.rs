@@ -24,7 +24,7 @@ mod disconnected;
 ///
 /// # Examples
 /// ```no_run
-/// # use client::ClientBuilder;
+/// # use southesk::ClientBuilder;
 /// # tokio_test::block_on(
 /// # async {
 /// let montrose = ClientBuilder::new("My Montrose client").build().await?;

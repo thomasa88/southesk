@@ -24,6 +24,11 @@ use super::{Client, Connected, Disconnected};
 const MCP_SERVER_URL: &str = "https://mcp.montrose.io";
 
 impl Client<Disconnected> {
+    /// Sets up a new MCP connection.
+    ///
+    /// This will automatically handle authentication, including refreshing
+    /// tokens if needed. If there are no valid credentials, the user will be
+    /// prompted to authenticate.
     pub async fn connect(self) -> Result<Client<Connected>, ClientConnectError> {
         let auth_mgr = self.authenticate().await?;
 
