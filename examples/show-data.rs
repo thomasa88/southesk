@@ -40,7 +40,8 @@ async fn main() -> anyhow::Result<()> {
     for account in accounts {
         println!(
             "Account: {} {}",
-            account.account_number, account.account_name
+            account.account_number,
+            account.account_name.as_deref().unwrap_or("")
         );
         let currency = &account.summary.currency;
         println!("  Account ID: {}", account.account_id);

@@ -23,12 +23,14 @@ pub enum HoldingsSelector {
 }
 
 /// Full account information, including holdings.
+#[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
     pub account_id: Uuid,
     pub account_number: String,
-    pub account_name: String,
+    #[serde_as(as = "NoneAsEmptyString")]
+    pub account_name: Option<String>,
     pub currency: String,
     pub summary: AccountSummary,
     pub positions: Vec<Position>,
