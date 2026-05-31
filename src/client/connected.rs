@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 use rmcp::model::{CallToolRequestParams, CallToolResult, JsonObject};
-use serde::de::DeserializeOwned;
 #[cfg(feature = "__dev")]
-use std::fmt::Write;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
 use tracing::debug;
+#[cfg(feature = "__dev")]
+use tracing::{info, warn};
 
 use crate::{
     ClientCallError,
@@ -164,43 +166,41 @@ impl Client<Connected> {
     /// # Panics
     /// Panics if writing to the result string fails.
     pub async fn introspect(&self) -> String {
-        let mut result = String::new();
-        writeln!(result, "Fetching available tools from server...").unwrap();
-
-        match self.state.client.peer().list_all_tools().await {
-            Ok(tools) => {
-                writeln!(result, "Available tools: {}", tools.len()).unwrap();
-                for tool in tools {
-                    writeln!(
-                        result,
-                        "- {} ({})\n{:#?}\n{:#?}\n",
-                        tool.name,
-                        tool.description.unwrap_or_default(),
-                        tool.input_schema,
-                        tool.output_schema,
-                    )
-                    .unwrap();
+        fn parse<T: Serialize, E: std::error::Error>(
+            d: &str,
+            res: Result<Vec<T>, E>,
+            json_result: &mut serde_json::Map<String, serde_json::Value>,
+        ) {
+            match res {
+                Ok(items) => {
+                    info!("Available {d}: {}", items.len());
+                    json_result.insert(d.to_string(), serde_json::to_value(&items).unwrap());
                 }
-            }
-            Err(e) => {
-                writeln!(result, "Error fetching tools: {e}").unwrap();
+                Err(e) => {
+                    warn!("Error fetching {d}: {e}");
+                    json_result.insert(d.to_string(), serde_json::Value::Null);
+                }
             }
         }
 
-        writeln!(result, "Fetching available prompts from server...").unwrap();
+        let mut json_result = serde_json::Map::new();
 
-        match self.state.client.peer().list_all_prompts().await {
-            Ok(prompts) => {
-                writeln!(result, "Available prompts: {}", prompts.len()).unwrap();
-                for prompt in prompts {
-                    writeln!(result, "- {}", prompt.name).unwrap();
-                }
-            }
-            Err(e) => {
-                writeln!(result, "Error fetching prompts: {e}").unwrap();
-            }
-        }
-        result
+        parse(
+            "tools",
+            self.state.client.peer().list_all_tools().await,
+            &mut json_result,
+        );
+        parse(
+            "prompts",
+            self.state.client.peer().list_all_prompts().await,
+            &mut json_result,
+        );
+        parse(
+            "resources",
+            self.state.client.peer().list_all_resources().await,
+            &mut json_result,
+        );
+        serde_json::to_string_pretty(&json_result).unwrap()
     }
 }
 

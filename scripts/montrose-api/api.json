@@ -1,0 +1,251 @@
+{
+  "tools": [
+    {
+      "name": "get_holdings",
+      "description": "Returns holdings for either one account (when accountId is provided) or all accessible accounts. Use GetUserAccounts first to find valid account IDs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "description": "Optional account ID. If omitted, holdings are returned for all accessible accounts.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "accountId"
+        ]
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "add_to_watchlist",
+      "description": "Adds one or more instruments to an existing watchlist by orderbookId. Use SearchInstruments to find the correct orderbookId for a ticker or name. Instruments already on the watchlist are silently skipped.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "description": "The watchlist ID returned by GetWatchlists.",
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "description": "OrderbookIds (int) of the instruments to add. Use SearchInstruments to find the correct orderbookId.",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "search_instruments",
+      "description": "Searches instruments by ticker or name and returns matching orderbookIds, tickers, and names. Use this tool before CreateTradeTicket when multiple instruments have similar names.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "description": "Ticker or instrument name to search for.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "create_trade_ticket",
+      "description": "Creates a pre-filled trade ticket URL for the Montrose app. Specify side (Buy/Sell), quantity or amount, and an instrument identifier. Use orderbookId directly when known, since it is the safest identifier. If you only know a ticker or name and it may be ambiguous, call SearchInstruments first to find the correct orderbookId, then call CreateTradeTicket. Returns a URL that opens the trade ticket in the Montrose app with the order details pre-filled.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "side": {
+            "description": "The side of the order: Buy or Sell.",
+            "type": "string",
+            "enum": [
+              "Unknown",
+              "Buy",
+              "Sell"
+            ]
+          },
+          "orderbookId": {
+            "description": "Optional orderbookId (int) to identify the instrument directly. This is the safest identifier and should be preferred when known or after using SearchInstruments.",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
+          },
+          "ticker": {
+            "description": "Optional ticker (string) to identify the instrument by ticker symbol, e.g. \"VOLV B\". This is a convenience identifier and may be ambiguous; use SearchInstruments to find the correct orderbookId when needed.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "name": {
+            "description": "Optional instrument name (string) to search for the instrument. This is a convenience identifier and may be ambiguous; use SearchInstruments to find the correct orderbookId when needed.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "quantity": {
+            "description": "Optional number of shares to trade. Exactly one of quantity or amount must be provided.",
+            "type": [
+              "number",
+              "null"
+            ],
+            "default": null
+          },
+          "amount": {
+            "description": "Optional amount to trade. Exactly one of quantity or amount must be provided. If the user explicitly specifies a currency (e.g. \"10 000 SEK\", \"500 USD\"), pass it via the currency parameter; otherwise leave currency unset and the account's main currency will be used.",
+            "type": [
+              "number",
+              "null"
+            ],
+            "default": null
+          },
+          "price": {
+            "description": "Optional price for the order.",
+            "type": [
+              "number",
+              "null"
+            ],
+            "default": null
+          },
+          "accountId": {
+            "description": "Optional account ID. Use GetUserAccounts to find valid account IDs.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "default": null
+          },
+          "currency": {
+            "description": "Optional ISO 4217 currency code (e.g. \"SEK\", \"USD\", \"EUR\") for the amount. Set this only when the user explicitly states a currency. When omitted, the account's main currency is used.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "side"
+        ]
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "get_watchlists",
+      "description": "Returns the authenticated user's watchlists with their ID, name, and the number of instruments on each list. Use GetWatchlist with a listId to read the instruments on a specific watchlist.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "create_watchlist",
+      "description": "Creates a new watchlist with the given name for the authenticated user. If a watchlist with the same name already exists, returns that existing watchlist.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the watchlist to create.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "get_watchlist",
+      "description": "Returns the instruments on a single watchlist, identified by listId. Each instrument is enriched with its orderbookId, ticker and name. Use GetWatchlists first to discover valid listIds.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "description": "The watchlist ID returned by GetWatchlists.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "listId"
+        ]
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "remove_from_watchlist",
+      "description": "Removes one or more instruments from a watchlist by orderbookId. Returns the orderbookIds that were actually removed; orderbookIds that were not on the watchlist are silently ignored and excluded from the response.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "description": "The watchlist ID returned by GetWatchlists.",
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "description": "OrderbookIds (int) of the instruments to remove.",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    },
+    {
+      "name": "get_user_accounts",
+      "description": "Returns all user accounts with stable account IDs and display names. Use this tool to discover valid account IDs before calling GetHoldings for a specific account.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "execution": {
+        "taskSupport": "optional"
+      }
+    }
+  ],
+  "prompts": null,
+  "resources": null
+}

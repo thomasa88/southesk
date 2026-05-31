@@ -4,9 +4,9 @@
 
 cd "$(dirname "$0")"
 
-cargo r -F __dev --example=devel-introspect > new_api.txt
+cargo r -F __dev --example=devel-introspect > new_api.json
 
-if diff --color -u api.txt new_api.txt; then
+if diff --color -u api.json new_api.json; then
     echo "API is unchanged"
     exit 0
 else
