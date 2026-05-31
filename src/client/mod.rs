@@ -142,7 +142,7 @@ impl ClientBuilder {
             None => {
                 let cred_user = self.cred_user.unwrap_or(DEFAULT_CRED_USER.to_string());
                 SharedCredStore::new({
-                    #[cfg(feature = "keyring-creds")]
+                    #[cfg(feature = "keyring")]
                     {
                         KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
                             ClientBuildError::BuildError {
@@ -151,7 +151,7 @@ impl ClientBuilder {
                             }
                         })?
                     }
-                    #[cfg(not(feature = "keyring-creds"))]
+                    #[cfg(not(feature = "keyring"))]
                     {
                         let client_dirs =
                             etcetera::choose_app_strategy(etcetera::AppStrategyArgs {

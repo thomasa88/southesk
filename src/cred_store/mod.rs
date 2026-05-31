@@ -1,7 +1,7 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-#[cfg(feature = "keyring-creds")]
+#[cfg(feature = "keyring")]
 pub mod keyring_cred_store;
 pub mod plaintext_cred_store;
 

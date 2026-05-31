@@ -10,8 +10,8 @@ categories = ["finance"]
 exclude = ["scripts/*"]
 
 [features]
-default = ["keyring-creds"]
-keyring-creds = [
+default = ["keyring"]
+keyring = [
     "dep:keyring-core",
     "dep:dbus-secret-service-keyring-store",
     "dep:windows-native-keyring-store",
