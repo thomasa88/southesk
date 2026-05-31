@@ -80,7 +80,7 @@ pub struct InstrumentValue {
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct AccountInfo {
+pub struct AccountIdentifiers {
     /// Example: `d075c5d4-222f-4ba9-b973-10bb9aeea705`
     pub account_id: Uuid,
     /// Example: `1234567`

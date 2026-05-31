@@ -12,8 +12,8 @@ use tracing::{info, warn};
 use crate::{
     ClientCallError,
     types::{
-        Account, AccountInfo, CreateTradeTicketResult, HoldingsSelector, RemoveFromWatchlistResult,
-        TradeInstrumentInfo, TradeTicketArgs, Watchlist, WatchlistInfo,
+        Account, AccountIdentifiers, CreateTradeTicketResult, HoldingsSelector,
+        RemoveFromWatchlistResult, TradeInstrumentInfo, TradeTicketArgs, Watchlist, WatchlistInfo,
     },
 };
 
@@ -46,7 +46,7 @@ impl Client<Connected> {
     /// Returns all user accounts with stable account IDs and display names. Use
     /// this tool to discover valid account IDs before calling
     /// [`get_holdings`](Self::get_holdings) for a specific account.
-    pub async fn get_user_accounts(&self) -> Result<Vec<AccountInfo>, ClientCallError> {
+    pub async fn get_user_accounts(&self) -> Result<Vec<AccountIdentifiers>, ClientCallError> {
         self.api_call("get_user_accounts", None).await
     }
 
