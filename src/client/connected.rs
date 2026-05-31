@@ -3,6 +3,7 @@
 
 use rmcp::model::{CallToolRequestParams, CallToolResult, JsonObject};
 use serde::de::DeserializeOwned;
+#[cfg(feature = "__dev")]
 use std::fmt::Write;
 use tracing::debug;
 
@@ -16,6 +17,9 @@ use crate::{
 
 use super::{Client, Connected};
 
+/// # Montrose API methods
+///
+/// Each method maps directly to a Montrose MCP tool of the same name.
 impl Client<Connected> {
     /// Returns holdings for either one account (when [`HoldingsSelector::AccountId`] is provided) or
     /// all accessible accounts. Use
@@ -127,7 +131,33 @@ impl Client<Connected> {
         arg_map.insert("orderbookIds".to_string(), orderbook_ids.into());
         self.api_call("remove_from_watchlist", Some(arg_map)).await
     }
+}
 
+// Helpers
+impl Client<Connected> {
+    /// Calls the specified MCP tool with the given arguments.
+    async fn api_call<T: DeserializeOwned>(
+        &self,
+        tool: &str,
+        args: Option<JsonObject>,
+    ) -> Result<T, ClientCallError> {
+        let req = CallToolRequestParams::new(tool.to_owned());
+        let req = if let Some(args) = args {
+            req.with_arguments(args)
+        } else {
+            req
+        };
+        debug!("Call request: {:#?}", req);
+        let res = self.state.client.call_tool(req).await?;
+        debug!("Call response: {:#?}", res);
+        parse_result::<T>(&res)
+    }
+}
+
+// Development utilities
+#[cfg(feature = "__dev")]
+#[doc(hidden)]
+impl Client<Connected> {
     /// Fetches and prints available tools and prompts from the server.
     /// Used for southesk development.
     ///
@@ -171,24 +201,6 @@ impl Client<Connected> {
             }
         }
         result
-    }
-
-    /// Calls the specified MCP tool with the given arguments.
-    async fn api_call<T: DeserializeOwned>(
-        &self,
-        tool: &str,
-        args: Option<JsonObject>,
-    ) -> Result<T, ClientCallError> {
-        let req = CallToolRequestParams::new(tool.to_owned());
-        let req = if let Some(args) = args {
-            req.with_arguments(args)
-        } else {
-            req
-        };
-        debug!("Call request: {:#?}", req);
-        let res = self.state.client.call_tool(req).await?;
-        debug!("Call response: {:#?}", res);
-        parse_result::<T>(&res)
     }
 }
 

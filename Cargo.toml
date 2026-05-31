@@ -17,6 +17,8 @@ keyring-creds = [
     "dep:windows-native-keyring-store",
     "dep:apple-native-keyring-store",
 ]
+# Internal feature to enable development functions for exploring the MCP API
+__dev = []
 
 [dependencies]
 async-trait = "0.1.89"
@@ -72,3 +74,4 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 [[example]]
 name = "devel-introspect"
 path = "examples/devel/introspect.rs"
+required-features = ["__dev"]

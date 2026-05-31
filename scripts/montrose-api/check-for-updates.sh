@@ -4,7 +4,7 @@
 
 cd "$(dirname "$0")"
 
-cargo r --example=devel-introspect > new_api.txt
+cargo r -F __dev --example=devel-introspect > new_api.txt
 
 if diff --color -u api.txt new_api.txt; then
     echo "API is unchanged"
