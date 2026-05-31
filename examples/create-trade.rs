@@ -6,7 +6,7 @@
 use anyhow::Context;
 use southesk::{
     Decimal,
-    types::{TradeInstrument, TradeSide, TradeTicketArgs, TradeVolume},
+    types::{Instrument, TradeSide, TradeTicketArgs, TradeVolume},
 };
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -46,7 +46,7 @@ async fn main() -> anyhow::Result<()> {
             volume: TradeVolume::Amount(Decimal::new(100, 0)),
             currency: None,
             // instrument: TradeInstrument::Ticker("LF GLOB".to_string()),
-            instrument: TradeInstrument::OrderbookId(3361),
+            instrument: Instrument::OrderbookId(3361),
             price: None,
         })
         .await?;

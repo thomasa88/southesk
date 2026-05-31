@@ -13,7 +13,8 @@ use crate::{
     ClientCallError,
     types::{
         Account, AccountIdentifiers, CreateTradeTicketResult, HoldingsSelector,
-        RemoveFromWatchlistResult, TradeInstrumentInfo, TradeTicketArgs, Watchlist, WatchlistInfo,
+        InstrumentIdentifiers, RemoveFromWatchlistResult, TradeTicketArgs, Watchlist,
+        WatchlistInfo,
     },
 };
 
@@ -88,7 +89,7 @@ impl Client<Connected> {
     pub async fn search_instruments(
         &self,
         query: &str,
-    ) -> Result<Vec<TradeInstrumentInfo>, ClientCallError> {
+    ) -> Result<Vec<InstrumentIdentifiers>, ClientCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("query".to_string(), query.into());
         self.api_call("search_instruments", Some(arg_map)).await

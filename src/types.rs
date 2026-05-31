@@ -122,7 +122,7 @@ pub struct TradeTicketArgs {
 
     /// The instrument to trade
     #[serde(flatten)]
-    pub instrument: TradeInstrument,
+    pub instrument: Instrument,
 }
 
 /// Specifies how much of an instrument to trade.
@@ -142,7 +142,7 @@ pub enum TradeVolume {
 /// Specifies the instrument to trade.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum TradeInstrument {
+pub enum Instrument {
     /// Optional instrument name (string) to search for the instrument. This is
     /// a convenience identifier and may be ambiguous; use [`search_instruments`](crate::Client::search_instruments) to
     /// find the correct orderbookId when needed.
@@ -172,7 +172,7 @@ pub(crate) struct CreateTradeTicketResult {
 /// Various identifiers that can be used to identify a trade instrument.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct TradeInstrumentInfo {
+pub struct InstrumentIdentifiers {
     /// Instrument name
     pub name: String,
     /// Instrument order book ID
@@ -195,7 +195,7 @@ pub struct WatchlistInfo {
 pub struct Watchlist {
     pub list_id: u64,
     pub name: String,
-    pub items: Vec<TradeInstrumentInfo>,
+    pub items: Vec<InstrumentIdentifiers>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
