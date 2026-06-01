@@ -10,7 +10,7 @@ use anyhow::{Context, ensure};
 use rust_decimal::dec;
 use southesk::{
     Decimal,
-    types::{HoldingsSelector, Instrument, TradeSide, TradeTicketArgs, TradeVolume},
+    types::{HoldingsSelector, Instrument, TradeCurrency, TradeSide, TradeTicketArgs, TradeVolume},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -210,7 +210,7 @@ async fn main() -> anyhow::Result<()> {
                 side: TradeSide::Buy,
                 account_id: Some(account.account_id),
                 volume: TradeVolume::Amount(trade.to_buy_amount_sek),
-                currency: None,
+                currency: TradeCurrency::Account,
                 instrument: Instrument::Ticker(trade.ticker.to_string()),
                 price: None,
             })

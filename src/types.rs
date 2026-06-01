@@ -115,10 +115,8 @@ pub struct TradeTicketArgs {
     #[serde(flatten)]
     pub volume: TradeVolume,
 
-    /// Optional ISO 4217 currency code (e.g. "SEK", "USD", "EUR") for the
-    /// amount. Set this only when the user explicitly states a currency. When
-    /// omitted, the account's main currency is used.
-    pub currency: Option<String>,
+    /// ISO 4217 currency code (e.g. "SEK", "USD", "EUR") for the amount.
+    pub currency: TradeCurrency,
 
     /// The instrument to trade
     #[serde(flatten)]
@@ -131,12 +129,84 @@ pub struct TradeTicketArgs {
 pub enum TradeVolume {
     /// Amount (money) to trade. If the user explicitly specifies a currency
     /// (e.g. "10 000 SEK", "500 USD"), pass it via the
-    /// [`TradeTicketArgs::currency`] parameter; otherwise leave currency unset
-    /// and the account's main currency will be used.
+    /// [`TradeTicketArgs::currency`] parameter.
     #[serde(rename = "amount")]
     Amount(Decimal),
     /// Number of shares to trade.
     Quantity(Decimal),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub enum TradeCurrency {
+    /// Use the account's main currency.
+    #[default]
+    Account,
+    /// Use the currency given by the ISO 4217 code.
+    ///
+    /// Examples: `SEK`, `USD`, `EUR`.
+    Code(String),
+}
+
+impl Serialize for TradeCurrency {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        use serde::ser::Error;
+        // From the create_trade_ticket tool documentation:
+        // "If the user explicitly specifies a currency
+        // (e.g. "10 000 SEK", "500 USD"), pass it via the currency parameter;
+        // otherwise leave currency unset and the account's main currency will
+        // be used."
+        match self {
+            Self::Account => serializer.serialize_none(),
+            Self::Code(code) => {
+                if code.len() != 3 {
+                    return Err(S::Error::custom("currency code should be 3 letters"));
+                }
+                serializer.serialize_some(code)
+            }
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for TradeCurrency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_option(TradeCurrencyVisitor)
+    }
+}
+
+struct TradeCurrencyVisitor;
+
+impl<'de> serde::de::Visitor<'de> for TradeCurrencyVisitor {
+    type Value = TradeCurrency;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("an ISO 4217 code of length 3")
+    }
+
+    fn visit_none<E>(self) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(TradeCurrency::Account)
+    }
+
+    fn visit_some<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let code = String::deserialize(deserializer)?;
+        if code.len() != 3 {
+            return Err(serde::de::Error::custom(format!(
+                "Currency code should be 3 letters: {code}"
+            )));
+        }
+        Ok(TradeCurrency::Code(code))
+    }
 }
 
 /// Specifies the instrument to trade.
@@ -203,4 +273,32 @@ pub struct Watchlist {
 pub struct RemoveFromWatchlistResult {
     pub list_id: u64,
     pub orderbook_ids: Vec<u64>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trade_currency_serialization() {
+        assert_eq!(
+            serde_json::to_string(&TradeCurrency::Account).unwrap(),
+            "null"
+        );
+        assert_eq!(
+            serde_json::from_str::<TradeCurrency>("null").unwrap(),
+            TradeCurrency::Account
+        );
+
+        assert_eq!(
+            serde_json::to_string(&TradeCurrency::Code("SEK".into())).unwrap(),
+            "\"SEK\""
+        );
+        assert_eq!(
+            serde_json::from_str::<TradeCurrency>("\"USD\"").unwrap(),
+            TradeCurrency::Code("USD".into())
+        );
+        assert!(serde_json::from_str::<TradeCurrency>("\"WRONG_LEN\"").is_err());
+        assert!(serde_json::from_str::<TradeCurrency>("\"\"").is_err());
+    }
 }
