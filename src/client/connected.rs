@@ -1,6 +1,8 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+use std::borrow::Cow;
+
 use rmcp::model::{CallToolRequestParams, CallToolResult, JsonObject};
 #[cfg(feature = "__dev")]
 use serde::Serialize;
@@ -150,15 +152,77 @@ impl Client<Connected> {
     }
 }
 
+/// # Raw API calls
+///
+/// The following methods provides raw API access to the MCP. They can be used
+/// when the corresponding APIs are not yet implement in [`Client`].
+impl Client<Connected> {
+    /// Calls the specified MCP tool with the given arguments.
+    ///
+    /// This function can be used before a new MCP API tool has been added to
+    /// southesk.
+    ///
+    /// Set `T` as a type that implements `Deserialize` that matches the
+    /// expected response format. You can use [`serde_json::Value`] when the
+    /// format is unknown.
+    ///
+    /// This is a low-level API call. Prefer using the higher-level methods when
+    /// available.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use southesk::ClientBuilder;
+    /// # tokio_test::block_on(
+    /// # async {
+    /// # let client = ClientBuilder::new("My Montrose client").build().await?;
+    /// # let client = client.connect().await?;
+    /// use southesk::raw::json_object;
+    ///
+    /// let result: serde_json::Value = client
+    ///     .raw_tool_call::<serde_json::Value>(
+    ///         "get_holdings",
+    ///         Some(json_object!({"accountId": "771c4286-991c-48aa-965e-c7dd62e31735"})))
+    ///     .await?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// # });
+    /// ```
+    ///
+    /// ```no_run
+    /// # use southesk::ClientBuilder;
+    /// # tokio_test::block_on(
+    /// # async {
+    /// # let client = ClientBuilder::new("My Montrose client").build().await?;
+    /// # let client = client.connect().await?;
+    /// let mut args = serde_json::Map::new();
+    /// args.insert(
+    ///     "accountId".to_string(),
+    ///     "771c4286-991c-48aa-965e-c7dd62e31735".into(),
+    /// );
+    /// let result: serde_json::Value = client
+    ///     .raw_tool_call::<serde_json::Value>("get_holdings", Some(args))
+    ///     .await?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// # });
+    /// ```
+    pub async fn raw_tool_call<T: DeserializeOwned>(
+        &self,
+        tool_name: impl Into<Cow<'static, str>>,
+        args: Option<JsonObject>,
+    ) -> Result<T, ClientCallError> {
+        self.api_call(tool_name, args).await
+    }
+}
+
 // Helpers
 impl Client<Connected> {
     /// Calls the specified MCP tool with the given arguments.
     async fn api_call<T: DeserializeOwned>(
         &self,
-        tool: &str,
+        tool_name: impl Into<Cow<'static, str>>,
         args: Option<JsonObject>,
     ) -> Result<T, ClientCallError> {
-        let req = CallToolRequestParams::new(tool.to_owned());
+        let req = CallToolRequestParams::new(tool_name);
         let req = if let Some(args) = args {
             req.with_arguments(args)
         } else {

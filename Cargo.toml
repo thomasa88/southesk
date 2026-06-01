@@ -35,6 +35,7 @@ rmcp = { version = "1.7.0", default-features = false, features = [
     "transport-child-process",
     "tower",
     "auth",
+    "macros",
 ] }
 rust_decimal = { version = "1.40.0", features = ["macros"] }
 serde = "1.0.228"
