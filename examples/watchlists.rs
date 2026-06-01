@@ -38,13 +38,22 @@ async fn main() -> anyhow::Result<()> {
     let created_list = montrose.create_watchlist("southesk list!").await?;
     dbg!(&created_list);
 
-    println!();
-    println!("-------- Remove instrument from watchlist --------");
     let montglobe_matches = montrose.search_instruments("MONTGLOBE").await?;
     ensure!(
         montglobe_matches.len() == 1,
         "Expected exactly one instrument matching 'MONTGLOBE'"
     );
+
+    println!();
+    println!("-------- Add instrument to watchlist --------");
+    let montglobe = &montglobe_matches[0];
+    let added = montrose
+        .add_to_watchlist(created_list.list_id, &[montglobe.orderbook_id])
+        .await?;
+    dbg!(&added);
+
+    println!();
+    println!("-------- Remove instrument from watchlist --------");
     let montglobe = &montglobe_matches[0];
     let removed = montrose
         .remove_from_watchlist(created_list.list_id, &[montglobe.orderbook_id])

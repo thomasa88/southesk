@@ -13,8 +13,7 @@ use crate::{
     ClientCallError,
     types::{
         Account, AccountIdentifiers, CreateTradeTicketResult, HoldingsSelector,
-        InstrumentIdentifiers, RemoveFromWatchlistResult, TradeTicketArgs, Watchlist,
-        WatchlistInfo,
+        InstrumentIdentifiers, ModifyWatchlistResult, TradeTicketArgs, Watchlist, WatchlistInfo,
     },
 };
 
@@ -121,6 +120,21 @@ impl Client<Connected> {
         self.api_call("create_watchlist", Some(arg_map)).await
     }
 
+    /// Adds one or more instruments to an existing watchlist by orderbookId.
+    /// Use [`search_instruments`](Self::search_instruments) to find the correct
+    /// orderbookId for a ticker or name. Instruments already on the watchlist
+    /// are silently skipped.
+    pub async fn add_to_watchlist(
+        &self,
+        list_id: u64,
+        orderbook_ids: &[u64],
+    ) -> Result<ModifyWatchlistResult, ClientCallError> {
+        let mut arg_map = serde_json::Map::new();
+        arg_map.insert("listId".to_string(), list_id.into());
+        arg_map.insert("orderbookIds".to_string(), orderbook_ids.into());
+        self.api_call("add_to_watchlist", Some(arg_map)).await
+    }
+
     /// Removes one or more instruments from a watchlist by orderbookId. Returns
     /// the orderbookIds that were actually removed; orderbookIds that were not
     /// on the watchlist are silently ignored and excluded from the response.
@@ -128,7 +142,7 @@ impl Client<Connected> {
         &self,
         list_id: u64,
         orderbook_ids: &[u64],
-    ) -> Result<RemoveFromWatchlistResult, ClientCallError> {
+    ) -> Result<ModifyWatchlistResult, ClientCallError> {
         let mut arg_map = serde_json::Map::new();
         arg_map.insert("listId".to_string(), list_id.into());
         arg_map.insert("orderbookIds".to_string(), orderbook_ids.into());

@@ -269,7 +269,7 @@ pub struct Watchlist {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct RemoveFromWatchlistResult {
+pub struct ModifyWatchlistResult {
     pub list_id: u64,
     pub orderbook_ids: Vec<u64>,
 }
