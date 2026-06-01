@@ -130,7 +130,6 @@ pub enum TradeVolume {
     /// Amount (money) to trade. If the user explicitly specifies a currency
     /// (e.g. "10 000 SEK", "500 USD"), pass it via the
     /// [`TradeTicketArgs::currency`] parameter.
-    #[serde(rename = "amount")]
     Amount(Decimal),
     /// Number of shares to trade.
     Quantity(Decimal),
