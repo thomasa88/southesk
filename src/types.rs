@@ -104,11 +104,9 @@ pub struct TradeTicketArgs {
     /// Optional account ID. Use
     /// [`get_user_accounts`](crate::Client::get_user_accounts) to find valid
     /// account IDs.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub account_id: Option<Uuid>,
 
     /// Optional price for the order.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub price: Option<Decimal>,
 
     /// How much of the instrument to trade.
