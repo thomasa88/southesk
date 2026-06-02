@@ -3,8 +3,7 @@
 
 //! Shows the user's accounts and holdings.
 
-use rust_decimal::dec;
-use southesk::{Decimal, types::HoldingsSelector};
+use southesk::{Decimal, rust_decimal::dec, types::HoldingsSelector};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]

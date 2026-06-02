@@ -7,9 +7,9 @@
 use std::io::{Read, Write};
 
 use anyhow::{Context, ensure};
-use rust_decimal::dec;
 use southesk::{
     Decimal,
+    rust_decimal::dec,
     types::{HoldingsSelector, Instrument, TradeCurrency, TradeSide, TradeTicketArgs, TradeVolume},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
