@@ -1,5 +1,7 @@
 <!-- To make diffing easier, this file leans towards using semantic linebreaks ( https://sembr.org/ ) -->
 
+![](docs/images/southesk-banner.svg)
+
 # southesk
 
 A library for creating clients for the [Montrose MCP](https://www.montrose.io/mcp) API. It provides the API calls and handles user authentication.
@@ -95,6 +97,6 @@ the MCP resource seems to only accept the initial access token. The result is
 that a new authorization flow is triggered after 24 hours and the user needs to
 authenticate again.
 
-## The river South Esk
+## What's in a name?
 
 The river South Esk flows through the town of Montrose, Scotland, out into the North Sea. South Esk gives its name to the title Earl of Southesk, held by the Carnegie family.
