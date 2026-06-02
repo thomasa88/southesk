@@ -27,7 +27,7 @@ mod disconnected;
 /// # use southesk::ClientBuilder;
 /// # tokio_test::block_on(
 /// # async {
-/// let montrose = ClientBuilder::new("My Montrose client").build().await?;
+/// let montrose = ClientBuilder::new("My Montrose Client").build().await?;
 /// let montrose = montrose.connect().await?;
 ///
 /// let accounts = montrose.get_user_accounts().await?;

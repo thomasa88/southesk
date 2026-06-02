@@ -2,7 +2,7 @@
 
 # southesk
 
-A library for creating clients for the [Montrose MCP](https://www.montrose.io/mcp) API.
+A library for creating clients for the [Montrose MCP](https://www.montrose.io/mcp) API. It provides the API calls and handles user authentication.
 
 Although the library uses an MCP, it does not contain any AI functionality.
 
@@ -21,6 +21,34 @@ To handle moving underlying APIs, the plan is to implement 3 API levels:
 * High level API: A stable API, with core functionality for transactions and trading. It is likely to be more limited than the low level API.
 * Low level API: Maps closely to the underlying MCP API.
 * Raw API: Direct calls to the MCP API. Can be used before southesk has implemented support for the API call.
+
+## Getting Started
+
+<!-- This is the same exmple as in src/lib.rs. Therefore, it is built when running doc tests. -->
+
+To use `southesk`, add it as a dependency along with an async runtime:
+
+```bash
+> cargo add southesk
+> cargo add tokio -F rt-multi-thread
+```
+
+Then you can create a client and make API calls:
+
+```rust
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let montrose = southesk::ClientBuilder::new("My Montrose Client")
+        .build()
+        .await?;
+    let montrose = montrose.connect().await?;
+
+    let accounts = montrose.get_user_accounts().await?;
+    dbg!(&accounts);
+
+    Ok(())
+}
+```
 
 ## Examples
 

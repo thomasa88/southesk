@@ -20,6 +20,10 @@ Headers:
 
 ## [Unreleased]
 
+## Added
+
+- Quuckstart example added to the readme and top Rust documentation.
+
 ## [0.0.2] - 2026-06-02
 
 ## Added
