@@ -143,9 +143,7 @@ impl AuthHandler for BrowserAuth {
 /// It prints the authorization URL and waits for the user to paste the redirect
 /// URL.
 #[derive(Debug)]
-pub struct ConsoleAuth {
-    redirect_base_url: String,
-}
+pub struct ConsoleAuth {}
 
 impl Default for ConsoleAuth {
     fn default() -> Self {
@@ -154,17 +152,17 @@ impl Default for ConsoleAuth {
 }
 
 impl ConsoleAuth {
+    const REDIRECT_BASE_URL: &str = "http://localhost:7878/callback";
+
     pub fn new() -> Self {
-        ConsoleAuth {
-            redirect_base_url: "http://localhost:7878/callback".to_string(),
-        }
+        ConsoleAuth {}
     }
 }
 
 #[async_trait]
 impl AuthHandler for ConsoleAuth {
     fn redirect_uri(&self) -> &str {
-        &self.redirect_base_url
+        Self::REDIRECT_BASE_URL
     }
 
     async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, ClientConnectError> {
@@ -173,7 +171,7 @@ impl AuthHandler for ConsoleAuth {
         eprintln!("After completing authentication, your browser will redirect to a URL");
         eprintln!(
             "starting with '{}?...' (the page won't load).",
-            self.redirect_base_url
+            Self::REDIRECT_BASE_URL
         );
         eprint!("\nPaste that full redirect URL here: ");
         std::io::stdout().flush().ok();
