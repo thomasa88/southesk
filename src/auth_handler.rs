@@ -1,7 +1,7 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-use std::{io::Write, net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc};
 
 use async_trait::async_trait;
 use axum::{
@@ -14,6 +14,7 @@ use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use tokio::{
+    io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::TcpListener,
     sync::{Mutex, oneshot},
 };
@@ -174,18 +175,17 @@ impl AuthHandler for ConsoleAuth {
             Self::REDIRECT_BASE_URL
         );
         eprint!("\nPaste that full redirect URL here: ");
-        std::io::stdout().flush().ok();
+        tokio::io::stdout().flush().await.ok();
 
-        let redirect_url = tokio::task::spawn_blocking(|| {
-            let mut line = String::new();
-            std::io::stdin().read_line(&mut line).ok();
-            line.trim().to_owned()
-        })
-        .await
-        .map_err(|e| ClientConnectError::AuthError {
-            msg: format!("Failed to read redirect URL from stdin: {e}"),
-            source: None,
-        })?;
+        let mut line = String::new();
+        BufReader::new(tokio::io::stdin())
+            .read_line(&mut line)
+            .await
+            .map_err(|e| ClientConnectError::AuthError {
+                msg: format!("Failed to read redirect URL from stdin: {e}"),
+                source: None,
+            })?;
+        let redirect_url = line.trim().to_string();
 
         let parsed = Url::parse(&redirect_url).map_err(|e| ClientConnectError::AuthError {
             msg: format!("Invalid redirect URL '{redirect_url}': {e}"),
