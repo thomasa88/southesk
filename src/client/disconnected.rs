@@ -119,8 +119,8 @@ impl Client<Disconnected> {
         // needed. See AuthorizationManager::REFRESH_BUFFER_SECS.
         let initialized = Self::init_from_store_with_secret(
             &mut auth_mgr,
+            MCP_SERVER_URL,
             self.cred_store.clone(),
-            self.auth_handler.redirect_uri(),
         )
         .await?;
 
@@ -139,8 +139,8 @@ impl Client<Disconnected> {
     /// initializes the auth manager with a client secret.
     async fn init_from_store_with_secret(
         auth_mgr: &mut AuthorizationManager,
+        base_url: impl Into<String>,
         cred_store: impl FullCredStore,
-        redirect_uri: impl Into<String>,
     ) -> Result<bool, ClientConnectError> {
         let creds = cred_store
             .load()
@@ -156,7 +156,11 @@ impl Client<Disconnected> {
             return Ok(false);
         };
 
-        let oauth_config = OAuthClientConfig::new(creds.client_id, redirect_uri)
+        // AuthorizationManager::initialize_from_store() ->
+        // AuthorizationManager::configure_client_id() passes "base_url" for
+        // "redirect_uri". Maybe it is just to have a valid URL as placeholder,
+        // so that OAuthClientConfig::new() does not complain?
+        let oauth_config = OAuthClientConfig::new(creds.client_id, base_url)
             .with_scopes(creds.granted_scopes)
             .with_client_secret(client_secret);
 
@@ -166,7 +170,7 @@ impl Client<Disconnected> {
             .to_connect_err("Failed to discover authorization server metadata")?;
         auth_mgr.set_metadata(metadata);
 
-        // auth_mgr.configure_client_credentials(config) does basically the same as configure_client?
+        // // auth_mgr.configure_client_credentials(config) does basically the same as configure_client?
         auth_mgr
             .configure_client(oauth_config)
             .to_connect_err("Failed to configure authorization manager with client credentials")?;
@@ -175,11 +179,19 @@ impl Client<Disconnected> {
     }
 
     async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, ClientConnectError> {
+        let Some(auth_handler) = &self.auth_handler else {
+            return Err(ClientConnectError::AuthError {
+                msg: "Need to do a new authentiction, but interactive authentication is disabled"
+                    .to_string(),
+                source: None,
+            });
+        };
+
         // oauth: Empty scope will let the server select
         let wanted_scopes = &["mcp"];
         debug!("Requesting scopes: {:?}", wanted_scopes);
 
-        let redirect_uri = self.auth_handler.redirect_uri();
+        let redirect_uri = auth_handler.redirect_uri();
         debug!("Using redirect URI: {}", redirect_uri);
 
         let (mut oauth_state, client_secret) = Self::start_authorization_with_secret(
@@ -208,7 +220,7 @@ impl Client<Disconnected> {
         let auth_handler::AuthGrant {
             code: auth_code,
             state: csrf_token,
-        } = self.auth_handler.authenticate(&auth_url).await?;
+        } = auth_handler.authenticate(&auth_url).await?;
         info!("Received authorization code: {}", auth_code);
 
         info!("Exchanging authorization code for access token...");

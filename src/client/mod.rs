@@ -40,7 +40,7 @@ mod disconnected;
 #[derive(Debug)]
 pub struct Client<S: State = Disconnected> {
     client_name: String,
-    auth_handler: Box<dyn AuthHandler>,
+    auth_handler: Option<Box<dyn AuthHandler>>,
     cred_store: SharedCredStore,
     state: S,
 }
@@ -71,6 +71,7 @@ const DEFAULT_CRED_USER: &str = "user";
 pub struct ClientBuilder {
     client_name: String,
     auth_handler: Option<Box<dyn AuthHandler>>,
+    interactive_auth: bool,
     cred_user: Option<String>,
     cred_store: Option<SharedCredStore>,
 }
@@ -84,6 +85,7 @@ impl ClientBuilder {
         Self {
             client_name: client_name.into(),
             auth_handler: None,
+            interactive_auth: true,
             cred_user: None,
             cred_store: None,
         }
@@ -94,6 +96,18 @@ impl ClientBuilder {
     /// [`BrowserAuth`] is used by default.
     pub fn auth_handler(mut self, handler: impl AuthHandler + 'static) -> Self {
         self.auth_handler = Some(Box::new(handler));
+        self
+    }
+
+    /// Disables initiating new interactive authentications (through
+    /// [`AuthHandler`]).
+    ///
+    /// The client will only rely on existing OAuth tokens (from a previous
+    /// session). This can be useful for long-running background programs.
+    /// [`Client::connect`] will fail if the server denies the existing OAuth
+    /// credentials.
+    pub fn no_auth(mut self) -> Self {
+        self.interactive_auth = false;
         self
     }
 
@@ -117,8 +131,8 @@ impl ClientBuilder {
     }
 
     pub async fn build(self) -> Result<Client<Disconnected>, ClientBuildError> {
-        let auth_handler =
-            match self.auth_handler {
+        let auth_handler = if self.interactive_auth {
+            Some(match self.auth_handler {
                 Some(handler) => handler,
                 None => Box::new(BrowserAuth::new().await.map_err(|e| {
                     ClientBuildError::BuildError {
@@ -126,7 +140,10 @@ impl ClientBuilder {
                         source: Some(Box::new(e)),
                     }
                 })?),
-            };
+            })
+        } else {
+            None
+        };
 
         let cred_store = match self.cred_store {
             Some(store) => {
