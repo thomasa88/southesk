@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: MIT
 
 use rmcp::{RoleClient, model::InitializeRequestParams, service::RunningService};
+#[cfg(feature = "__dev")]
+use {rmcp::transport::CredentialStore, tracing::warn};
 
 use crate::{
     auth_handler::{AuthHandler, BrowserAuth},
@@ -74,6 +76,8 @@ pub struct ClientBuilder {
     interactive_auth: bool,
     cred_user: Option<String>,
     cred_store: Option<SharedCredStore>,
+    #[cfg(feature = "__dev")]
+    force_token_refresh: bool,
 }
 
 impl ClientBuilder {
@@ -88,6 +92,8 @@ impl ClientBuilder {
             interactive_auth: true,
             cred_user: None,
             cred_store: None,
+            #[cfg(feature = "__dev")]
+            force_token_refresh: false,
         }
     }
 
@@ -127,6 +133,12 @@ impl ClientBuilder {
     /// Overrides the credential store used to store the user's OAuth credentials
     pub fn cred_store(mut self, cred_store: impl FullCredStore + 'static) -> Self {
         self.cred_store = Some(SharedCredStore::new(cred_store));
+        self
+    }
+
+    #[cfg(feature = "__dev")]
+    pub fn dev_force_token_refresh(mut self) -> Self {
+        self.force_token_refresh = true;
         self
     }
 
@@ -187,6 +199,34 @@ impl ClientBuilder {
                 })
             }
         };
+
+        #[cfg(feature = "__dev")]
+        if self.force_token_refresh {
+            warn!("Force token refresh enabled");
+            let creds = cred_store
+                .load()
+                .await
+                .map_err(|e| ClientBuildError::BuildError {
+                    msg: "Failed to load credentials for setting forced refresh".to_string(),
+                    source: Some(Box::new(e)),
+                })?;
+            if let Some(mut creds) = creds {
+                use std::time::Duration;
+
+                creds
+                    .token_response
+                    .as_mut()
+                    .unwrap()
+                    .set_expires_in(Some(&Duration::ZERO));
+                cred_store
+                    .save(creds)
+                    .await
+                    .map_err(|e| ClientBuildError::BuildError {
+                        msg: "Failed to save credentials for setting forced refresh".to_string(),
+                        source: Some(Box::new(e)),
+                    })?;
+            }
+        }
 
         Ok(Client {
             client_name: self.client_name,
