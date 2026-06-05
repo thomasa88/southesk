@@ -8,7 +8,7 @@
 //!
 //! [`Client`] provides the main interface to the library.
 //!
-//! ## Quickstart
+//! # Quickstart
 //! To use `southesk`, add it as a dependency along with an async runtime:
 //!
 //! ```bash
