@@ -1,6 +1,7 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+/// Errors that occur when doing calls to the MCP API.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientCallError {
     #[error("MCP service communication error")]
@@ -25,6 +26,7 @@ impl ClientCallError {
     }
 }
 
+/// Errors that occur when connecting the client.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientConnectError {
     #[error("Authentication failed: {msg}")]
@@ -52,6 +54,7 @@ impl<T> MapAuthToConnectError<T> for Result<T, rmcp::transport::AuthError> {
     }
 }
 
+/// Errors that occur when building the client.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientBuildError {
     #[error("Failed to build client: {msg}")]

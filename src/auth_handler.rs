@@ -1,6 +1,9 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! (Interactive) authentication handlers for the OAuth flow, use to
+//! authenticate the client with the MCP server.
+
 use std::{net::SocketAddr, sync::Arc};
 
 use async_trait::async_trait;
@@ -24,6 +27,8 @@ use crate::result::ClientConnectError;
 
 const BROWSER_CALLBACK_HTML: &str = include_str!("res/default_callback.html");
 
+/// OAuth callback handler that prompts the user to authenticate, typically by
+/// opening a URL and waiting for a callback.
 #[async_trait]
 pub trait AuthHandler: Debug {
     /// The URL that the OAuth server will redirect to after authentication. It
@@ -70,6 +75,9 @@ async fn browser_callback_handler(
 }
 
 impl BrowserAuth {
+    /// Creates a new browser authentication handler and starts a callback server.
+    ///
+    /// The callback server listens on a random available port on localhost.
     pub async fn new() -> Result<Self, ClientConnectError> {
         // 0 means to bind to a random available port
         let addr = SocketAddr::from(([127, 0, 0, 1], 0));
@@ -155,6 +163,7 @@ impl Default for ConsoleAuth {
 impl ConsoleAuth {
     const REDIRECT_BASE_URL: &str = "http://localhost:7878/callback";
 
+    /// Creates a new console authentication callback handler.
     pub fn new() -> Self {
         ConsoleAuth {}
     }

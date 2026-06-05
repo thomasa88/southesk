@@ -12,6 +12,8 @@ use rmcp::transport::{AuthError, StoredCredentials};
 
 use super::{CombinedStoredCreds, FullCredStore};
 
+/// A credential store that saves the credentials in a plaintext JSON file in
+/// the user's config directory.
 #[derive(Debug, Clone)]
 pub struct PlaintextCredStore {
     path: PathBuf,

@@ -1,7 +1,7 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-//! A credential store that saves the credentials in the system keyring.
+//! A credential store that saves the credentials in the user's keyring.
 
 use std::sync::Arc;
 use tracing::debug;
@@ -11,6 +11,7 @@ use rmcp::transport::{AuthError, CredentialStore, StoredCredentials};
 
 use super::{CombinedStoredCreds, FullCredStore};
 
+/// A credential store that saves the credentials in the user's keyring.
 #[derive(Debug, Clone)]
 pub struct KeyringCredStore {
     store: Arc<dyn keyring_core::api::CredentialStoreApi + Send + Sync>,

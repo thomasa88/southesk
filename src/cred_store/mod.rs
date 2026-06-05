@@ -1,6 +1,7 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Credential stores for storing OAuth credentials.
 #[cfg(feature = "keyring")]
 pub mod keyring_cred_store;
 pub mod plaintext_cred_store;
@@ -19,17 +20,21 @@ use serde::{Deserialize, Serialize};
 /// and then requires it for token refreshes, it needs to be stored.
 #[async_trait]
 pub trait FullCredStore: CredentialStore + Debug {
+    /// Saves the client secret to the credential store.
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError>;
+    /// Loads the client secret from the credential store, if it exists.
     async fn load_client_secret(&self) -> Result<Option<String>, AuthError>;
 }
 
-/// A credential store wrapper, that allows the provided credential store to be shared.
+/// A credential store wrapper that allows the provided credential store to be
+/// shared between calls and threads.
 #[derive(Debug, Clone)]
 pub struct SharedCredStore {
     inner: Arc<dyn FullCredStore>,
 }
 
 impl SharedCredStore {
+    /// Creates a new shared credential store from the provided credential store.
     pub fn new(cred_store: impl FullCredStore + 'static) -> Self {
         Self {
             inner: Arc::new(cred_store),

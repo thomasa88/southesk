@@ -52,9 +52,11 @@ mod private {
 }
 pub trait State: private::Sealed {}
 
+#[doc(hidden)]
 #[derive(Debug)]
 pub struct Disconnected;
 
+#[doc(hidden)]
 #[derive(Debug)]
 pub struct Connected {
     client: RunningService<RoleClient, InitializeRequestParams>,
@@ -137,11 +139,15 @@ impl ClientBuilder {
     }
 
     #[cfg(feature = "__dev")]
+    /// Makes the client force an OAuth token refresh when connecting.
     pub fn dev_force_token_refresh(mut self) -> Self {
         self.force_token_refresh = true;
         self
     }
 
+    /// Builds the client.
+    ///
+    /// The client needs to be connected before the MCP API can be used.
     pub async fn build(self) -> Result<Client<Disconnected>, ClientBuildError> {
         let auth_handler = if self.interactive_auth {
             Some(match self.auth_handler {
