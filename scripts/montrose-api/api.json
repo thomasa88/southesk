@@ -7,17 +7,215 @@
         "type": "object",
         "properties": {
           "accountId": {
-            "description": "Optional account ID. If omitted, holdings are returned for all accessible accounts.",
+            "description": "Optional account ID as a UUID/GUID string (e.g. \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"). Use GetUserAccounts to find valid account IDs. If omitted, holdings are returned for all accessible accounts.",
             "type": [
               "string",
               "null"
             ],
-            "format": "uuid"
+            "format": "uuid",
+            "default": null
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "accountId": {
+                  "type": "string"
+                },
+                "accountNumber": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "accountName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "accountType": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "currency": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "summary": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "totalMarketValue": {
+                      "type": "number"
+                    },
+                    "availableForPurchase": {
+                      "type": "number"
+                    },
+                    "totalValue": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "totalMarketValue",
+                    "availableForPurchase",
+                    "totalValue",
+                    "currency"
+                  ]
+                },
+                "positions": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "instrumentName": {
+                        "type": "string"
+                      },
+                      "ticker": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "orderbookId": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "possibleOrderbookIds": {
+                        "type": [
+                          "array",
+                          "null"
+                        ],
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      "quantity": {
+                        "type": "number"
+                      },
+                      "marketValue": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "properties": {
+                          "accountCurrency": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "instrumentCurrency": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "accountCurrency",
+                          "instrumentCurrency"
+                        ]
+                      },
+                      "unrealizedResult": {
+                        "type": [
+                          "object",
+                          "null"
+                        ],
+                        "properties": {
+                          "accountCurrency": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "instrumentCurrency": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "accountCurrency",
+                          "instrumentCurrency"
+                        ]
+                      },
+                      "unrealizedResultPercent": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "instrumentCurrency": {
+                        "type": "string"
+                      },
+                      "fxRate": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "instrumentName",
+                      "ticker",
+                      "orderbookId",
+                      "possibleOrderbookIds",
+                      "quantity",
+                      "marketValue",
+                      "unrealizedResult",
+                      "unrealizedResultPercent",
+                      "instrumentCurrency",
+                      "fxRate"
+                    ]
+                  }
+                },
+                "error": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "accountId",
+                "accountNumber",
+                "accountName",
+                "accountType",
+                "currency",
+                "summary",
+                "positions",
+                "error"
+              ]
+            }
           }
         },
         "required": [
-          "accountId"
+          "result"
         ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
       },
       "execution": {
         "taskSupport": "optional"
@@ -46,6 +244,29 @@
           "orderbookIds"
         ]
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
       "execution": {
         "taskSupport": "optional"
       }
@@ -64,6 +285,41 @@
         "required": [
           "query"
         ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderbookId": {
+                  "type": "integer"
+                },
+                "ticker": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "orderbookId",
+                "ticker",
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
       },
       "execution": {
         "taskSupport": "optional"
@@ -133,7 +389,7 @@
             "default": null
           },
           "accountId": {
-            "description": "Optional account ID. Use GetUserAccounts to find valid account IDs.",
+            "description": "Optional account ID as a UUID/GUID string (e.g. \"3fa85f64-5717-4562-b3fc-2c963f66afa6\"). Use GetUserAccounts to find valid account IDs.",
             "type": [
               "string",
               "null"
@@ -154,6 +410,22 @@
           "side"
         ]
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
       "execution": {
         "taskSupport": "optional"
       }
@@ -164,6 +436,41 @@
       "inputSchema": {
         "type": "object",
         "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "listId": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "orderbookCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "listId",
+                "name",
+                "orderbookCount"
+              ]
+            }
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
       },
       "execution": {
         "taskSupport": "optional"
@@ -184,6 +491,30 @@
           "name"
         ]
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orderbookCount": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "listId",
+          "name",
+          "orderbookCount"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      },
       "execution": {
         "taskSupport": "optional"
       }
@@ -202,6 +533,55 @@
         "required": [
           "listId"
         ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderbookId": {
+                  "type": "integer"
+                },
+                "ticker": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "orderbookId",
+                "ticker",
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "name",
+          "items"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
       },
       "execution": {
         "taskSupport": "optional"
@@ -230,6 +610,29 @@
           "orderbookIds"
         ]
       },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "openWorldHint": false
+      },
       "execution": {
         "taskSupport": "optional"
       }
@@ -240,6 +643,45 @@
       "inputSchema": {
         "type": "object",
         "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "accountId": {
+                  "type": "string"
+                },
+                "accountNumber": {
+                  "type": "string"
+                },
+                "accountName": {
+                  "type": "string"
+                },
+                "accountType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "accountId",
+                "accountNumber",
+                "accountName",
+                "accountType"
+              ]
+            }
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": false
       },
       "execution": {
         "taskSupport": "optional"
