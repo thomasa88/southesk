@@ -3,8 +3,12 @@
 
 //! Credential stores for storing OAuth credentials.
 #[cfg(feature = "keyring")]
-pub mod keyring_cred_store;
-pub mod plaintext_cred_store;
+mod keyring_cred_store;
+mod plaintext_cred_store;
+
+#[cfg(feature = "keyring")]
+pub use keyring_cred_store::KeyringCredStore;
+pub use plaintext_cred_store::PlaintextCredStore;
 
 use std::fmt::Debug;
 use std::sync::Arc;

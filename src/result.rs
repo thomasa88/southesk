@@ -18,7 +18,7 @@ pub enum ClientCallError {
 }
 
 impl ClientCallError {
-    pub fn parse_err(msg: impl Into<String>) -> ClientCallError {
+    pub(crate) fn parse_err(msg: impl Into<String>) -> ClientCallError {
         Self::ParseError {
             msg: msg.into(),
             source: None,

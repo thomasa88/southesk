@@ -48,7 +48,4 @@ pub use rust_decimal;
 pub use rust_decimal::Decimal;
 pub use uuid;
 pub use uuid::Uuid;
-
-pub mod raw {
-    pub use rmcp::object as json_object;
-}
+pub mod raw;

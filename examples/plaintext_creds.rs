@@ -5,7 +5,7 @@
 //! client secret in a text file.
 
 use etcetera::AppStrategy;
-use southesk::cred_store::plaintext_cred_store::PlaintextCredStore;
+use southesk::cred_store::PlaintextCredStore;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
