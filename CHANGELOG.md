@@ -22,7 +22,14 @@ Headers:
 
 ## Added
 
-- Quuckstart example added to the readme and top Rust documentation.
+- Quickstart example added to the readme and top Rust documentation.
+- no_auth() option, for non-interactive sessions. Requires an existing access token.
+- Documentation of many more (non-API) types.
+- Banner/logo image.
+
+## Changed
+
+- Simplified module path to credential store implementations.
 
 ## [0.0.2] - 2026-06-02
 
