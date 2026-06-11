@@ -15,7 +15,8 @@ use crate::{
     ClientCallError,
     types::{
         Account, AccountIdentifiers, CreateTradeTicketResult, HoldingsSelector,
-        InstrumentIdentifiers, ModifyWatchlistResult, TradeTicketArgs, Watchlist, WatchlistInfo,
+        InstrumentIdentifiers, ModifyWatchlistResult, TradeCurrency, TradeTicketArgs, Watchlist,
+        WatchlistInfo,
     },
 };
 
@@ -25,8 +26,14 @@ use super::{Client, Connected};
 ///
 /// Each method maps directly to a Montrose MCP tool of the same name.
 impl Client<Connected> {
-    /// Returns holdings for either one account (when [`HoldingsSelector::AccountId`] is provided) or
-    /// all accessible accounts. Use
+    /// Returns holdings for either one account (when
+    /// [`HoldingsSelector::AccountId`] is provided) or all accessible accounts.
+    /// Each account includes
+    /// [`currency_positions`](Account::currency_positions): the account's
+    /// multi-currency cash balances with the amount available for purchase per
+    /// currency. An empty [`currency_positions`](Account::currency_positions)
+    /// list means the account holds cash only in its main currency (see
+    /// [`summary`](Account::summary)). Use
     /// [`get_user_accounts`](Self::get_user_accounts) first to find valid
     /// account IDs.
     pub async fn get_holdings(
@@ -65,6 +72,11 @@ impl Client<Connected> {
         &self,
         args: TradeTicketArgs,
     ) -> Result<reqwest::Url, ClientCallError> {
+        if args.currency == TradeCurrency::Account && args.account_id.is_none() {
+            return Err(ClientCallError::InvalidArguments(
+                "Either currency or account_id must be set".to_string(),
+            ));
+        }
         let arg_map = match serde_json::to_value(args) {
             Ok(serde_json::Value::Object(map)) => map,
             Ok(_) => {
@@ -87,6 +99,8 @@ impl Client<Connected> {
     /// orderbookIds, tickers, and names. Use this tool before
     /// [`create_trade_ticket`](Self::create_trade_ticket) when multiple
     /// instruments have similar names.
+    ///
+    /// Seems to return at most 9 results.
     pub async fn search_instruments(
         &self,
         query: &str,

@@ -30,6 +30,7 @@ Headers:
 ## Changed
 
 - Simplified module path to credential store implementations.
+- Montrose API updated to the 2026-06-11 version. Includes `CurrencyPosition`.
 
 ## [0.0.2] - 2026-06-02
 

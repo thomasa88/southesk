@@ -27,54 +27,114 @@ pub enum HoldingsSelector {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Account {
+    /// Unique account ID. Not visible to the user.
+    ///
+    /// Example: `d075c5d4-222f-4ba9-b973-10bb9aeea705`
     pub account_id: Uuid,
+    /// Account number.
+    ///
+    /// Example: `1234567`
     pub account_number: String,
+    /// Account name, as set by the user. It is not guaranteed to be unique, as
+    /// multiple accounts can have the same name.
     #[serde_as(as = "NoneAsEmptyString")]
     pub account_name: Option<String>,
+    /// Account type.
+    pub account_type: AccountType,
+    /// The main currency of the account.
     pub currency: String,
+    /// Summary of the account holdings.
     pub summary: AccountSummary,
+    /// List of positions (instruments) in the account.
     pub positions: Vec<Position>,
+    /// List of currency positions (cash holdings) in the account of other
+    /// currencies than the main currency.
+    pub currency_positions: Vec<CurrencyPosition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
+pub enum AccountType {
+    /// Investment savings account (ISK).
+    #[doc(alias = "ISK")]
+    #[serde(rename = "ISK")]
+    InvestmentSavings,
+    /// Capital insurance (Kapitalförsäkring).
+    #[doc(alias = "KF")]
+    #[serde(rename = "KF")]
+    CapitalInsurance,
+    /// Regular brokerage account (Depå).
+    #[doc(alias = "Depot")]
+    #[serde(rename = "Depot")]
+    Brokerage,
+    /// Savings account (Sparkonto).
+    #[serde(rename = "SPAR")]
+    Savings,
+    /// Credit account (Kreditkonto).
+    #[serde(rename = "Credit")]
+    Credit,
+    /// Other (not yet categorized) account type.
+    #[serde(untagged)]
+    Other(String),
 }
 
 /// Summary of the account holdings.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountSummary {
-    /// Value of the investments in the account
+    /// Value of the investments in the account.
     pub total_market_value: Decimal,
-    /// Amount available for purchase
+    /// Amount available for purchase.
     pub available_for_purchase: Decimal,
     /// Total value of the account. The sum of investments and cash.
     pub total_value: Decimal,
-    /// Currency of the account
+    /// Currency of the account.
     pub currency: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Position {
+    /// Name of the instrument.
     pub instrument_name: String,
+    /// Ticker symbol of the instrument.
     pub ticker: String,
+    /// Orderbook ID of the instrument.
     pub orderbook_id: u64,
     pub possible_orderbook_ids: Vec<u64>,
     /// Number of shares
     pub quantity: Decimal,
-    /// Value of the position (quantity * price)
+    /// Value of the position (quantity * price).
     pub market_value: InstrumentValue,
     pub unrealized_result: InstrumentValue,
     pub unrealized_result_percent: Decimal,
     pub instrument_currency: String,
-    /// Exchange rate (instrument_currency / account_currency)
+    /// Exchange rate (instrument_currency / account_currency).
     pub fx_rate: Decimal,
+}
+
+/// Cash balance in a single currency within an account.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CurrencyPosition {
+    /// ISO 4217 currency code (e.g. "SEK", "USD", "EUR").
+    pub currency_code: String,
+    /// Balance of the currency.
+    pub balance: Decimal,
+    /// Accrued interest for the currency.
+    pub accrued_interest: Decimal,
+    /// Amount available for purchase in the currency.
+    pub available_for_purchase: Decimal,
 }
 
 /// Value of an instrument in different currencies.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstrumentValue {
-    /// Value in the account currency
+    /// Value in the account's main currency.
     pub account_currency: Decimal,
-    /// Value in the instrument currency
+    /// Value in the instrument currency.
     pub instrument_currency: Decimal,
 }
 
@@ -83,14 +143,20 @@ pub struct InstrumentValue {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountIdentifiers {
+    /// Unique account ID. Not visible to the user.
+    ///
     /// Example: `d075c5d4-222f-4ba9-b973-10bb9aeea705`
     pub account_id: Uuid,
+    /// Account number
+    ///
     /// Example: `1234567`
     pub account_number: String,
     /// Account name, as set by the user. It is not guaranteed to be unique, as
     /// multiple accounts can have the same name.
     #[serde_as(as = "NoneAsEmptyString")]
     pub account_name: Option<String>,
+    /// Account type
+    pub account_type: String,
 }
 
 /// Arguments for creating a trade ticket, used with
@@ -113,7 +179,13 @@ pub struct TradeTicketArgs {
     #[serde(flatten)]
     pub volume: TradeVolume,
 
-    /// ISO 4217 currency code (e.g. "SEK", "USD", "EUR") for the amount.
+    /// ISO 4217 currency code (e.g. \"SEK\", \"USD\", \"EUR\") for the amount.
+    /// Only set this to [`TradeCurrency::Code`] when the user explicitly states
+    /// a currency. When omitted and an [`account_id`](Self::account_id) is
+    /// provided, the currency is resolved from the account's currency
+    /// positions: if the account holds a cash position in the instrument's
+    /// trading currency, that currency is used; otherwise the account's main
+    /// currency.
     pub currency: TradeCurrency,
 
     /// The instrument to trade
@@ -240,11 +312,11 @@ pub(crate) struct CreateTradeTicketResult {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstrumentIdentifiers {
-    /// Instrument name
+    /// Instrument name.
     pub name: String,
-    /// Instrument order book ID
+    /// Instrument order book ID.
     pub orderbook_id: u64,
-    /// Instrument ticker
+    /// Instrument ticker.
     pub ticker: String,
 }
 
@@ -253,7 +325,7 @@ pub struct InstrumentIdentifiers {
 pub struct WatchlistInfo {
     pub list_id: u64,
     pub name: String,
-    /// Number of instruments in the watchlist
+    /// Number of instruments in the watchlist.
     pub orderbook_count: u64,
 }
 
