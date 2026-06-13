@@ -22,11 +22,11 @@ pub enum HoldingsSelector {
     AccountId(Uuid),
 }
 
-/// Full account information, including holdings.
+/// Account holdings, including account identifiers.
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Account {
+pub struct AccountHoldings {
     /// Unique account ID. Not visible to the user.
     ///
     /// Example: `d075c5d4-222f-4ba9-b973-10bb9aeea705`

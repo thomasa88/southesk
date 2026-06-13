@@ -14,7 +14,7 @@ use tracing::{info, warn};
 use crate::{
     ClientCallError,
     types::{
-        Account, AccountIdentifiers, CreateTradeTicketResult, HoldingsSelector,
+        AccountHoldings, AccountIdentifiers, CreateTradeTicketResult, HoldingsSelector,
         InstrumentIdentifiers, ModifyWatchlistResult, TradeCurrency, TradeTicketArgs, Watchlist,
         WatchlistInfo,
     },
@@ -29,17 +29,18 @@ impl Client<Connected> {
     /// Returns holdings for either one account (when
     /// [`HoldingsSelector::AccountId`] is provided) or all accessible accounts.
     /// Each account includes
-    /// [`currency_positions`](Account::currency_positions): the account's
-    /// multi-currency cash balances with the amount available for purchase per
-    /// currency. An empty [`currency_positions`](Account::currency_positions)
-    /// list means the account holds cash only in its main currency (see
-    /// [`summary`](Account::summary)). Use
+    /// [`currency_positions`](AccountHoldings::currency_positions): the
+    /// account's multi-currency cash balances with the amount available for
+    /// purchase per currency. An empty
+    /// [`currency_positions`](AccountHoldings::currency_positions) list means
+    /// the account holds cash only in its main currency (see
+    /// [`summary`](AccountHoldings::summary)). Use
     /// [`get_user_accounts`](Self::get_user_accounts) first to find valid
     /// account IDs.
     pub async fn get_holdings(
         &self,
         selection: HoldingsSelector,
-    ) -> Result<Vec<Account>, ClientCallError> {
+    ) -> Result<Vec<AccountHoldings>, ClientCallError> {
         let mut args = serde_json::Map::new();
         args.insert(
             "accountId".to_string(),
@@ -117,7 +118,7 @@ impl Client<Connected> {
         self.api_call("get_watchlists", None).await
     }
 
-    /// Returns the instruments on a single watchlist, identified by listId.
+    /// Returns the instruments on a single watchlist, identified by `list_id`.
     /// Each instrument is enriched with its orderbookId, ticker and name. Use
     /// [`get_watchlists`](Self::get_watchlists) first to discover valid listIds.
     pub async fn get_watchlist(&self, list_id: u64) -> Result<Watchlist, ClientCallError> {
