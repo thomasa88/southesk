@@ -35,6 +35,10 @@ Headers:
 - Renamed `HoldingsSelector` to `AccountFilter`.
 - Turn account number and currency into their own types.
 
+## Fixed
+
+- Removed left-over oauth2 dependency.
+
 ## [0.0.2] - 2026-06-02
 
 ## Added
