@@ -24,6 +24,8 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.3] - 2026-06-13
+
 ## Added
 
 - Quickstart example added to the readme and top Rust documentation.
@@ -64,6 +66,7 @@ Headers:
 First public release.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/thomasa88/southesk/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/thomasa88/southesk/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/thomasa88/southesk/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/thomasa88/southesk/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/thomasa88/southesk/releases/tag/v0.0.1
