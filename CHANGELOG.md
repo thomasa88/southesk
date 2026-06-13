@@ -16,9 +16,13 @@ Headers:
 * "Fixed" for any bug fixes.
 * "Security" in case of vulnerabilities. 
 
+`cargo release` is used to bump the version.
+
 -->
 
-## [Unreleased]
+<!-- next-header -->
+
+## [Unreleased] - ReleaseDate
 
 ## Added
 
@@ -59,6 +63,7 @@ Headers:
 
 First public release.
 
-[unreleased]: https://github.com/thomasa88/southesk/compare/v0.0.2...HEAD
+<!-- next-url -->
+[Unreleased]: https://github.com/thomasa88/southesk/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/thomasa88/southesk/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/thomasa88/southesk/releases/tag/v0.0.1
