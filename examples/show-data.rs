@@ -3,7 +3,7 @@
 
 //! Shows the user's accounts and holdings.
 
-use southesk::{Decimal, rust_decimal::dec, types::HoldingsSelector};
+use southesk::{Decimal, rust_decimal::dec, types::AccountFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
 
     println!();
     println!("-------- Holdings --------");
-    let accounts = montrose.get_holdings(HoldingsSelector::All).await?;
+    let accounts = montrose.get_holdings(AccountFilter::All).await?;
     for account in accounts {
         println!(
             "Account: {} {}",

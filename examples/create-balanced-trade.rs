@@ -12,7 +12,7 @@ use anyhow::{Context, ensure};
 use southesk::{
     Decimal,
     rust_decimal::dec,
-    types::{HoldingsSelector, Instrument, TradeCurrency, TradeSide, TradeTicketArgs, TradeVolume},
+    types::{AccountFilter, Instrument, TradeCurrency, TradeSide, TradeTicketArgs, TradeVolume},
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -98,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
         .context("Account not found")?;
 
     let all_holdings = montrose
-        .get_holdings(HoldingsSelector::AccountId(account.account_id))
+        .get_holdings(AccountFilter::AccountId(account.account_id))
         .await?;
     let holdings = all_holdings
         .first()

@@ -14,7 +14,7 @@ use tracing::{info, warn};
 use crate::{
     ClientCallError,
     types::{
-        AccountHoldings, AccountIdentifiers, CreateTradeTicketResult, HoldingsSelector,
+        AccountFilter, AccountHoldings, AccountIdentifiers, CreateTradeTicketResult,
         InstrumentIdentifiers, ModifyWatchlistResult, TradeCurrency, TradeTicketArgs, Watchlist,
         WatchlistInfo,
     },
@@ -27,7 +27,7 @@ use super::{Client, Connected};
 /// Each method maps directly to a Montrose MCP tool of the same name.
 impl Client<Connected> {
     /// Returns holdings for either one account (when
-    /// [`HoldingsSelector::AccountId`] is provided) or all accessible accounts.
+    /// [`AccountFilter::AccountId`] is provided) or all accessible accounts.
     /// Each account includes
     /// [`currency_positions`](AccountHoldings::currency_positions): the
     /// account's multi-currency cash balances with the amount available for
@@ -39,14 +39,14 @@ impl Client<Connected> {
     /// account IDs.
     pub async fn get_holdings(
         &self,
-        selection: HoldingsSelector,
+        selection: AccountFilter,
     ) -> Result<Vec<AccountHoldings>, ClientCallError> {
         let mut args = serde_json::Map::new();
         args.insert(
             "accountId".to_string(),
             match selection {
-                HoldingsSelector::AccountId(account_id) => Some(account_id.to_string()),
-                HoldingsSelector::All => None,
+                AccountFilter::AccountId(account_id) => Some(account_id.to_string()),
+                AccountFilter::All => None,
             }
             .into(),
         );

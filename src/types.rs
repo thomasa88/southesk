@@ -17,7 +17,7 @@ use uuid::Uuid;
 /// Used to select which holdings to fetch when calling
 /// [`get_holdings`](crate::Client::get_holdings).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub enum HoldingsSelector {
+pub enum AccountFilter {
     All,
     AccountId(Uuid),
 }
