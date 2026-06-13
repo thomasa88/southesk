@@ -21,6 +21,8 @@ use crate::{
 
 use super::{Client, Connected, Disconnected};
 
+type McpClient = RunningService<RoleClient, InitializeRequestParams>;
+
 const MCP_SERVER_URL: &str = "https://mcp.montrose.io";
 
 impl Client<Disconnected> {
@@ -33,41 +35,63 @@ impl Client<Disconnected> {
     /// Use [`ClientBuilder::no_auth`](crate::client::ClientBuilder::no_auth) to
     /// disable interactive authentication.
     pub async fn connect(self) -> Result<Client<Connected>, ClientConnectError> {
-        let auth_mgr = self.authenticate().await?;
+        info!("Establishing connection to MCP server...");
+        debug!("Using MCP server URL: {}", MCP_SERVER_URL);
 
-        let mut mcp_client_res = self.init_mcp_client(auth_mgr).await;
-
-        if let Err(rmcp::service::ClientInitializeError::TransportError {
-            error: dyn_transport_err,
-            context: _,
-        }) = &mcp_client_res
-        {
-            debug!("Transport error: {dyn_transport_err:#?}");
-            // Try again if it was an authorization error
-            if Self::is_auth_required_error(dyn_transport_err) {
-                info!("Authentication required error encountered");
-                info!("Starting new authorization flow");
-                let auth_mgr = self.authenticate_new_auth().await?;
-                mcp_client_res = self.init_mcp_client(auth_mgr).await;
-            }
+        // This is a call graph flattened into a (max two laps) loop.
+        //
+        // It tries the following steps:
+        // * Connect using stored credentials, if available.
+        // * Connect by letting the user authenticate
+        let mut auth_mgr = self.auth_mgr_from_creds().await?;
+        if auth_mgr.is_none() {
+            info!("No usable credentials found in the credential store.");
         }
+        let mut need_auth = auth_mgr.is_none();
+        loop {
+            if need_auth {
+                assert!(auth_mgr.is_none());
+                info!("Starting new authorization flow.",);
+                auth_mgr = Some(self.authenticate_new_auth().await?);
+            }
 
-        let mcp_client = mcp_client_res.map_err(|e| ClientConnectError::ConnectionError {
-            msg: "Failed to connect to MCP server".to_string(),
-            source: Some(e.into()),
-        })?;
+            let mcp_client_res = self.init_mcp_client(auth_mgr.take().unwrap()).await;
+            match mcp_client_res {
+                Ok(mcp_client) => {
+                    info!("Successfully connected to the MCP server");
 
-        info!("Successfully connected to MCP server");
-
-        Ok(Client {
-            client_name: self.client_name,
-            auth_handler: self.auth_handler,
-            cred_store: self.cred_store,
-            state: Connected { client: mcp_client },
-        })
+                    return Ok(Client {
+                        client_name: self.client_name,
+                        auth_handler: self.auth_handler,
+                        cred_store: self.cred_store,
+                        state: Connected { client: mcp_client },
+                    });
+                }
+                // Try to let the user authenticate - if the user has not
+                // already been asked to do that.
+                Err(e) if !need_auth && Self::is_auth_required_error(&e) => {
+                    info!("Authentication required error encountered");
+                    need_auth = true;
+                }
+                Err(e) => {
+                    return Err(ClientConnectError::ConnectionError {
+                        msg: "Failed to connect to MCP server".to_string(),
+                        source: Some(e.into()),
+                    });
+                }
+            };
+        }
     }
 
-    fn is_auth_required_error(dyn_transport_err: &rmcp::transport::DynamicTransportError) -> bool {
+    fn is_auth_required_error(client_init_err: &rmcp::service::ClientInitializeError) -> bool {
+        let rmcp::service::ClientInitializeError::TransportError {
+            error: dyn_transport_err,
+            context: _,
+        } = client_init_err
+        else {
+            return false;
+        };
+
         let http_error = dyn_transport_err
             .error
             .downcast_ref::<rmcp::transport::streamable_http_client::StreamableHttpError<
@@ -88,10 +112,7 @@ impl Client<Disconnected> {
     async fn init_mcp_client(
         &self,
         auth_mgr: AuthorizationManager,
-    ) -> Result<
-        RunningService<RoleClient, InitializeRequestParams>,
-        rmcp::service::ClientInitializeError,
-    > {
+    ) -> Result<McpClient, rmcp::service::ClientInitializeError> {
         let auth_client = AuthClient::new(reqwest::Client::default(), auth_mgr);
         let transport = StreamableHttpClientTransport::with_client(
             auth_client,
@@ -101,11 +122,9 @@ impl Client<Disconnected> {
         client_service.serve(transport).await
     }
 
-    async fn authenticate(&self) -> Result<AuthorizationManager, ClientConnectError> {
-        debug!("Using MCP server URL: {}", MCP_SERVER_URL);
-
-        info!("Establishing authorized connection to MCP server...");
-
+    async fn auth_mgr_from_creds(
+        &self,
+    ) -> Result<Option<AuthorizationManager>, ClientConnectError> {
         // Cannot convert an OAuthState into an AuthorizationManager, as it
         // initially isn't in the Authorized state. So we start with an
         // AuthorizationManager in case we already have usable credentials.
@@ -120,7 +139,7 @@ impl Client<Disconnected> {
 
         // The authorization manager automatically does a token refresh if
         // needed. See AuthorizationManager::REFRESH_BUFFER_SECS.
-        let initialized = Self::init_from_store_with_secret(
+        let initialized = Self::auth_mgr_init_from_store_with_secret(
             &mut auth_mgr,
             MCP_SERVER_URL,
             self.cred_store.clone(),
@@ -129,18 +148,15 @@ impl Client<Disconnected> {
 
         if initialized {
             info!("Initialized authorization manager from credential store");
-            return Ok(auth_mgr);
+            Ok(Some(auth_mgr))
+        } else {
+            Ok(None)
         }
-
-        info!(
-            "No usable credentials found in the credential store. Starting new authorization flow.",
-        );
-        self.authenticate_new_auth().await
     }
 
     /// Replacement for [`AuthorizationManager::initialize_from_store`] that
     /// initializes the auth manager with a client secret.
-    async fn init_from_store_with_secret(
+    async fn auth_mgr_init_from_store_with_secret(
         auth_mgr: &mut AuthorizationManager,
         base_url: impl Into<String>,
         cred_store: impl FullCredStore,
@@ -184,7 +200,7 @@ impl Client<Disconnected> {
     async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, ClientConnectError> {
         let Some(auth_handler) = &self.auth_handler else {
             return Err(ClientConnectError::AuthError {
-                msg: "Need to do a new authentiction, but interactive authentication is disabled"
+                msg: "Need to do a new authentication, but interactive authentication is disabled."
                     .to_string(),
                 source: None,
             });
@@ -197,7 +213,7 @@ impl Client<Disconnected> {
         let redirect_uri = auth_handler.redirect_uri();
         debug!("Using redirect URI: {}", redirect_uri);
 
-        let (mut oauth_state, client_secret) = Self::start_authorization_with_secret(
+        let (mut oauth_state, client_secret) = Self::auth_mgr_start_authorization_with_secret(
             wanted_scopes,
             redirect_uri,
             &self.client_name,
@@ -252,7 +268,9 @@ impl Client<Disconnected> {
     }
 
     /// Replacement for [`OAuthState::start_authorization`] that returns the client secret.
-    async fn start_authorization_with_secret<S: CredentialStore + FullCredStore + 'static>(
+    async fn auth_mgr_start_authorization_with_secret<
+        S: CredentialStore + FullCredStore + 'static,
+    >(
         scopes: &[&str],
         redirect_uri: &str,
         client_name: &str,
