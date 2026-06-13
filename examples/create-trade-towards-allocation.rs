@@ -10,7 +10,9 @@ use anyhow::{Context, ensure};
 use southesk::{
     Decimal,
     rust_decimal::dec,
-    types::{AccountFilter, Instrument, TradeCurrency, TradeSide, TradeTicketArgs, TradeVolume},
+    types::{
+        AccountFilter, Currency, Instrument, TradeCurrency, TradeSide, TradeTicketArgs, TradeVolume,
+    },
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -108,7 +110,7 @@ async fn main() -> anyhow::Result<()> {
     let available_cash = holdings.summary.available_for_purchase;
     let currency = &holdings.summary.currency;
     ensure!(
-        currency == "SEK",
+        currency == &Currency::new("SEK").unwrap(),
         "This example only works for SEK accounts. The trade API uses SEK. Need to implement conversion calculations for other currencies."
     );
     let amount_to_buy = if margin_or_total > Decimal::ZERO {

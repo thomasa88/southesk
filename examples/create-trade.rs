@@ -35,7 +35,7 @@ async fn main() -> anyhow::Result<()> {
         trade_account
             .account_name
             .as_deref()
-            .unwrap_or(&trade_account.account_number)
+            .unwrap_or(trade_account.account_number.as_ref())
     );
 
     info!("Creating trade ticket...");

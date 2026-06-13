@@ -33,6 +33,7 @@ Headers:
 - Montrose API updated to the 2026-06-11 version. Includes `CurrencyPosition`.
 - Renamed `Account` to `AccountHoldings`.
 - Renamed `HoldingsSelector` to `AccountFilter`.
+- Turn account number and currency into their own types.
 
 ## [0.0.2] - 2026-06-02
 

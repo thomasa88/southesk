@@ -6,6 +6,7 @@
 //! The types correspond to the types used by the Montrose MCP API. Some have
 //! been slightly adapted for better ergonomics in Rust.
 
+use derive_more::{AsRef, Display};
 use reqwest::Url;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -23,6 +24,60 @@ pub enum AccountFilter {
     AccountId(Uuid),
 }
 
+/// An account number for a financial account.
+///
+/// Example: `1234567`
+#[derive(
+    Debug, Display, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, AsRef,
+)]
+pub struct AccountNumber(String);
+
+impl AccountNumber {
+    /// Creates a new account number.
+    pub fn new(num: impl Into<String>) -> Result<Self, error::ParseAccountNumberError> {
+        let num = num.into();
+        // Taking a guess on the min and max length
+        if num.is_empty() || num.len() < 6 || num.len() > 12 {
+            Err(error::ParseAccountNumberError::BadLength)
+        } else if !num.chars().all(|c| c.is_ascii_digit()) {
+            Err(error::ParseAccountNumberError::InvalidFormat)
+        } else {
+            Ok(AccountNumber(num.to_string()))
+        }
+    }
+}
+
+/// ISO 4217 currency code.
+///
+/// Examples: `SEK`, `USD`, `EUR`
+#[derive(Debug, Display, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, AsRef)]
+pub struct Currency(String);
+
+impl Currency {
+    /// Creates a new currency code.
+    ///
+    /// A simple format validation is performed, but the code is not checked for
+    /// validity.
+    pub fn new(code: impl AsRef<str>) -> Result<Self, error::ParseCurrencyError> {
+        let code = code.as_ref();
+        if code.len() != 3 || !code.chars().all(|c| c.is_ascii_alphabetic()) {
+            Err(error::ParseCurrencyError::InvalidFormat)
+        } else {
+            Ok(Currency(code.to_uppercase()))
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for Currency {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let code = String::deserialize(deserializer)?;
+        Currency::new(code).map_err(serde::de::Error::custom)
+    }
+}
+
 /// Account holdings, including account identifiers.
 #[serde_as]
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -35,7 +90,7 @@ pub struct AccountHoldings {
     /// Account number.
     ///
     /// Example: `1234567`
-    pub account_number: String,
+    pub account_number: AccountNumber,
     /// Account name, as set by the user. It is not guaranteed to be unique, as
     /// multiple accounts can have the same name.
     #[serde_as(as = "NoneAsEmptyString")]
@@ -43,7 +98,7 @@ pub struct AccountHoldings {
     /// Account type.
     pub account_type: AccountType,
     /// The main currency of the account.
-    pub currency: String,
+    pub currency: Currency,
     /// Summary of the account holdings.
     pub summary: AccountSummary,
     /// List of positions (instruments) in the account.
@@ -92,7 +147,7 @@ pub struct AccountSummary {
     /// Total value of the account. The sum of investments and cash.
     pub total_value: Decimal,
     /// Currency of the account.
-    pub currency: String,
+    pub currency: Currency,
 }
 
 /// A position in a single instrument within an account.
@@ -118,7 +173,7 @@ pub struct Position {
     /// Unrealized result as a percentage.
     pub unrealized_result_percent: Decimal,
     /// Currency of the instrument.
-    pub instrument_currency: String,
+    pub instrument_currency: Currency,
     /// Exchange rate (`instrument_currency / account_currency`).
     pub fx_rate: Decimal,
 }
@@ -128,7 +183,7 @@ pub struct Position {
 #[serde(rename_all = "camelCase")]
 pub struct CurrencyPosition {
     /// ISO 4217 currency code (e.g. "SEK", "USD", "EUR").
-    pub currency_code: String,
+    pub currency_code: Currency,
     /// Balance of the currency.
     pub balance: Decimal,
     /// Accrued interest for the currency.
@@ -159,7 +214,7 @@ pub struct AccountIdentifiers {
     /// Account number
     ///
     /// Example: `1234567`
-    pub account_number: String,
+    pub account_number: AccountNumber,
     /// Account name, as set by the user. It is not guaranteed to be unique, as
     /// multiple accounts can have the same name.
     #[serde_as(as = "NoneAsEmptyString")]
@@ -222,7 +277,7 @@ pub enum TradeCurrency {
     /// Use the currency given by the ISO 4217 code.
     ///
     /// Examples: `SEK`, `USD`, `EUR`.
-    Code(String),
+    Code(Currency),
 }
 
 impl Serialize for TradeCurrency {
@@ -230,7 +285,6 @@ impl Serialize for TradeCurrency {
     where
         S: serde::Serializer,
     {
-        use serde::ser::Error;
         // From the create_trade_ticket tool documentation:
         // "If the user explicitly specifies a currency
         // (e.g. "10 000 SEK", "500 USD"), pass it via the currency parameter;
@@ -238,12 +292,7 @@ impl Serialize for TradeCurrency {
         // be used."
         match self {
             Self::Account => serializer.serialize_none(),
-            Self::Code(code) => {
-                if code.len() != 3 {
-                    return Err(S::Error::custom("currency code should be 3 letters"));
-                }
-                serializer.serialize_some(code)
-            }
+            Self::Code(code) => serializer.serialize_some(code),
         }
     }
 }
@@ -277,12 +326,7 @@ impl<'de> serde::de::Visitor<'de> for TradeCurrencyVisitor {
     where
         D: serde::Deserializer<'de>,
     {
-        let code = String::deserialize(deserializer)?;
-        if code.len() != 3 {
-            return Err(serde::de::Error::custom(format!(
-                "Currency code should be 3 letters: {code}"
-            )));
-        }
+        let code = Currency::deserialize(deserializer)?;
         Ok(TradeCurrency::Code(code))
     }
 }
@@ -367,6 +411,25 @@ pub struct ModifyWatchlistResult {
     pub orderbook_ids: Vec<u64>,
 }
 
+/// Errors related to the MCP types.
+pub mod error {
+    /// Errors that can occur when parsing an account number.
+    #[derive(Debug, thiserror::Error, PartialEq, Eq)]
+    pub enum ParseAccountNumberError {
+        #[error("Invalid account number format")]
+        InvalidFormat,
+        #[error("Account number has a bad length")]
+        BadLength,
+    }
+
+    /// Errors that can occur when parsing a currency code.
+    #[derive(Debug, thiserror::Error, PartialEq, Eq)]
+    pub enum ParseCurrencyError {
+        #[error("Invalid currency code")]
+        InvalidFormat,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -383,14 +446,72 @@ mod tests {
         );
 
         assert_eq!(
-            serde_json::to_string(&TradeCurrency::Code("SEK".into())).unwrap(),
+            serde_json::to_string(&TradeCurrency::Code(Currency::new("SEK").unwrap())).unwrap(),
             "\"SEK\""
         );
         assert_eq!(
             serde_json::from_str::<TradeCurrency>("\"USD\"").unwrap(),
-            TradeCurrency::Code("USD".into())
+            TradeCurrency::Code(Currency::new("USD").unwrap())
         );
         assert!(serde_json::from_str::<TradeCurrency>("\"WRONG_LEN\"").is_err());
         assert!(serde_json::from_str::<TradeCurrency>("\"\"").is_err());
+    }
+
+    #[test]
+    fn account_number_parsing() {
+        assert_eq!(
+            AccountNumber::new("1234567").unwrap(),
+            AccountNumber("1234567".to_string())
+        );
+        assert_eq!(
+            AccountNumber::new(""),
+            Err(error::ParseAccountNumberError::BadLength)
+        );
+        assert_eq!(
+            AccountNumber::new("283333a"),
+            Err(error::ParseAccountNumberError::InvalidFormat)
+        );
+        assert_eq!(
+            AccountNumber::new("2833333939393939392222222"),
+            Err(error::ParseAccountNumberError::BadLength)
+        );
+    }
+
+    #[test]
+    fn account_number_to_string() {
+        assert_eq!(AccountNumber("1111233".to_string()).to_string(), "1111233");
+    }
+
+    #[test]
+    fn currency_parsing() {
+        assert_eq!(Currency::new("USD").unwrap(), Currency("USD".to_string()));
+        assert_eq!(Currency::new("sek").unwrap(), Currency("SEK".to_string()));
+        assert_eq!(
+            Currency::new(""),
+            Err(error::ParseCurrencyError::InvalidFormat)
+        );
+        assert_eq!(
+            Currency::new("USDOLLAR"),
+            Err(error::ParseCurrencyError::InvalidFormat)
+        );
+        assert_eq!(
+            Currency::new("US2"),
+            Err(error::ParseCurrencyError::InvalidFormat)
+        );
+    }
+
+    #[test]
+    fn currency_to_string() {
+        assert_eq!(Currency("USD".to_string()).to_string(), "USD");
+    }
+
+    #[test]
+    fn currency_deserialization() {
+        let json = "\"usd\"";
+        let currency: Currency = serde_json::from_str(json).unwrap();
+        assert_eq!(currency, Currency("USD".to_string()));
+
+        let invalid_json = "\"US2\"";
+        assert!(serde_json::from_str::<Currency>(invalid_json).is_err());
     }
 }
