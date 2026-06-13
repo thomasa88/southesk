@@ -4,7 +4,7 @@
 //! (Interactive) authentication handlers for the OAuth flow, use to
 //! authenticate the client with the MCP server.
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use axum::{
@@ -20,6 +20,7 @@ use tokio::{
     io::{AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::TcpListener,
     sync::{Mutex, oneshot},
+    time::timeout,
 };
 use tracing::{debug, error, info};
 
@@ -45,6 +46,7 @@ pub trait AuthHandler: Debug {
 pub struct BrowserAuth {
     listen_addr: String,
     cb_tx: Arc<Mutex<Option<oneshot::Sender<AuthGrant>>>>,
+    auth_timeout: Duration,
 }
 
 #[derive(Clone)]
@@ -75,6 +77,8 @@ async fn browser_callback_handler(
 }
 
 impl BrowserAuth {
+    pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(120);
+
     /// Creates a new browser authentication handler and starts a callback server.
     ///
     /// The callback server listens on a random available port on localhost.
@@ -121,7 +125,20 @@ impl BrowserAuth {
         Ok(BrowserAuth {
             listen_addr,
             cb_tx: cb_rx,
+            auth_timeout: Self::DEFAULT_TIMEOUT,
         })
+    }
+
+    /// Sets the timeout for the user to complete authentication.
+    ///
+    /// Defaults to [`DEFAULT_TIMEOUT`](Self::DEFAULT_TIMEOUT). Note that the
+    /// Montrose web page login times out after 1 minute, but the user can wait
+    /// longer before approving the MCP client.
+    pub fn with_timeout(self, timeout: Duration) -> Self {
+        Self {
+            auth_timeout: timeout,
+            ..self
+        }
     }
 }
 
@@ -137,8 +154,18 @@ impl AuthHandler for BrowserAuth {
         eprintln!("Opening authorization page in browser: {auth_url}");
         eprintln!("Please complete the authentication in the opened browser window.");
         webbrowser::open(auth_url).ok();
-        info!("Waiting for browser callback");
-        let params = cb_rx.await.map_err(|e| ClientConnectError::AuthError {
+        info!(
+            "Waiting {} seconds for browser callback",
+            self.auth_timeout.as_secs()
+        );
+        let auth_result =
+            timeout(self.auth_timeout, cb_rx)
+                .await
+                .map_err(|_| ClientConnectError::AuthError {
+                    msg: "Timeout while waiting for the user to authenticate".to_string(),
+                    source: None,
+                })?;
+        let params = auth_result.map_err(|e| ClientConnectError::AuthError {
             msg: format!("Failed to receive callback parameters: {e}"),
             source: Some(e.into()),
         })?;

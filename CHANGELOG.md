@@ -24,6 +24,10 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## Added
+
+- Timeout option to `BrowserAuth` authentication callback handler.
+
 ## [0.0.3] - 2026-06-13
 
 ## Added
