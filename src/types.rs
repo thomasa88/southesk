@@ -14,11 +14,12 @@ use uuid::Uuid;
 
 // TODO: Generate types from tool input and output JSON schemas?
 
-/// Used to select which holdings to fetch when calling
-/// [`get_holdings`](crate::Client::get_holdings).
+/// Selects what accounts to operate on.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum AccountFilter {
+    /// Use all accounts.
     All,
+    /// Use the account with the given account ID.
     AccountId(Uuid),
 }
 
@@ -52,6 +53,7 @@ pub struct AccountHoldings {
     pub currency_positions: Vec<CurrencyPosition>,
 }
 
+/// Type of financial account.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[non_exhaustive]
@@ -93,6 +95,7 @@ pub struct AccountSummary {
     pub currency: String,
 }
 
+/// A position in a single instrument within an account.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Position {
@@ -102,15 +105,21 @@ pub struct Position {
     pub ticker: String,
     /// Orderbook ID of the instrument.
     pub orderbook_id: u64,
+    /// Possible orderbook IDs for the instrument. This is a list of orderbook
+    /// IDs that can be used to identify the instrument, e.g. in different
+    /// markets.
     pub possible_orderbook_ids: Vec<u64>,
-    /// Number of shares
+    /// Number of shares.
     pub quantity: Decimal,
-    /// Value of the position (quantity * price).
+    /// Value of the position (`quantity * price`).
     pub market_value: InstrumentValue,
+    /// Unrealized result of the position.
     pub unrealized_result: InstrumentValue,
+    /// Unrealized result as a percentage.
     pub unrealized_result_percent: Decimal,
+    /// Currency of the instrument.
     pub instrument_currency: String,
-    /// Exchange rate (instrument_currency / account_currency).
+    /// Exchange rate (`instrument_currency / account_currency`).
     pub fx_rate: Decimal,
 }
 
@@ -159,8 +168,7 @@ pub struct AccountIdentifiers {
     pub account_type: String,
 }
 
-/// Arguments for creating a trade ticket, used with
-/// [`create_trade_ticket`](crate::Client::create_trade_ticket).
+/// Arguments for creating a trade ticket.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeTicketArgs {
@@ -188,7 +196,7 @@ pub struct TradeTicketArgs {
     /// currency.
     pub currency: TradeCurrency,
 
-    /// The instrument to trade
+    /// The instrument to trade.
     #[serde(flatten)]
     pub instrument: Instrument,
 }
@@ -205,6 +213,7 @@ pub enum TradeVolume {
     Quantity(Decimal),
 }
 
+/// Currency to use in a trade.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub enum TradeCurrency {
     /// Use the account's main currency.
@@ -294,11 +303,13 @@ pub enum Instrument {
     Ticker(String),
 }
 
-// Whether to buy or sell an instrument.
+/// Whether to buy or sell an instrument.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Default)]
 pub enum TradeSide {
+    /// Buy the instrument.
     #[default]
     Buy,
+    /// Sell the instrument.
     Sell,
 }
 
@@ -320,27 +331,39 @@ pub struct InstrumentIdentifiers {
     pub ticker: String,
 }
 
+/// Summary info about an instrument watchlist.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WatchlistInfo {
+    /// Watchlist ID.
     pub list_id: u64,
+    /// Watchlist name.
     pub name: String,
     /// Number of instruments in the watchlist.
     pub orderbook_count: u64,
 }
 
+/// An instrument watchlist.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Watchlist {
+    /// Watchlist ID.
     pub list_id: u64,
+    /// Watchlist name.
     pub name: String,
+    /// Instruments in the watchlist.
+    #[doc(alias = "instruments")]
     pub items: Vec<InstrumentIdentifiers>,
 }
 
+/// Result of adding or removing instruments from a watchlist.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModifyWatchlistResult {
+    /// Watchlist ID.
     pub list_id: u64,
+    /// This is the affected orderbook IDs for some operations and the IDs in
+    /// the call for others (2026-06-11).
     pub orderbook_ids: Vec<u64>,
 }
 

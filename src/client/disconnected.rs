@@ -29,6 +29,9 @@ impl Client<Disconnected> {
     /// This will automatically handle authentication, including refreshing
     /// tokens if needed. If there are no valid credentials, the user will be
     /// prompted to authenticate.
+    ///
+    /// Use [`ClientBuilder::no_auth`](crate::client::ClientBuilder::no_auth) to
+    /// disable interactive authentication.
     pub async fn connect(self) -> Result<Client<Connected>, ClientConnectError> {
         let auth_mgr = self.authenticate().await?;
 

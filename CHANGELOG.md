@@ -24,7 +24,7 @@ Headers:
 
 - Quickstart example added to the readme and top Rust documentation.
 - no_auth() option, for non-interactive sessions. Requires an existing access token.
-- Documentation of many more (non-API) types.
+- Documentation of many more types.
 - Banner/logo image.
 
 ## Changed
