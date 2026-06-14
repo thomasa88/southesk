@@ -175,5 +175,8 @@ async fn main() -> anyhow::Result<()> {
         println!("{trade_url}");
     }
     println!("Done");
+
+    montrose.disconnect().await;
+
     Ok(())
 }

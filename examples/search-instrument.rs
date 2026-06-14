@@ -42,5 +42,7 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
+    montrose.disconnect().await;
+
     Ok(())
 }

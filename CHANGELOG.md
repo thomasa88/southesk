@@ -27,6 +27,7 @@ Headers:
 ## Added
 
 - Timeout option to `BrowserAuth` authentication callback handler.
+- `Client::disconnect()`, for clean disconnects.
 
 ## [0.0.3] - 2026-06-13
 

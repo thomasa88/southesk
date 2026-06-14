@@ -48,6 +48,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let accounts = montrose.get_user_accounts().await?;
     dbg!(&accounts);
 
+    montrose.disconnect().await;
+
     Ok(())
 }
 ```

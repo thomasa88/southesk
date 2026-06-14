@@ -31,12 +31,14 @@ async fn main() -> anyhow::Result<()> {
         .cred_store(PlaintextCredStore::new(&creds_file))
         .build()
         .await?;
-    let _montrose = montrose.connect().await?;
+    let montrose = montrose.connect().await?;
 
     println!(
         "Credentials stored as plaintext in {}",
         creds_file.display()
     );
+
+    montrose.disconnect().await;
 
     Ok(())
 }

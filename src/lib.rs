@@ -29,6 +29,8 @@
 //!     let accounts = montrose.get_user_accounts().await?;
 //!     dbg!(&accounts);
 //!
+//!     montrose.disconnect().await;
+//!
 //!     Ok(())
 //! }
 //! ```

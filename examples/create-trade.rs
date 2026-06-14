@@ -52,5 +52,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     info!("Trade ticket URL: {}", trade_url);
 
+    montrose.disconnect().await;
+
     Ok(())
 }

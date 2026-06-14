@@ -1,18 +1,16 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
-use std::borrow::Cow;
+use std::{borrow::Cow, time::Duration};
 
 use rmcp::model::{CallToolRequestParams, CallToolResult, JsonObject};
 #[cfg(feature = "__dev")]
 use serde::Serialize;
 use serde::de::DeserializeOwned;
-use tracing::debug;
-#[cfg(feature = "__dev")]
-use tracing::{info, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::{
-    ClientCallError,
+    ClientCallError, Disconnected,
     types::{
         AccountFilter, AccountHoldings, AccountIdentifiers, CreateTradeTicketResult,
         InstrumentIdentifiers, ModifyWatchlistResult, TradeCurrency, TradeTicketArgs, Watchlist,
@@ -21,6 +19,32 @@ use crate::{
 };
 
 use super::{Client, Connected};
+
+/// # Client state
+impl Client<Connected> {
+    /// Disconnects from the MCP server.
+    pub async fn disconnect(mut self) -> Client<Disconnected> {
+        info!("Disconnecting from the MCP server...");
+        match self
+            .state
+            .client
+            .close_with_timeout(Duration::from_secs(30))
+            .await
+        {
+            Ok(None) => warn!("MCP service did not shut down cleanly"),
+            Ok(Some(quit_reason)) => debug!("MCP service exited: {quit_reason:?}"),
+            Err(e) => error!("Failed to join MCP service task: {e}"),
+        };
+        info!("Disconnected from the MCP server");
+
+        Client {
+            client_name: self.client_name,
+            auth_handler: self.auth_handler,
+            cred_store: self.cred_store,
+            state: Disconnected,
+        }
+    }
+}
 
 /// # Montrose API methods
 ///

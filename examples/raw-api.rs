@@ -25,5 +25,7 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     dbg!(result);
 
+    montrose.disconnect().await;
+
     Ok(())
 }

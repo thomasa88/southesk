@@ -32,5 +32,7 @@ async fn main() -> anyhow::Result<()> {
 
     io::stdout().write_all(montrose.introspect().await.as_bytes())?;
 
+    montrose.disconnect().await;
+
     Ok(())
 }

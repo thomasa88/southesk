@@ -34,8 +34,11 @@ impl Client<Disconnected> {
     ///
     /// Use [`ClientBuilder::no_auth`](crate::client::ClientBuilder::no_auth) to
     /// disable interactive authentication.
+    ///
+    /// Call [`disconnect`](Client::disconnect) to disconnect cleanly at
+    /// shutdown.
     pub async fn connect(self) -> Result<Client<Connected>, ClientConnectError> {
-        info!("Establishing connection to MCP server...");
+        info!("Connecting to the MCP server...");
         debug!("Using MCP server URL: {}", MCP_SERVER_URL);
 
         // This is a call graph flattened into a (max two laps) loop.

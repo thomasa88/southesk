@@ -36,6 +36,8 @@ mod disconnected;
 /// for account in &accounts {
 ///     dbg!(account);
 /// }
+///
+/// montrose.disconnect().await;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// # });
 /// ```
