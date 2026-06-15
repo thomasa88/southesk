@@ -24,7 +24,7 @@ use tokio::{
 };
 use tracing::{debug, error, info};
 
-use crate::result::ClientConnectError;
+use crate::error::ClientConnectError;
 
 const BROWSER_CALLBACK_HTML: &str = include_str!("res/default_callback.html");
 

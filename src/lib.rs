@@ -36,11 +36,11 @@
 //! ```
 
 pub use client::{Client, ClientBuilder, Connected, Disconnected};
-pub use result::{ClientBuildError, ClientCallError, ClientConnectError};
+pub use error::{ClientBuildError, ClientCallError, ClientConnectError};
 pub mod auth_handler;
 mod client;
 pub mod cred_store;
-mod result;
+mod error;
 pub mod types;
 
 // Re-export dependencies that are part of the public interface

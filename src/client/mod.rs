@@ -8,7 +8,7 @@ use {rmcp::transport::CredentialStore, tracing::warn};
 use crate::{
     auth_handler::{AuthHandler, BrowserAuth},
     cred_store::{FullCredStore, KeyringCredStore, SharedCredStore},
-    result::ClientBuildError,
+    error::ClientBuildError,
 };
 
 mod connected;

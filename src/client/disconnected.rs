@@ -16,7 +16,7 @@ use tracing::{debug, info};
 use crate::{
     auth_handler,
     cred_store::FullCredStore,
-    result::{ClientConnectError, MapAuthToConnectError},
+    error::{ClientConnectError, MapAuthToConnectError},
 };
 
 use super::{Client, Connected, Disconnected};
