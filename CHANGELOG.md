@@ -24,6 +24,8 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.4] - 2026-06-26
+
 ## Added
 
 - Timeout option to `BrowserAuth` authentication callback handler.
@@ -72,7 +74,8 @@ Headers:
 First public release.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/thomasa88/southesk/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/thomasa88/southesk/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/thomasa88/southesk/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/thomasa88/southesk/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/thomasa88/southesk/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/thomasa88/southesk/releases/tag/v0.0.1
