@@ -28,6 +28,7 @@ Headers:
 
 - Timeout option to `BrowserAuth` authentication callback handler.
 - `Client::disconnect()`, for clean disconnects.
+- Rename `result` module to `error`.
 
 ## [0.0.3] - 2026-06-13
 
