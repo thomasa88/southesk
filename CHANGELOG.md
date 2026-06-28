@@ -24,6 +24,10 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## Changed
+
+- Moved southesk into a Cargo workspace.
+
 ## [0.0.4] - 2026-06-26
 
 ## Added

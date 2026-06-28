@@ -26,7 +26,10 @@ To handle moving underlying APIs, the plan is to implement 3 API levels:
 
 ## Getting Started
 
-<!-- This is the same exmple as in src/lib.rs. Therefore, it is built when running doc tests. -->
+<!--
+This is the same example as in crates/southesk/src/lib.rs.
+Therefore, it is built when running doc tests.
+-->
 
 To use `southesk`, add it as a dependency along with an async runtime:
 
@@ -56,11 +59,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## Examples
 
-A set of examples using `southesk` is available in the [examples](examples) directory.
+A set of examples using `southesk` is available in the [examples](crates/southesk/examples) directory.
 They can be run as follows:
 
 ```bash
-cargo run --example=show_data
+cargo run -p southesk --example=show_data
 ```
 
 ## Features

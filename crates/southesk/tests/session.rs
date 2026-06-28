@@ -1,3 +1,6 @@
+// Copyright 2026 Thomas Axelsson
+// SPDX-License-Identifier: MIT
+
 use std::time::Duration;
 
 use southesk::ClientBuilder;
