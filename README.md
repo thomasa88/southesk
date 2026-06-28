@@ -60,7 +60,7 @@ A set of examples using `southesk` is available in the [examples](examples) dire
 They can be run as follows:
 
 ```bash
-cargo run --example=show-data
+cargo run --example=show_data
 ```
 
 ## Features
