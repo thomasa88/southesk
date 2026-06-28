@@ -13,8 +13,6 @@ use serde::{Deserialize, Serialize};
 use serde_with::{NoneAsEmptyString, serde_as};
 use uuid::Uuid;
 
-// TODO: Generate types from tool input and output JSON schemas?
-
 /// Selects what accounts to operate on.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum AccountFilter {

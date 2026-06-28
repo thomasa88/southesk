@@ -1,0 +1,32 @@
+[package]
+name = "southesk-macros"
+description = "Macros for southesk."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+proc-macro = true
+
+[features]
+# Limits the number of derives in the generated code, to make it easier to read
+# the cargo expand output.
+__dev-macros = []
+
+[dependencies]
+quote = { workspace = true }
+indexmap = { workspace = true }
+proc-macro2 = { workspace = true }
+serde = { workspace = true }
+# preserve_order: Keep tool arguments in the order provided by the JSON schema
+serde_json = { workspace = true, features = ["preserve_order"] }
+syn = { workspace = true }
+
+[dev-dependencies]
+rust_decimal = { workspace = true }
+southesk = { path = "../southesk" }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+

@@ -46,7 +46,7 @@ impl Client<Connected> {
     }
 }
 
-/// # Montrose API methods
+/// # High-level API
 ///
 /// Each method maps directly to a Montrose MCP tool of the same name.
 impl Client<Connected> {
@@ -191,12 +191,11 @@ impl Client<Connected> {
     }
 }
 
-/// # Raw API calls
+/// # Raw API
 ///
-/// The following methods provides raw API access to the MCP. They can be used
-/// when the corresponding APIs are not yet implement in [`Client`].
+/// The following methods provides raw API access to the MCP.
 impl Client<Connected> {
-    /// Calls the specified MCP tool with the given arguments.
+    /// Raw API. Calls the specified MCP tool with the given arguments.
     ///
     /// This function can be used before a new MCP API tool has been added to
     /// southesk.
@@ -205,7 +204,7 @@ impl Client<Connected> {
     /// expected response format. You can use [`serde_json::Value`] when the
     /// format is unknown.
     ///
-    /// This is a low-level API call. Prefer using the higher-level methods when
+    /// This is a raw API call. Prefer using the higher-level methods when
     /// available.
     ///
     /// # Examples
@@ -256,7 +255,7 @@ impl Client<Connected> {
 // Helpers
 impl Client<Connected> {
     /// Calls the specified MCP tool with the given arguments.
-    async fn api_call<T: DeserializeOwned>(
+    pub(crate) async fn api_call<T: DeserializeOwned>(
         &self,
         tool_name: impl Into<Cow<'static, str>>,
         args: Option<JsonObject>,

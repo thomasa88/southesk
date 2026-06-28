@@ -17,12 +17,21 @@ mod disconnected;
 /// The Montrose MCP client
 ///
 /// The client must first be connected, then the Montrose API functions can be
-/// used. Build a client using [`ClientBuilder`].
+/// used. Build a client using [`ClientBuilder`]. The user will by default
+/// automatically be requested to authenticate if there is no valid cached OAuth
+/// token.
 ///
-/// [`Client<Connected>`] provides the available API functions.
+/// The [high-level](#high-level-api) API functions provide a Rust-style API,
+/// where the type system is used to enforce required and mutually exclusive
+/// arguments.
 ///
-/// The user will automatically be requested to authenticate if there is no
-/// valid cached OAuth token.
+/// The [low-level](#low-level-api) API functions provide an API functions that
+/// are generated directly from the MCP API. They provide less guardrails and
+/// are clunkier to use, but can allow access to functionality not yet provided
+/// by the high-level API functions.
+///
+/// The [raw](#raw-api) API functions allow calling MCP tools with raw JSON
+/// data.
 ///
 /// # Examples
 /// ```no_run

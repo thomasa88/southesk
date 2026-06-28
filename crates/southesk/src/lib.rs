@@ -41,6 +41,7 @@ pub mod auth_handler;
 mod client;
 pub mod cred_store;
 mod error;
+pub mod low_level;
 pub mod types;
 
 // Re-export dependencies that are part of the public interface

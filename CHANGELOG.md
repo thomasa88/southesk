@@ -24,6 +24,10 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## Added
+
+- Low-level API that provides automatically generated functions from the MCP schema using `southesk-macros`.
+
 ## Changed
 
 - Moved southesk into a Cargo workspace.

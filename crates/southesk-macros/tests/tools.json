@@ -1,0 +1,60 @@
+{
+  "tools": [
+    {
+      "name": "simple_tool",
+      "description": "A simple tool.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "description": "The input string.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "output": {
+            "description": "The output number.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "output"
+        ]
+      }
+    },
+    {
+      "name": "other_tool",
+      "description": "Another tool.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "description": "The input string.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "input"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "output": {
+            "description": "The output number.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "output"
+        ]
+      }
+    }
+  ]
+}
