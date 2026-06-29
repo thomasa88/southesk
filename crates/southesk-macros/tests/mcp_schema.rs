@@ -13,7 +13,7 @@ struct Client<S> {
 }
 
 struct Connected;
-use southesk::ClientCallError;
+use southesk::error::ClientCallError;
 
 impl<S> Client<S> {
     async fn api_call<T: DeserializeOwned>(

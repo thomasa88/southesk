@@ -10,7 +10,8 @@ use serde::de::DeserializeOwned;
 use tracing::{debug, error, info, warn};
 
 use crate::{
-    ClientCallError, Disconnected,
+    Disconnected,
+    error::ClientCallError,
     types::{
         AccountFilter, AccountHoldings, AccountIdentifiers, CreateTradeTicketResult,
         InstrumentIdentifiers, ModifyWatchlistResult, TradeCurrency, TradeTicketArgs, Watchlist,

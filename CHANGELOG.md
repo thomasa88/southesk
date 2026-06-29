@@ -31,6 +31,7 @@ Headers:
 ## Changed
 
 - Moved southesk into a Cargo workspace.
+- southesk error types are now found in `error`.
 
 ## [0.0.4] - 2026-06-26
 

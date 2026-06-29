@@ -36,11 +36,10 @@
 //! ```
 
 pub use client::{Client, ClientBuilder, Connected, Disconnected};
-pub use error::{ClientBuildError, ClientCallError, ClientConnectError};
 pub mod auth_handler;
 mod client;
 pub mod cred_store;
-mod error;
+pub mod error;
 pub mod low_level;
 pub mod types;
 
