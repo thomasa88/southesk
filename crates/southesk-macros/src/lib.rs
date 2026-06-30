@@ -21,6 +21,7 @@ struct Tool {
     output_schema: JsType,
 }
 
+/// A representation of the JSON schema
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct McpSchema {
@@ -29,21 +30,16 @@ struct McpSchema {
 
 impl Parse for McpSchema {
     fn parse(input: ParseStream) -> syn::Result<Self> {
+        let top_dir =
+            std::env::var("CARGO_MANIFEST_DIR").expect("Needs to be run in a cargo project");
         let json_path_lit = input.parse::<syn::LitStr>()?;
-        let json_path = PathBuf::from(&json_path_lit.value());
-        let json = std::fs::File::open(&json_path).unwrap_or_else(|_| {
-            panic!(
-                "Cannot open {} in {}",
-                json_path.display(),
-                std::env::current_dir().unwrap().display()
-            )
-        });
+        let json_path: PathBuf = [&top_dir, &json_path_lit.value()].iter().collect();
+        let json = std::fs::File::open(&json_path)
+            .unwrap_or_else(|_| panic!("Cannot open {}", json_path.display()));
         let schema: McpSchema = serde_json::from_reader(json).map_err(|e| {
             syn::Error::new(json_path_lit.span(), format!("Failed to parse JSON: {}", e))
         })?;
-        Ok(Self {
-            tools: schema.tools,
-        })
+        Ok(schema)
     }
 }
 
@@ -462,8 +458,10 @@ fn type_value<'de, D: Deserializer<'de>>(deserializer: D) -> Result<(String, boo
 }
 
 /// Creates MCP types from the JSON file at the given path.
+///
+/// The path should be relative to the Cargo manifest directory of the crate.
 #[proc_macro]
 pub fn mcp_schema(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let c = parse_macro_input!(input as McpSchema);
-    quote! { #c }.into()
+    let mcp_schema = parse_macro_input!(input as McpSchema);
+    mcp_schema.to_token_stream().into()
 }

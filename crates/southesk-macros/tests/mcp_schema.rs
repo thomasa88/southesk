@@ -3,17 +3,19 @@
 
 use std::{borrow::Cow, marker::PhantomData};
 
+use rust_decimal::dec;
 use serde::de::DeserializeOwned;
+use southesk::error::ClientCallError;
+use southesk::raw::JsonObject;
 use southesk_macros::mcp_schema;
-
-type JsonObject<F = serde_json::Value> = serde_json::Map<String, F>;
 
 struct Client<S> {
     _state: PhantomData<S>,
 }
 
 struct Connected;
-use southesk::error::ClientCallError;
+
+mcp_schema!("tests/tools.json");
 
 impl<S> Client<S> {
     async fn api_call<T: DeserializeOwned>(
@@ -34,13 +36,18 @@ impl<S> Client<S> {
     }
 }
 
-mcp_schema!("crates/southesk-macros/tests/tools.json");
-
 #[tokio::test]
 async fn call_simple_tool() {
     let client = Client::<Connected> {
         _state: PhantomData,
     };
-    let input_str = "hello".to_string();
-    client.low_simple_tool(&input_str).await.unwrap();
+    assert_eq!(
+        client.low_simple_tool("input_str").await.unwrap(),
+        dec!(42)
+    );
+}
+
+#[test]
+pub fn check_expanded() {
+    macrotest::expand("tests/expand/*.rs");
 }

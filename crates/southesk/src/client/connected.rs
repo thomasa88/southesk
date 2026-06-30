@@ -3,7 +3,7 @@
 
 use std::{borrow::Cow, time::Duration};
 
-use rmcp::model::{CallToolRequestParams, CallToolResult, JsonObject};
+use rmcp::model::{CallToolRequestParams, CallToolResult};
 #[cfg(feature = "__dev")]
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -12,6 +12,7 @@ use tracing::{debug, error, info, warn};
 use crate::{
     Disconnected,
     error::ClientCallError,
+    raw::JsonObject,
     types::{
         AccountFilter, AccountHoldings, AccountIdentifiers, CreateTradeTicketResult,
         InstrumentIdentifiers, ModifyWatchlistResult, TradeCurrency, TradeTicketArgs, Watchlist,

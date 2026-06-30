@@ -36,6 +36,7 @@ uuid = { version = "1.22.0", features = ["serde"] }
 webbrowser = "1.2.0"
 
 # macros
+macrotest = "1.2.1"
 proc-macro2 = "1.0.106"
 quote = "1.0.45"
 syn = "2.0.117"

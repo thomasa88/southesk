@@ -8,4 +8,4 @@ use crate::Connected;
 use crate::error::ClientCallError;
 use southesk_macros::mcp_schema;
 
-mcp_schema!("scripts/montrose-api/api.json");
+mcp_schema!("../../scripts/montrose-api/api.json");
