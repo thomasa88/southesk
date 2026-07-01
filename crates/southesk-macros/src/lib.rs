@@ -95,6 +95,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
     let ret_struct_name = snake_to_pascal_case(tool_name) + "Return";
     let func_name = format!("low_{tool_name}");
 
+    // Generate all argument types
     let (arg_struct_ident, input_has_ref, _is_nullable) = process_type(
         Some(&mut support_types),
         &args_struct_name,
@@ -129,6 +130,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
     }
     let (return_type, _, _) = process_type(None, &return_type_name, return_obj, "", false);
 
+    // Generate all return types
     let (ret_struct_ident, output_has_ref, _is_nullable) = process_type(
         Some(&mut support_types),
         &ret_struct_name,
@@ -196,7 +198,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
             let prop_ident = Ident::new(&arg_name, Span::call_site());
             let (mut prop_type_quote, _has_ref, _is_nullable) = process_type(
                 None,
-                &camel_to_pascal_case(prop_name),
+                &format!("{}{}", &args_struct_name, camel_to_pascal_case(prop_name)),
                 prop_js_type,
                 "",
                 true,
@@ -347,11 +349,40 @@ fn process_type(
             }
         }
         "string" => {
-            if allow_ref {
-                has_ref = HasRef::Yes;
-                quote! { &'arg str }
+            if let Some(enum_values) = &js_type.r#enum {
+                let enum_ident = Ident::new(type_name_hint, Span::call_site());
+                if let Some(support_types) = support_types {
+                    let mut enum_members = TokenStream::new();
+                    for enum_value in enum_values {
+                        let enum_value_ident = Ident::new(enum_value, Span::call_site());
+                        enum_members.extend(quote! {
+                            #enum_value_ident,
+                        });
+                    }
+                    let comment = &js_type.description;
+                    support_types.extend(quote! {
+                        #[doc = #comment]
+                    });
+                    #[cfg(not(feature = "__dev-macros"))]
+                    {
+                        support_types.extend(quote! {
+                            #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+                        });
+                    }
+                    support_types.extend(quote! {
+                        pub enum #enum_ident {
+                            #enum_members
+                        }
+                    });
+                }
+                quote! { #enum_ident }
             } else {
-                quote! { String }
+                if allow_ref {
+                    has_ref = HasRef::Yes;
+                    quote! { &'arg str }
+                } else {
+                    quote! { String }
+                }
             }
         }
         "number" => quote! { Decimal },
@@ -411,10 +442,14 @@ struct JsType {
     description: String,
     #[serde(default)]
     properties: IndexMap<String, JsType>,
+    /// Items in array
     #[serde(default)]
     items: Option<Box<JsType>>,
     #[serde(default)]
     required: Vec<String>,
+    /// Strings can be enums
+    #[serde(default)]
+    r#enum: Option<Vec<String>>,
 }
 
 /// Deserializes the type member. It assumes that the first type is the wanted one.

@@ -55,7 +55,7 @@ fn main() {
         ///Low-level API. Another tool.
         async fn low_other_tool_long(
             &self,
-            args: OtherToolArgs<'_>,
+            args: OtherToolArgs,
         ) -> Result<Decimal, ClientCallError> {
             let json_args = serde_json::to_value(args)
                 .map_err(|e| ClientCallError::InvalidArguments(
@@ -84,12 +84,12 @@ fn main() {
         }
         /**Low-level API. Another tool.
 
-`input`: The input string.
+`input`: The input value.
 
 */
-        pub async fn low_other_tool<'arg>(
+        pub async fn low_other_tool(
             &self,
-            input: &'arg str,
+            input: OtherToolArgsInput,
         ) -> Result<Decimal, ClientCallError> {
             let args = OtherToolArgs { input };
             self.low_other_tool_long(args).await
@@ -425,14 +425,279 @@ fn main() {
                 }
             }
         };
-        ///Arguments for [`low_other_tool`](crate::Client::low_other_tool)
-        #[serde(rename_all = "camelCase")]
-        pub struct OtherToolArgs<'arg> {
-            ///The input string.
-            pub input: &'arg str,
+        ///The input value.
+        pub enum OtherToolArgsInput {
+            Value1,
+            Value2,
+            Value3,
         }
         #[automatically_derived]
-        impl<'arg> ::core::fmt::Debug for OtherToolArgs<'arg> {
+        impl ::core::fmt::Debug for OtherToolArgsInput {
+            #[inline]
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                ::core::fmt::Formatter::write_str(
+                    f,
+                    match self {
+                        OtherToolArgsInput::Value1 => "Value1",
+                        OtherToolArgsInput::Value2 => "Value2",
+                        OtherToolArgsInput::Value3 => "Value3",
+                    },
+                )
+            }
+        }
+        #[automatically_derived]
+        impl ::core::clone::Clone for OtherToolArgsInput {
+            #[inline]
+            fn clone(&self) -> OtherToolArgsInput {
+                match self {
+                    OtherToolArgsInput::Value1 => OtherToolArgsInput::Value1,
+                    OtherToolArgsInput::Value2 => OtherToolArgsInput::Value2,
+                    OtherToolArgsInput::Value3 => OtherToolArgsInput::Value3,
+                }
+            }
+        }
+        #[automatically_derived]
+        impl ::core::marker::StructuralPartialEq for OtherToolArgsInput {}
+        #[automatically_derived]
+        impl ::core::cmp::PartialEq for OtherToolArgsInput {
+            #[inline]
+            fn eq(&self, other: &OtherToolArgsInput) -> bool {
+                let __self_discr = ::core::intrinsics::discriminant_value(self);
+                let __arg1_discr = ::core::intrinsics::discriminant_value(other);
+                __self_discr == __arg1_discr
+            }
+        }
+        #[doc(hidden)]
+        #[allow(
+            non_upper_case_globals,
+            unused_attributes,
+            unused_qualifications,
+            clippy::absolute_paths,
+        )]
+        const _: () = {
+            #[allow(unused_extern_crates, clippy::useless_attribute)]
+            extern crate serde as _serde;
+            #[automatically_derived]
+            impl _serde::Serialize for OtherToolArgsInput {
+                fn serialize<__S>(
+                    &self,
+                    __serializer: __S,
+                ) -> _serde::__private228::Result<__S::Ok, __S::Error>
+                where
+                    __S: _serde::Serializer,
+                {
+                    match *self {
+                        OtherToolArgsInput::Value1 => {
+                            _serde::Serializer::serialize_unit_variant(
+                                __serializer,
+                                "OtherToolArgsInput",
+                                0u32,
+                                "Value1",
+                            )
+                        }
+                        OtherToolArgsInput::Value2 => {
+                            _serde::Serializer::serialize_unit_variant(
+                                __serializer,
+                                "OtherToolArgsInput",
+                                1u32,
+                                "Value2",
+                            )
+                        }
+                        OtherToolArgsInput::Value3 => {
+                            _serde::Serializer::serialize_unit_variant(
+                                __serializer,
+                                "OtherToolArgsInput",
+                                2u32,
+                                "Value3",
+                            )
+                        }
+                    }
+                }
+            }
+        };
+        #[doc(hidden)]
+        #[allow(
+            non_upper_case_globals,
+            unused_attributes,
+            unused_qualifications,
+            clippy::absolute_paths,
+        )]
+        const _: () = {
+            #[allow(unused_extern_crates, clippy::useless_attribute)]
+            extern crate serde as _serde;
+            #[automatically_derived]
+            impl<'de> _serde::Deserialize<'de> for OtherToolArgsInput {
+                fn deserialize<__D>(
+                    __deserializer: __D,
+                ) -> _serde::__private228::Result<Self, __D::Error>
+                where
+                    __D: _serde::Deserializer<'de>,
+                {
+                    #[allow(non_camel_case_types)]
+                    #[doc(hidden)]
+                    enum __Field {
+                        __field0,
+                        __field1,
+                        __field2,
+                    }
+                    #[doc(hidden)]
+                    struct __FieldVisitor;
+                    #[automatically_derived]
+                    impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                        type Value = __Field;
+                        fn expecting(
+                            &self,
+                            __formatter: &mut _serde::__private228::Formatter,
+                        ) -> _serde::__private228::fmt::Result {
+                            _serde::__private228::Formatter::write_str(
+                                __formatter,
+                                "variant identifier",
+                            )
+                        }
+                        fn visit_u64<__E>(
+                            self,
+                            __value: u64,
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                0u64 => _serde::__private228::Ok(__Field::__field0),
+                                1u64 => _serde::__private228::Ok(__Field::__field1),
+                                2u64 => _serde::__private228::Ok(__Field::__field2),
+                                _ => {
+                                    _serde::__private228::Err(
+                                        _serde::de::Error::invalid_value(
+                                            _serde::de::Unexpected::Unsigned(__value),
+                                            &"variant index 0 <= i < 3",
+                                        ),
+                                    )
+                                }
+                            }
+                        }
+                        fn visit_str<__E>(
+                            self,
+                            __value: &str,
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                "Value1" => _serde::__private228::Ok(__Field::__field0),
+                                "Value2" => _serde::__private228::Ok(__Field::__field1),
+                                "Value3" => _serde::__private228::Ok(__Field::__field2),
+                                _ => {
+                                    _serde::__private228::Err(
+                                        _serde::de::Error::unknown_variant(__value, VARIANTS),
+                                    )
+                                }
+                            }
+                        }
+                        fn visit_bytes<__E>(
+                            self,
+                            __value: &[u8],
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                b"Value1" => _serde::__private228::Ok(__Field::__field0),
+                                b"Value2" => _serde::__private228::Ok(__Field::__field1),
+                                b"Value3" => _serde::__private228::Ok(__Field::__field2),
+                                _ => {
+                                    let __value = &_serde::__private228::from_utf8_lossy(
+                                        __value,
+                                    );
+                                    _serde::__private228::Err(
+                                        _serde::de::Error::unknown_variant(__value, VARIANTS),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    #[automatically_derived]
+                    impl<'de> _serde::Deserialize<'de> for __Field {
+                        #[inline]
+                        fn deserialize<__D>(
+                            __deserializer: __D,
+                        ) -> _serde::__private228::Result<Self, __D::Error>
+                        where
+                            __D: _serde::Deserializer<'de>,
+                        {
+                            _serde::Deserializer::deserialize_identifier(
+                                __deserializer,
+                                __FieldVisitor,
+                            )
+                        }
+                    }
+                    #[doc(hidden)]
+                    struct __Visitor<'de> {
+                        marker: _serde::__private228::PhantomData<OtherToolArgsInput>,
+                        lifetime: _serde::__private228::PhantomData<&'de ()>,
+                    }
+                    #[automatically_derived]
+                    impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                        type Value = OtherToolArgsInput;
+                        fn expecting(
+                            &self,
+                            __formatter: &mut _serde::__private228::Formatter,
+                        ) -> _serde::__private228::fmt::Result {
+                            _serde::__private228::Formatter::write_str(
+                                __formatter,
+                                "enum OtherToolArgsInput",
+                            )
+                        }
+                        fn visit_enum<__A>(
+                            self,
+                            __data: __A,
+                        ) -> _serde::__private228::Result<Self::Value, __A::Error>
+                        where
+                            __A: _serde::de::EnumAccess<'de>,
+                        {
+                            match _serde::de::EnumAccess::variant(__data)? {
+                                (__Field::__field0, __variant) => {
+                                    _serde::de::VariantAccess::unit_variant(__variant)?;
+                                    _serde::__private228::Ok(OtherToolArgsInput::Value1)
+                                }
+                                (__Field::__field1, __variant) => {
+                                    _serde::de::VariantAccess::unit_variant(__variant)?;
+                                    _serde::__private228::Ok(OtherToolArgsInput::Value2)
+                                }
+                                (__Field::__field2, __variant) => {
+                                    _serde::de::VariantAccess::unit_variant(__variant)?;
+                                    _serde::__private228::Ok(OtherToolArgsInput::Value3)
+                                }
+                            }
+                        }
+                    }
+                    #[doc(hidden)]
+                    const VARIANTS: &'static [&'static str] = &[
+                        "Value1",
+                        "Value2",
+                        "Value3",
+                    ];
+                    _serde::Deserializer::deserialize_enum(
+                        __deserializer,
+                        "OtherToolArgsInput",
+                        VARIANTS,
+                        __Visitor {
+                            marker: _serde::__private228::PhantomData::<
+                                OtherToolArgsInput,
+                            >,
+                            lifetime: _serde::__private228::PhantomData,
+                        },
+                    )
+                }
+            }
+        };
+        ///Arguments for [`low_other_tool`](crate::Client::low_other_tool)
+        #[serde(rename_all = "camelCase")]
+        pub struct OtherToolArgs {
+            ///The input value.
+            pub input: OtherToolArgsInput,
+        }
+        #[automatically_derived]
+        impl ::core::fmt::Debug for OtherToolArgs {
             #[inline]
             fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 ::core::fmt::Formatter::debug_struct_field1_finish(
@@ -444,20 +709,20 @@ fn main() {
             }
         }
         #[automatically_derived]
-        impl<'arg> ::core::clone::Clone for OtherToolArgs<'arg> {
+        impl ::core::clone::Clone for OtherToolArgs {
             #[inline]
-            fn clone(&self) -> OtherToolArgs<'arg> {
+            fn clone(&self) -> OtherToolArgs {
                 OtherToolArgs {
                     input: ::core::clone::Clone::clone(&self.input),
                 }
             }
         }
         #[automatically_derived]
-        impl<'arg> ::core::marker::StructuralPartialEq for OtherToolArgs<'arg> {}
+        impl ::core::marker::StructuralPartialEq for OtherToolArgs {}
         #[automatically_derived]
-        impl<'arg> ::core::cmp::PartialEq for OtherToolArgs<'arg> {
+        impl ::core::cmp::PartialEq for OtherToolArgs {
             #[inline]
-            fn eq(&self, other: &OtherToolArgs<'arg>) -> bool {
+            fn eq(&self, other: &OtherToolArgs) -> bool {
                 self.input == other.input
             }
         }
@@ -472,7 +737,7 @@ fn main() {
             #[allow(unused_extern_crates, clippy::useless_attribute)]
             extern crate serde as _serde;
             #[automatically_derived]
-            impl<'arg> _serde::Serialize for OtherToolArgs<'arg> {
+            impl _serde::Serialize for OtherToolArgs {
                 fn serialize<__S>(
                     &self,
                     __serializer: __S,

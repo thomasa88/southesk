@@ -35,8 +35,13 @@
         "type": "object",
         "properties": {
           "input": {
-            "description": "The input string.",
-            "type": "string"
+            "description": "The input value.",
+            "type": "string",
+            "enum": [
+              "Value1",
+              "Value2",
+              "Value3"
+            ]
           }
         },
         "required": [

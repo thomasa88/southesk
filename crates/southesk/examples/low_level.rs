@@ -5,7 +5,7 @@
 
 use anyhow::Context;
 use rust_decimal::dec;
-use southesk::low_level::types::CreateTradeTicketArgs;
+use southesk::low_level::types::{CreateTradeTicketArgs, CreateTradeTicketArgsSide};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -32,7 +32,7 @@ async fn main() -> anyhow::Result<()> {
 
     montrose
         .low_create_trade_ticket(CreateTradeTicketArgs {
-            side: "Buy",
+            side: CreateTradeTicketArgsSide::Buy,
             orderbook_id: holdings
                 .first()
                 .and_then(|h| h.positions.first())
