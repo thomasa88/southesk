@@ -95,13 +95,6 @@ SOFTWARE.
 
 This software is licensed under the [MIT license](LICENSE).
 
-## Known Issues
-
-OAuth refresh works and can be performed successfully multiple times. However,
-the MCP resource seems to only accept the initial access token. The result is
-that a new authorization flow is triggered after 24 hours and the user needs to
-authenticate again.
-
 ## What's in a name?
 
 The river South Esk flows through the town of Montrose, Scotland, out into the North Sea. South Esk gives its name to the title Earl of Southesk, held by the Carnegie family.
