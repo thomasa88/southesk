@@ -41,10 +41,7 @@ async fn call_simple_tool() {
     let client = Client::<Connected> {
         _state: PhantomData,
     };
-    assert_eq!(
-        client.low_simple_tool("input_str").await.unwrap(),
-        dec!(42)
-    );
+    assert_eq!(client.low_simple_tool("input_str").await.unwrap(), dec!(42));
 }
 
 #[test]

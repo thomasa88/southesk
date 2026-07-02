@@ -100,7 +100,9 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
         Some(&mut support_types),
         &args_struct_name,
         input_schema,
-        &format!("Arguments for [`{func_name}`](crate::Client::{func_name})"),
+        Some(&format!(
+            "Arguments for [`{func_name}`](crate::Client::{func_name})"
+        )),
         true,
     );
 
@@ -128,14 +130,16 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
         return_member.extend(quote! { . #var_name });
         return_type_name += &camel_to_pascal_case(name);
     }
-    let (return_type, _, _) = process_type(None, &return_type_name, return_obj, "", false);
+    let (return_type, _, _) = process_type(None, &return_type_name, return_obj, None, false);
 
     // Generate all return types
     let (ret_struct_ident, output_has_ref, _is_nullable) = process_type(
         Some(&mut support_types),
         &ret_struct_name,
         output_schema,
-        &format!("Return value for [`{func_name}`](crate::Client::{func_name})."),
+        Some(&format!(
+            "Return value for [`{func_name}`](crate::Client::{func_name})."
+        )),
         false,
     );
     assert!(
@@ -200,7 +204,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
                 None,
                 &format!("{}{}", &args_struct_name, camel_to_pascal_case(prop_name)),
                 prop_js_type,
-                "",
+                None,
                 true,
             );
             if !input_schema.required.contains(prop_name) {
@@ -243,17 +247,21 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
     }
 }
 
-/// Generates a Rust type, and optionally its needed support types, from a schema object.
+/// Generates a Rust type, and optionally its needed support types, from a
+/// schema object.
 ///
-/// The returned token stream matches what would be written as a struct member type.
-/// Examples: `i64`, `&'arg str`, `CallToolArgs`
+/// The description (code comment) for objects and enums can be overridden. It
+/// is used for top-level schemas, as they don't have a description.
+///
+/// The returned token stream matches what would be written as a struct member
+/// type. Examples: `i64`, `&'arg str`, `CallToolArgs`
 ///
 /// HasRef will only be correctly set if support types are generated.
 fn process_type(
     support_types: Option<&mut TokenStream>,
     type_name_hint: &str,
     js_type: &JsType,
-    comment: &str,
+    description_override: Option<&str>,
     allow_ref: bool,
 ) -> (TokenStream, Option<HasRef>, bool) {
     let mut has_ref = HasRef::No;
@@ -268,36 +276,36 @@ fn process_type(
                 js_type
                     .properties
                     .iter()
-                    .for_each(|(prop_name, child_object)| {
-                        let prop_ident =
+                    .for_each(|(prop_name, prop_js_type)| {
+                        let member_ident =
                             Ident::new(&camel_to_snake_case(prop_name), Span::call_site());
-                        let (mut prop_type, child_has_ref, child_is_nullable) = process_type(
+                        let (mut member_type, member_has_ref, member_is_nullable) = process_type(
                             Some(support_types),
                             &format!("{}{}", type_name_hint, camel_to_pascal_case(prop_name)),
-                            child_object,
-                            "",
+                            prop_js_type,
+                            None,
                             allow_ref,
                         );
-                        if child_has_ref == Some(HasRef::Yes) {
+                        if member_has_ref == Some(HasRef::Yes) {
                             has_ref = HasRef::Yes;
                         }
-                        let mut prop_attrs = TokenStream::new();
-                        if child_is_nullable || !js_type.required.contains(prop_name) {
-                            prop_type = quote! { Option<#prop_type> };
+                        let mut member_attrs = TokenStream::new();
+                        if member_is_nullable || !js_type.required.contains(prop_name) {
+                            member_type = quote! { Option<#member_type> };
                             #[cfg(not(feature = "__dev-macros"))]
-                            prop_attrs.extend(quote! {
+                            member_attrs.extend(quote! {
                                 #[serde(skip_serializing_if = "Option::is_none")]
                             });
                         }
-                        let child_comment = if child_object.description.is_empty() {
+                        let member_comment = if prop_js_type.description.is_empty() {
                             "(The MCP does not provide any documentation for this field.)"
                         } else {
-                            &child_object.description
+                            &prop_js_type.description
                         };
                         struct_members.extend(quote! {
-                            #[doc = #child_comment]
-                            #prop_attrs
-                            pub #prop_ident: #prop_type,
+                            #[doc = #member_comment]
+                            #member_attrs
+                            pub #member_ident: #member_type,
                         });
                     });
                 let arg_ref = if has_ref == HasRef::Yes {
@@ -305,10 +313,12 @@ fn process_type(
                 } else {
                     quote! {}
                 };
-                let comment = if comment.is_empty() {
-                    "(The MCP does not provide any documentation for this struct.)"
+                let comment = if let Some(r#override) = description_override {
+                    r#override
+                } else if !js_type.description.is_empty() {
+                    &js_type.description
                 } else {
-                    comment
+                    "(The MCP does not provide any documentation for this struct.)"
                 };
                 support_types.extend(quote! {
                     #[doc = #comment]
@@ -338,7 +348,7 @@ fn process_type(
                 support_types,
                 &format!("{type_name_hint}Item"),
                 items,
-                "",
+                None,
                 allow_ref,
             );
             if allow_ref {

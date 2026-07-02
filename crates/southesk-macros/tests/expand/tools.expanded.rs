@@ -56,7 +56,7 @@ fn main() {
         async fn low_other_tool_long(
             &self,
             args: OtherToolArgs,
-        ) -> Result<Decimal, ClientCallError> {
+        ) -> Result<OtherToolReturn, ClientCallError> {
             let json_args = serde_json::to_value(args)
                 .map_err(|e| ClientCallError::InvalidArguments(
                     ::alloc::__export::must_use({
@@ -75,12 +75,7 @@ fn main() {
                 ))?
                 .to_owned();
             #[allow(clippy::needless_question_mark)]
-            Ok(
-                self
-                    .api_call::<OtherToolReturn>("other_tool", Some(json_args))
-                    .await?
-                    .output,
-            )
+            Ok(self.api_call::<OtherToolReturn>("other_tool", Some(json_args)).await?)
         }
         /**Low-level API. Another tool.
 
@@ -90,7 +85,7 @@ fn main() {
         pub async fn low_other_tool(
             &self,
             input: OtherToolArgsInput,
-        ) -> Result<Decimal, ClientCallError> {
+        ) -> Result<OtherToolReturn, ClientCallError> {
             let args = OtherToolArgs { input };
             self.low_other_tool_long(args).await
         }
@@ -170,7 +165,7 @@ fn main() {
         ///Return value for [`low_simple_tool`](crate::Client::low_simple_tool).
         #[serde(rename_all = "camelCase")]
         pub struct SimpleToolReturn {
-            ///The output number.
+            ///(The MCP does not provide any documentation for this field.)
             pub output: Decimal,
         }
         #[automatically_derived]
@@ -759,40 +754,40 @@ fn main() {
                 }
             }
         };
-        ///Return value for [`low_other_tool`](crate::Client::low_other_tool).
+        ///Nested child
         #[serde(rename_all = "camelCase")]
-        pub struct OtherToolReturn {
-            ///The output number.
-            pub output: Decimal,
+        pub struct OtherToolReturnParentChild {
+            ///Innermost child
+            pub innermost: Decimal,
         }
         #[automatically_derived]
-        impl ::core::fmt::Debug for OtherToolReturn {
+        impl ::core::fmt::Debug for OtherToolReturnParentChild {
             #[inline]
             fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
                 ::core::fmt::Formatter::debug_struct_field1_finish(
                     f,
-                    "OtherToolReturn",
-                    "output",
-                    &&self.output,
+                    "OtherToolReturnParentChild",
+                    "innermost",
+                    &&self.innermost,
                 )
             }
         }
         #[automatically_derived]
-        impl ::core::clone::Clone for OtherToolReturn {
+        impl ::core::clone::Clone for OtherToolReturnParentChild {
             #[inline]
-            fn clone(&self) -> OtherToolReturn {
-                OtherToolReturn {
-                    output: ::core::clone::Clone::clone(&self.output),
+            fn clone(&self) -> OtherToolReturnParentChild {
+                OtherToolReturnParentChild {
+                    innermost: ::core::clone::Clone::clone(&self.innermost),
                 }
             }
         }
         #[automatically_derived]
-        impl ::core::marker::StructuralPartialEq for OtherToolReturn {}
+        impl ::core::marker::StructuralPartialEq for OtherToolReturnParentChild {}
         #[automatically_derived]
-        impl ::core::cmp::PartialEq for OtherToolReturn {
+        impl ::core::cmp::PartialEq for OtherToolReturnParentChild {
             #[inline]
-            fn eq(&self, other: &OtherToolReturn) -> bool {
-                self.output == other.output
+            fn eq(&self, other: &OtherToolReturnParentChild) -> bool {
+                self.innermost == other.innermost
             }
         }
         #[doc(hidden)]
@@ -806,7 +801,7 @@ fn main() {
             #[allow(unused_extern_crates, clippy::useless_attribute)]
             extern crate serde as _serde;
             #[automatically_derived]
-            impl _serde::Serialize for OtherToolReturn {
+            impl _serde::Serialize for OtherToolReturnParentChild {
                 fn serialize<__S>(
                     &self,
                     __serializer: __S,
@@ -816,13 +811,13 @@ fn main() {
                 {
                     let mut __serde_state = _serde::Serializer::serialize_struct(
                         __serializer,
-                        "OtherToolReturn",
+                        "OtherToolReturnParentChild",
                         false as usize + 1,
                     )?;
                     _serde::ser::SerializeStruct::serialize_field(
                         &mut __serde_state,
-                        "output",
-                        &self.output,
+                        "innermost",
+                        &self.innermost,
                     )?;
                     _serde::ser::SerializeStruct::end(__serde_state)
                 }
@@ -839,7 +834,7 @@ fn main() {
             #[allow(unused_extern_crates, clippy::useless_attribute)]
             extern crate serde as _serde;
             #[automatically_derived]
-            impl<'de> _serde::Deserialize<'de> for OtherToolReturn {
+            impl<'de> _serde::Deserialize<'de> for OtherToolReturnParentChild {
                 fn deserialize<__D>(
                     __deserializer: __D,
                 ) -> _serde::__private228::Result<Self, __D::Error>
@@ -886,7 +881,561 @@ fn main() {
                             __E: _serde::de::Error,
                         {
                             match __value {
+                                "innermost" => _serde::__private228::Ok(__Field::__field0),
+                                _ => _serde::__private228::Ok(__Field::__ignore),
+                            }
+                        }
+                        fn visit_bytes<__E>(
+                            self,
+                            __value: &[u8],
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                b"innermost" => _serde::__private228::Ok(__Field::__field0),
+                                _ => _serde::__private228::Ok(__Field::__ignore),
+                            }
+                        }
+                    }
+                    #[automatically_derived]
+                    impl<'de> _serde::Deserialize<'de> for __Field {
+                        #[inline]
+                        fn deserialize<__D>(
+                            __deserializer: __D,
+                        ) -> _serde::__private228::Result<Self, __D::Error>
+                        where
+                            __D: _serde::Deserializer<'de>,
+                        {
+                            _serde::Deserializer::deserialize_identifier(
+                                __deserializer,
+                                __FieldVisitor,
+                            )
+                        }
+                    }
+                    #[doc(hidden)]
+                    struct __Visitor<'de> {
+                        marker: _serde::__private228::PhantomData<
+                            OtherToolReturnParentChild,
+                        >,
+                        lifetime: _serde::__private228::PhantomData<&'de ()>,
+                    }
+                    #[automatically_derived]
+                    impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                        type Value = OtherToolReturnParentChild;
+                        fn expecting(
+                            &self,
+                            __formatter: &mut _serde::__private228::Formatter,
+                        ) -> _serde::__private228::fmt::Result {
+                            _serde::__private228::Formatter::write_str(
+                                __formatter,
+                                "struct OtherToolReturnParentChild",
+                            )
+                        }
+                        #[inline]
+                        fn visit_seq<__A>(
+                            self,
+                            mut __seq: __A,
+                        ) -> _serde::__private228::Result<Self::Value, __A::Error>
+                        where
+                            __A: _serde::de::SeqAccess<'de>,
+                        {
+                            let __field0 = match _serde::de::SeqAccess::next_element::<
+                                Decimal,
+                            >(&mut __seq)? {
+                                _serde::__private228::Some(__value) => __value,
+                                _serde::__private228::None => {
+                                    return _serde::__private228::Err(
+                                        _serde::de::Error::invalid_length(
+                                            0usize,
+                                            &"struct OtherToolReturnParentChild with 1 element",
+                                        ),
+                                    );
+                                }
+                            };
+                            _serde::__private228::Ok(OtherToolReturnParentChild {
+                                innermost: __field0,
+                            })
+                        }
+                        #[inline]
+                        fn visit_map<__A>(
+                            self,
+                            mut __map: __A,
+                        ) -> _serde::__private228::Result<Self::Value, __A::Error>
+                        where
+                            __A: _serde::de::MapAccess<'de>,
+                        {
+                            let mut __field0: _serde::__private228::Option<Decimal> = _serde::__private228::None;
+                            while let _serde::__private228::Some(__key) = _serde::de::MapAccess::next_key::<
+                                __Field,
+                            >(&mut __map)? {
+                                match __key {
+                                    __Field::__field0 => {
+                                        if _serde::__private228::Option::is_some(&__field0) {
+                                            return _serde::__private228::Err(
+                                                <__A::Error as _serde::de::Error>::duplicate_field(
+                                                    "innermost",
+                                                ),
+                                            );
+                                        }
+                                        __field0 = _serde::__private228::Some(
+                                            _serde::de::MapAccess::next_value::<Decimal>(&mut __map)?,
+                                        );
+                                    }
+                                    _ => {
+                                        let _ = _serde::de::MapAccess::next_value::<
+                                            _serde::de::IgnoredAny,
+                                        >(&mut __map)?;
+                                    }
+                                }
+                            }
+                            let __field0 = match __field0 {
+                                _serde::__private228::Some(__field0) => __field0,
+                                _serde::__private228::None => {
+                                    _serde::__private228::de::missing_field("innermost")?
+                                }
+                            };
+                            _serde::__private228::Ok(OtherToolReturnParentChild {
+                                innermost: __field0,
+                            })
+                        }
+                    }
+                    #[doc(hidden)]
+                    const FIELDS: &'static [&'static str] = &["innermost"];
+                    _serde::Deserializer::deserialize_struct(
+                        __deserializer,
+                        "OtherToolReturnParentChild",
+                        FIELDS,
+                        __Visitor {
+                            marker: _serde::__private228::PhantomData::<
+                                OtherToolReturnParentChild,
+                            >,
+                            lifetime: _serde::__private228::PhantomData,
+                        },
+                    )
+                }
+            }
+        };
+        ///Nested parent
+        #[serde(rename_all = "camelCase")]
+        pub struct OtherToolReturnParent {
+            ///Nested child
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub child: Option<OtherToolReturnParentChild>,
+        }
+        #[automatically_derived]
+        impl ::core::fmt::Debug for OtherToolReturnParent {
+            #[inline]
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                ::core::fmt::Formatter::debug_struct_field1_finish(
+                    f,
+                    "OtherToolReturnParent",
+                    "child",
+                    &&self.child,
+                )
+            }
+        }
+        #[automatically_derived]
+        impl ::core::clone::Clone for OtherToolReturnParent {
+            #[inline]
+            fn clone(&self) -> OtherToolReturnParent {
+                OtherToolReturnParent {
+                    child: ::core::clone::Clone::clone(&self.child),
+                }
+            }
+        }
+        #[automatically_derived]
+        impl ::core::marker::StructuralPartialEq for OtherToolReturnParent {}
+        #[automatically_derived]
+        impl ::core::cmp::PartialEq for OtherToolReturnParent {
+            #[inline]
+            fn eq(&self, other: &OtherToolReturnParent) -> bool {
+                self.child == other.child
+            }
+        }
+        #[doc(hidden)]
+        #[allow(
+            non_upper_case_globals,
+            unused_attributes,
+            unused_qualifications,
+            clippy::absolute_paths,
+        )]
+        const _: () = {
+            #[allow(unused_extern_crates, clippy::useless_attribute)]
+            extern crate serde as _serde;
+            #[automatically_derived]
+            impl _serde::Serialize for OtherToolReturnParent {
+                fn serialize<__S>(
+                    &self,
+                    __serializer: __S,
+                ) -> _serde::__private228::Result<__S::Ok, __S::Error>
+                where
+                    __S: _serde::Serializer,
+                {
+                    let mut __serde_state = _serde::Serializer::serialize_struct(
+                        __serializer,
+                        "OtherToolReturnParent",
+                        false as usize + if Option::is_none(&self.child) { 0 } else { 1 },
+                    )?;
+                    if !Option::is_none(&self.child) {
+                        _serde::ser::SerializeStruct::serialize_field(
+                            &mut __serde_state,
+                            "child",
+                            &self.child,
+                        )?;
+                    } else {
+                        _serde::ser::SerializeStruct::skip_field(
+                            &mut __serde_state,
+                            "child",
+                        )?;
+                    }
+                    _serde::ser::SerializeStruct::end(__serde_state)
+                }
+            }
+        };
+        #[doc(hidden)]
+        #[allow(
+            non_upper_case_globals,
+            unused_attributes,
+            unused_qualifications,
+            clippy::absolute_paths,
+        )]
+        const _: () = {
+            #[allow(unused_extern_crates, clippy::useless_attribute)]
+            extern crate serde as _serde;
+            #[automatically_derived]
+            impl<'de> _serde::Deserialize<'de> for OtherToolReturnParent {
+                fn deserialize<__D>(
+                    __deserializer: __D,
+                ) -> _serde::__private228::Result<Self, __D::Error>
+                where
+                    __D: _serde::Deserializer<'de>,
+                {
+                    #[allow(non_camel_case_types)]
+                    #[doc(hidden)]
+                    enum __Field {
+                        __field0,
+                        __ignore,
+                    }
+                    #[doc(hidden)]
+                    struct __FieldVisitor;
+                    #[automatically_derived]
+                    impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                        type Value = __Field;
+                        fn expecting(
+                            &self,
+                            __formatter: &mut _serde::__private228::Formatter,
+                        ) -> _serde::__private228::fmt::Result {
+                            _serde::__private228::Formatter::write_str(
+                                __formatter,
+                                "field identifier",
+                            )
+                        }
+                        fn visit_u64<__E>(
+                            self,
+                            __value: u64,
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                0u64 => _serde::__private228::Ok(__Field::__field0),
+                                _ => _serde::__private228::Ok(__Field::__ignore),
+                            }
+                        }
+                        fn visit_str<__E>(
+                            self,
+                            __value: &str,
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                "child" => _serde::__private228::Ok(__Field::__field0),
+                                _ => _serde::__private228::Ok(__Field::__ignore),
+                            }
+                        }
+                        fn visit_bytes<__E>(
+                            self,
+                            __value: &[u8],
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                b"child" => _serde::__private228::Ok(__Field::__field0),
+                                _ => _serde::__private228::Ok(__Field::__ignore),
+                            }
+                        }
+                    }
+                    #[automatically_derived]
+                    impl<'de> _serde::Deserialize<'de> for __Field {
+                        #[inline]
+                        fn deserialize<__D>(
+                            __deserializer: __D,
+                        ) -> _serde::__private228::Result<Self, __D::Error>
+                        where
+                            __D: _serde::Deserializer<'de>,
+                        {
+                            _serde::Deserializer::deserialize_identifier(
+                                __deserializer,
+                                __FieldVisitor,
+                            )
+                        }
+                    }
+                    #[doc(hidden)]
+                    struct __Visitor<'de> {
+                        marker: _serde::__private228::PhantomData<OtherToolReturnParent>,
+                        lifetime: _serde::__private228::PhantomData<&'de ()>,
+                    }
+                    #[automatically_derived]
+                    impl<'de> _serde::de::Visitor<'de> for __Visitor<'de> {
+                        type Value = OtherToolReturnParent;
+                        fn expecting(
+                            &self,
+                            __formatter: &mut _serde::__private228::Formatter,
+                        ) -> _serde::__private228::fmt::Result {
+                            _serde::__private228::Formatter::write_str(
+                                __formatter,
+                                "struct OtherToolReturnParent",
+                            )
+                        }
+                        #[inline]
+                        fn visit_seq<__A>(
+                            self,
+                            mut __seq: __A,
+                        ) -> _serde::__private228::Result<Self::Value, __A::Error>
+                        where
+                            __A: _serde::de::SeqAccess<'de>,
+                        {
+                            let __field0 = match _serde::de::SeqAccess::next_element::<
+                                Option<OtherToolReturnParentChild>,
+                            >(&mut __seq)? {
+                                _serde::__private228::Some(__value) => __value,
+                                _serde::__private228::None => {
+                                    return _serde::__private228::Err(
+                                        _serde::de::Error::invalid_length(
+                                            0usize,
+                                            &"struct OtherToolReturnParent with 1 element",
+                                        ),
+                                    );
+                                }
+                            };
+                            _serde::__private228::Ok(OtherToolReturnParent {
+                                child: __field0,
+                            })
+                        }
+                        #[inline]
+                        fn visit_map<__A>(
+                            self,
+                            mut __map: __A,
+                        ) -> _serde::__private228::Result<Self::Value, __A::Error>
+                        where
+                            __A: _serde::de::MapAccess<'de>,
+                        {
+                            let mut __field0: _serde::__private228::Option<
+                                Option<OtherToolReturnParentChild>,
+                            > = _serde::__private228::None;
+                            while let _serde::__private228::Some(__key) = _serde::de::MapAccess::next_key::<
+                                __Field,
+                            >(&mut __map)? {
+                                match __key {
+                                    __Field::__field0 => {
+                                        if _serde::__private228::Option::is_some(&__field0) {
+                                            return _serde::__private228::Err(
+                                                <__A::Error as _serde::de::Error>::duplicate_field("child"),
+                                            );
+                                        }
+                                        __field0 = _serde::__private228::Some(
+                                            _serde::de::MapAccess::next_value::<
+                                                Option<OtherToolReturnParentChild>,
+                                            >(&mut __map)?,
+                                        );
+                                    }
+                                    _ => {
+                                        let _ = _serde::de::MapAccess::next_value::<
+                                            _serde::de::IgnoredAny,
+                                        >(&mut __map)?;
+                                    }
+                                }
+                            }
+                            let __field0 = match __field0 {
+                                _serde::__private228::Some(__field0) => __field0,
+                                _serde::__private228::None => {
+                                    _serde::__private228::de::missing_field("child")?
+                                }
+                            };
+                            _serde::__private228::Ok(OtherToolReturnParent {
+                                child: __field0,
+                            })
+                        }
+                    }
+                    #[doc(hidden)]
+                    const FIELDS: &'static [&'static str] = &["child"];
+                    _serde::Deserializer::deserialize_struct(
+                        __deserializer,
+                        "OtherToolReturnParent",
+                        FIELDS,
+                        __Visitor {
+                            marker: _serde::__private228::PhantomData::<
+                                OtherToolReturnParent,
+                            >,
+                            lifetime: _serde::__private228::PhantomData,
+                        },
+                    )
+                }
+            }
+        };
+        ///Return value for [`low_other_tool`](crate::Client::low_other_tool).
+        #[serde(rename_all = "camelCase")]
+        pub struct OtherToolReturn {
+            ///The output number.
+            pub output: Decimal,
+            ///Nested parent
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub parent: Option<OtherToolReturnParent>,
+        }
+        #[automatically_derived]
+        impl ::core::fmt::Debug for OtherToolReturn {
+            #[inline]
+            fn fmt(&self, f: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
+                ::core::fmt::Formatter::debug_struct_field2_finish(
+                    f,
+                    "OtherToolReturn",
+                    "output",
+                    &self.output,
+                    "parent",
+                    &&self.parent,
+                )
+            }
+        }
+        #[automatically_derived]
+        impl ::core::clone::Clone for OtherToolReturn {
+            #[inline]
+            fn clone(&self) -> OtherToolReturn {
+                OtherToolReturn {
+                    output: ::core::clone::Clone::clone(&self.output),
+                    parent: ::core::clone::Clone::clone(&self.parent),
+                }
+            }
+        }
+        #[automatically_derived]
+        impl ::core::marker::StructuralPartialEq for OtherToolReturn {}
+        #[automatically_derived]
+        impl ::core::cmp::PartialEq for OtherToolReturn {
+            #[inline]
+            fn eq(&self, other: &OtherToolReturn) -> bool {
+                self.output == other.output && self.parent == other.parent
+            }
+        }
+        #[doc(hidden)]
+        #[allow(
+            non_upper_case_globals,
+            unused_attributes,
+            unused_qualifications,
+            clippy::absolute_paths,
+        )]
+        const _: () = {
+            #[allow(unused_extern_crates, clippy::useless_attribute)]
+            extern crate serde as _serde;
+            #[automatically_derived]
+            impl _serde::Serialize for OtherToolReturn {
+                fn serialize<__S>(
+                    &self,
+                    __serializer: __S,
+                ) -> _serde::__private228::Result<__S::Ok, __S::Error>
+                where
+                    __S: _serde::Serializer,
+                {
+                    let mut __serde_state = _serde::Serializer::serialize_struct(
+                        __serializer,
+                        "OtherToolReturn",
+                        false as usize + 1
+                            + if Option::is_none(&self.parent) { 0 } else { 1 },
+                    )?;
+                    _serde::ser::SerializeStruct::serialize_field(
+                        &mut __serde_state,
+                        "output",
+                        &self.output,
+                    )?;
+                    if !Option::is_none(&self.parent) {
+                        _serde::ser::SerializeStruct::serialize_field(
+                            &mut __serde_state,
+                            "parent",
+                            &self.parent,
+                        )?;
+                    } else {
+                        _serde::ser::SerializeStruct::skip_field(
+                            &mut __serde_state,
+                            "parent",
+                        )?;
+                    }
+                    _serde::ser::SerializeStruct::end(__serde_state)
+                }
+            }
+        };
+        #[doc(hidden)]
+        #[allow(
+            non_upper_case_globals,
+            unused_attributes,
+            unused_qualifications,
+            clippy::absolute_paths,
+        )]
+        const _: () = {
+            #[allow(unused_extern_crates, clippy::useless_attribute)]
+            extern crate serde as _serde;
+            #[automatically_derived]
+            impl<'de> _serde::Deserialize<'de> for OtherToolReturn {
+                fn deserialize<__D>(
+                    __deserializer: __D,
+                ) -> _serde::__private228::Result<Self, __D::Error>
+                where
+                    __D: _serde::Deserializer<'de>,
+                {
+                    #[allow(non_camel_case_types)]
+                    #[doc(hidden)]
+                    enum __Field {
+                        __field0,
+                        __field1,
+                        __ignore,
+                    }
+                    #[doc(hidden)]
+                    struct __FieldVisitor;
+                    #[automatically_derived]
+                    impl<'de> _serde::de::Visitor<'de> for __FieldVisitor {
+                        type Value = __Field;
+                        fn expecting(
+                            &self,
+                            __formatter: &mut _serde::__private228::Formatter,
+                        ) -> _serde::__private228::fmt::Result {
+                            _serde::__private228::Formatter::write_str(
+                                __formatter,
+                                "field identifier",
+                            )
+                        }
+                        fn visit_u64<__E>(
+                            self,
+                            __value: u64,
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
+                                0u64 => _serde::__private228::Ok(__Field::__field0),
+                                1u64 => _serde::__private228::Ok(__Field::__field1),
+                                _ => _serde::__private228::Ok(__Field::__ignore),
+                            }
+                        }
+                        fn visit_str<__E>(
+                            self,
+                            __value: &str,
+                        ) -> _serde::__private228::Result<Self::Value, __E>
+                        where
+                            __E: _serde::de::Error,
+                        {
+                            match __value {
                                 "output" => _serde::__private228::Ok(__Field::__field0),
+                                "parent" => _serde::__private228::Ok(__Field::__field1),
                                 _ => _serde::__private228::Ok(__Field::__ignore),
                             }
                         }
@@ -899,6 +1448,7 @@ fn main() {
                         {
                             match __value {
                                 b"output" => _serde::__private228::Ok(__Field::__field0),
+                                b"parent" => _serde::__private228::Ok(__Field::__field1),
                                 _ => _serde::__private228::Ok(__Field::__ignore),
                             }
                         }
@@ -951,13 +1501,27 @@ fn main() {
                                     return _serde::__private228::Err(
                                         _serde::de::Error::invalid_length(
                                             0usize,
-                                            &"struct OtherToolReturn with 1 element",
+                                            &"struct OtherToolReturn with 2 elements",
+                                        ),
+                                    );
+                                }
+                            };
+                            let __field1 = match _serde::de::SeqAccess::next_element::<
+                                Option<OtherToolReturnParent>,
+                            >(&mut __seq)? {
+                                _serde::__private228::Some(__value) => __value,
+                                _serde::__private228::None => {
+                                    return _serde::__private228::Err(
+                                        _serde::de::Error::invalid_length(
+                                            1usize,
+                                            &"struct OtherToolReturn with 2 elements",
                                         ),
                                     );
                                 }
                             };
                             _serde::__private228::Ok(OtherToolReturn {
                                 output: __field0,
+                                parent: __field1,
                             })
                         }
                         #[inline]
@@ -969,6 +1533,9 @@ fn main() {
                             __A: _serde::de::MapAccess<'de>,
                         {
                             let mut __field0: _serde::__private228::Option<Decimal> = _serde::__private228::None;
+                            let mut __field1: _serde::__private228::Option<
+                                Option<OtherToolReturnParent>,
+                            > = _serde::__private228::None;
                             while let _serde::__private228::Some(__key) = _serde::de::MapAccess::next_key::<
                                 __Field,
                             >(&mut __map)? {
@@ -981,6 +1548,18 @@ fn main() {
                                         }
                                         __field0 = _serde::__private228::Some(
                                             _serde::de::MapAccess::next_value::<Decimal>(&mut __map)?,
+                                        );
+                                    }
+                                    __Field::__field1 => {
+                                        if _serde::__private228::Option::is_some(&__field1) {
+                                            return _serde::__private228::Err(
+                                                <__A::Error as _serde::de::Error>::duplicate_field("parent"),
+                                            );
+                                        }
+                                        __field1 = _serde::__private228::Some(
+                                            _serde::de::MapAccess::next_value::<
+                                                Option<OtherToolReturnParent>,
+                                            >(&mut __map)?,
                                         );
                                     }
                                     _ => {
@@ -996,13 +1575,20 @@ fn main() {
                                     _serde::__private228::de::missing_field("output")?
                                 }
                             };
+                            let __field1 = match __field1 {
+                                _serde::__private228::Some(__field1) => __field1,
+                                _serde::__private228::None => {
+                                    _serde::__private228::de::missing_field("parent")?
+                                }
+                            };
                             _serde::__private228::Ok(OtherToolReturn {
                                 output: __field0,
+                                parent: __field1,
                             })
                         }
                     }
                     #[doc(hidden)]
-                    const FIELDS: &'static [&'static str] = &["output"];
+                    const FIELDS: &'static [&'static str] = &["output", "parent"];
                     _serde::Deserializer::deserialize_struct(
                         __deserializer,
                         "OtherToolReturn",

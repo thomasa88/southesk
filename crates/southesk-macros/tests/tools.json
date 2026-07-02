@@ -19,7 +19,6 @@
         "type": "object",
         "properties": {
           "output": {
-            "description": "The output number.",
             "type": "number"
           }
         },
@@ -54,6 +53,25 @@
           "output": {
             "description": "The output number.",
             "type": "number"
+          },
+          "parent": {
+            "description": "Nested parent",
+            "type": "object",
+            "properties": {
+              "child": {
+                "description": "Nested child",
+                "type": "object",
+                "properties": {
+                  "innermost": {
+                    "description": "Innermost child",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "innermost"
+                ]
+              }
+            }
           }
         },
         "required": [
