@@ -4,7 +4,8 @@
 
 # southesk
 
-A library for creating clients for the [Montrose MCP](https://www.montrose.io/mcp) API. It provides the API calls and handles user authentication.
+A library for creating clients for the [Montrose MCP](https://www.montrose.io/mcp) API.
+It provides the API functions and handles user authentication.
 
 Although the library uses an MCP, it does not contain any AI functionality.
 
@@ -16,13 +17,15 @@ The available APIs of the Montrose MCP service has been fetched by asking the se
 Since the API has no versioning and AI agents should be able to adopt to changing APIs,
 one should not expect the API to be stable.
 
-### The Plan
+## API levels
 
-To handle moving underlying APIs, the plan is to implement 3 API levels:
+To handle moving underlying APIs, the idea is to provide three API levels:
 
-* High level API: A stable API, with core functionality for transactions and trading. It is likely to be more limited than the low level API.
-* Low level API: Maps closely to the underlying MCP API.
-* Raw API: Direct calls to the MCP API. Can be used before southesk has implemented support for the API call.
+* High-level API: Follows Rust type conventions and provides documentation for all types and members.
+* Low-level API: Maps closely to the underlying MCP API.
+* Raw API: Direct calls to the MCP API using JSON data.
+
+The lower levels can be used before southesk has implemented support for the calls in the high-level API.
 
 ## Getting Started
 
@@ -34,6 +37,7 @@ Therefore, it is built when running doc tests.
 To use `southesk`, add it as a dependency along with an async runtime:
 
 ```bash
+> cargo init my_client
 > cargo add southesk
 > cargo add tokio -F rt-multi-thread
 ```
