@@ -24,6 +24,10 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## Fixed
+
+- Point to correct README.md for southesk on crates.io.
+
 ## [0.0.5] - 2026-07-03
 
 ## Added
