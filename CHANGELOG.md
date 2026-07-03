@@ -24,6 +24,8 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.6] - 2026-07-03
+
 ## Fixed
 
 - Point to correct README.md for southesk on crates.io.
@@ -92,7 +94,8 @@ Headers:
 First public release.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.5...HEAD
+[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.6...HEAD
+[0.0.6]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.5...southesk-v0.0.6
 [0.0.5]: https://github.com/thomasa88/southesk/compare/v0.0.4...southesk-v0.0.5
 [0.0.4]: https://github.com/thomasa88/southesk/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/thomasa88/southesk/compare/v0.0.2...v0.0.3

@@ -49,7 +49,7 @@ serde_urlencoded = { workspace = true }
 serde_with = { workspace = true }
 # Split over multiple lines for cargo-release replace
 southesk-macros.path = "../southesk-macros"
-southesk-macros.version = "0.0.5"
+southesk-macros.version = "0.0.6"
 thiserror = { workspace = true }
 tokio = { workspace = true, features = [
     "io-std",
