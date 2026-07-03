@@ -70,13 +70,13 @@ They can be run as follows:
 cargo run -p southesk --example=show_data
 ```
 
-## Features
+## Feature flags
 
-Default features:
-
-- `keyring`: Enables support to store OAuth credentials in the OS keyring.
+- `keyring` *(enabled by default)*: Enables support to store OAuth credentials in the OS keyring.
   The keyring will be used by default if the feature is enabled.
-
+- `high-api` *(enabled by default)*: Enables the high-level API.
+- `low-api`: Enables the low-level API.
+- `raw-api`: Enables the raw API.
 
 ## Security Warning
 

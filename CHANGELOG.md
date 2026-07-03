@@ -27,11 +27,13 @@ Headers:
 ## Added
 
 - Low-level API that provides automatically generated functions from the MCP schema using `southesk-macros`.
+  Feature flag: `low-api`.
 
 ## Changed
 
 - Moved southesk into a Cargo workspace.
 - southesk error types are now found in `error`.
+- Move raw API behind the feature flag `raw-api`.
 
 ## [0.0.4] - 2026-06-26
 

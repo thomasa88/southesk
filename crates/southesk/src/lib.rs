@@ -40,7 +40,12 @@ pub mod auth_handler;
 mod client;
 pub mod cred_store;
 pub mod error;
+#[cfg(feature = "low-api")]
 pub mod low_level;
+#[cfg(feature = "raw-api")]
+pub mod raw;
+#[cfg(not(feature = "raw-api"))]
+mod raw;
 pub mod types;
 
 // Re-export dependencies that are part of the public interface
@@ -50,4 +55,3 @@ pub use rust_decimal;
 pub use rust_decimal::Decimal;
 pub use uuid;
 pub use uuid::Uuid;
-pub mod raw;

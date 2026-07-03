@@ -28,5 +28,5 @@ syn = { workspace = true }
 [dev-dependencies]
 macrotest = { workspace = true }
 rust_decimal = { workspace = true }
-southesk = { path = "../southesk" }
+southesk = { path = "../southesk", features = ["raw-api"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
