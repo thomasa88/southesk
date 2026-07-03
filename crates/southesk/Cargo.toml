@@ -46,7 +46,9 @@ serde = { workspace = true }
 serde_json = { workspace = true, features = ["preserve_order"] }
 serde_urlencoded = { workspace = true }
 serde_with = { workspace = true }
-southesk-macros = { path = "../southesk-macros" }
+# Split over multiple lines for cargo-release replace
+southesk-macros.path = "../southesk-macros"
+southesk-macros.version = "0.0.4"
 thiserror = { workspace = true }
 tokio = { workspace = true, features = [
     "io-std",
