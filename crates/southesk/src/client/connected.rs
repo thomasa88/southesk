@@ -304,6 +304,18 @@ impl Client<Connected> {
 
         let mut json_result = serde_json::Map::new();
 
+        // Server info provides the server version, but not versioning of the
+        // tools.
+        let server_info = &self
+            .state
+            .client
+            .peer_info()
+            .expect("Failed to get server info")
+            .server_info;
+        json_result.insert(
+            "server".to_string(),
+            serde_json::to_value(&server_info).unwrap(),
+        );
         parse(
             "tools",
             self.state.client.peer().list_all_tools().await,

@@ -28,6 +28,7 @@ Headers:
 
 - Low-level API that provides automatically generated functions from the MCP schema using `southesk-macros`.
   Feature flag: `low-api`.
+- Server version is now included in the MCP introspection dump.
 
 ## Changed
 

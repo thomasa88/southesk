@@ -1,4 +1,8 @@
 {
+  "server": {
+    "name": "montrose-mcp",
+    "version": "1.0.0"
+  },
   "tools": [
     {
       "name": "get_holdings",
