@@ -8,6 +8,3 @@ pre-release-replacements = [
   { file = "../../CHANGELOG.md", search = "<!-- next-url -->", replace = "<!-- next-url -->\n[Unreleased]: {{repository}}/compare/{{tag_name}}...HEAD", exactly = 1 },
   { file = "Cargo.toml", search = "southesk-macros.version = \".*?\"", replace = "southesk-macros.version = \"{{version}}\"" },
 ]
-
-pre-release-commit-message = "southesk: Release v{{version}}"
-tag-message = "Release v{{version}}"

@@ -1,0 +1,4 @@
+# cargo-release configuration
+
+pre-release-commit-message = "southesk: Release v{{version}}"
+tag-message = "Release v{{version}}"
