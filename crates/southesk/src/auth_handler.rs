@@ -24,8 +24,6 @@ use tokio::{
 };
 use tracing::{debug, error, info};
 
-use crate::error::ClientConnectError;
-
 const BROWSER_CALLBACK_HTML: &str = include_str!("res/default_callback.html");
 
 /// OAuth callback handler that prompts the user to authenticate, typically by
@@ -37,7 +35,49 @@ pub trait AuthHandler: Debug {
     fn redirect_uri(&self) -> &str;
     /// Requests the user to authenticate by visiting the given `auth_url` and
     /// waits for the OAuth callback to be received.
-    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, ClientConnectError>;
+    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, AuthFlowError>;
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("Initializing authentication handler failed: {msg}")]
+pub struct AuthInitError {
+    msg: String,
+    source: Option<Box<dyn std::error::Error + Send + Sync>>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum AuthFlowError {
+    /// The data provided in the server callback, or the callback URL itself,
+    /// was malformed or incomplete
+    #[error("Callback response malformed or incomplete: {msg}")]
+    BadResponse {
+        msg: String,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
+    },
+    /// Authentication was aborted. For example by a timeout or the user
+    /// canceling the authentication
+    #[error("Authentication aborted: {msg}")]
+    Aborted {
+        msg: String,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
+    },
+    /// An internal error. For example, failure to launch the browser or to read
+    /// user input from the console.
+    #[error("Authentication process failed with internal error: {msg}")]
+    Internal {
+        msg: String,
+        source: Option<Box<dyn std::error::Error + Send + Sync>>,
+    },
+}
+
+/// The parameters received in the OAuth callback URL, containing the
+/// authorization code and state (CSRF token).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct AuthGrant {
+    /// The authorization code to exchange for an access token
+    pub code: String,
+    /// CSRF token sent by the client and now returned by the server
+    pub state: String,
 }
 
 /// An OAuth callback handler that opens the user's web browser and listens for
@@ -52,16 +92,6 @@ pub struct BrowserAuth {
 #[derive(Clone)]
 struct BrowserAuthAppState {
     cb_tx: Arc<Mutex<Option<oneshot::Sender<AuthGrant>>>>,
-}
-
-/// The parameters received in the OAuth callback URL, containing the
-/// authorization code and state (CSRF token).
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct AuthGrant {
-    /// The authorization code to exchange for an access token
-    pub code: String,
-    /// CSRF token sent by the client and now returned by the server
-    pub state: String,
 }
 
 async fn browser_callback_handler(
@@ -82,22 +112,17 @@ impl BrowserAuth {
     /// Creates a new browser authentication handler and starts a callback server.
     ///
     /// The callback server listens on a random available port on localhost.
-    pub async fn new() -> Result<Self, ClientConnectError> {
+    pub async fn new() -> Result<Self, AuthInitError> {
         // 0 means to bind to a random available port
         let addr = SocketAddr::from(([127, 0, 0, 1], 0));
-        let listener =
-            TcpListener::bind(addr)
-                .await
-                .map_err(|e| ClientConnectError::AuthError {
-                    msg: format!("Failed to bind callback server: {e}"),
-                    source: Some(e.into()),
-                })?;
-        let addr = listener
-            .local_addr()
-            .map_err(|e| ClientConnectError::AuthError {
-                msg: format!("Failed to get address of callback server: {e}"),
-                source: Some(e.into()),
-            })?;
+        let listener = TcpListener::bind(addr).await.map_err(|e| AuthInitError {
+            msg: format!("Failed to bind callback server: {e}"),
+            source: Some(e.into()),
+        })?;
+        let addr = listener.local_addr().map_err(|e| AuthInitError {
+            msg: format!("Failed to get address of callback server: {e}"),
+            source: Some(e.into()),
+        })?;
         // The MCP server does not like an IP as the host in the callback server (HTTP/2 403)
         let listen_addr = format!("http://localhost:{}/callback", addr.port());
 
@@ -148,12 +173,14 @@ impl AuthHandler for BrowserAuth {
         &self.listen_addr
     }
 
-    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, ClientConnectError> {
+    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, AuthFlowError> {
         let (cb_tx, cb_rx) = oneshot::channel();
         *self.cb_tx.lock().await = Some(cb_tx);
-        eprintln!("Opening authorization page in browser: {auth_url}");
-        eprintln!("Please complete the authentication in the opened browser window.");
-        webbrowser::open(auth_url).ok();
+        info!("Opening authorization page in browser: {auth_url}");
+        webbrowser::open(auth_url).map_err(|e| AuthFlowError::Internal {
+            msg: "Failed to open the authentication URL in a web browser".to_string(),
+            source: Some(Box::new(e)),
+        })?;
         info!(
             "Waiting {} seconds for browser callback",
             self.auth_timeout.as_secs()
@@ -161,15 +188,15 @@ impl AuthHandler for BrowserAuth {
         let auth_result =
             timeout(self.auth_timeout, cb_rx)
                 .await
-                .map_err(|_| ClientConnectError::AuthError {
+                .map_err(|_| AuthFlowError::Aborted {
                     msg: "Timeout while waiting for the user to authenticate".to_string(),
                     source: None,
                 })?;
-        let params = auth_result.map_err(|e| ClientConnectError::AuthError {
-            msg: format!("Failed to receive callback parameters: {e}"),
+        let params = auth_result.map_err(|e| AuthFlowError::Internal {
+            msg: format!("Failed to receive parameters over callback channel: {e}"),
             source: Some(e.into()),
         })?;
-        eprintln!("Authentication completed.");
+        info!("Authentication completed.");
         Ok(params)
     }
 }
@@ -202,7 +229,7 @@ impl AuthHandler for ConsoleAuth {
         Self::REDIRECT_BASE_URL
     }
 
-    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, ClientConnectError> {
+    async fn authenticate(&self, auth_url: &str) -> Result<AuthGrant, AuthFlowError> {
         eprintln!("\nOpen the following URL in your browser to authenticate:\n");
         eprintln!("  {auth_url}\n");
         eprintln!("After completing authentication, your browser will redirect to a URL");
@@ -217,19 +244,19 @@ impl AuthHandler for ConsoleAuth {
         BufReader::new(tokio::io::stdin())
             .read_line(&mut line)
             .await
-            .map_err(|e| ClientConnectError::AuthError {
+            .map_err(|e| AuthFlowError::Internal {
                 msg: format!("Failed to read redirect URL from stdin: {e}"),
                 source: None,
             })?;
         let redirect_url = line.trim().to_string();
 
-        let parsed = Url::parse(&redirect_url).map_err(|e| ClientConnectError::AuthError {
+        let parsed = Url::parse(&redirect_url).map_err(|e| AuthFlowError::BadResponse {
             msg: format!("Invalid redirect URL '{redirect_url}': {e}"),
             source: None,
         })?;
 
         let grant = serde_urlencoded::from_str(parsed.query().unwrap_or("")).map_err(|e| {
-            ClientConnectError::AuthError {
+            AuthFlowError::BadResponse {
                 msg: format!(
                     "Failed to parse query parameters from redirect URL '{redirect_url}': {e}"
                 ),

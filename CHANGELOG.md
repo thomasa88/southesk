@@ -24,6 +24,11 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## Changed
+
+- Authentication handlers have their own error types that matches the errors
+  betters and lets calling application disambiguate on the type of error. 
+
 ## [0.0.6] - 2026-07-03
 
 ## Fixed
