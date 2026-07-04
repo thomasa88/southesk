@@ -1,6 +1,6 @@
 <!-- To make diffing easier, this file leans towards using semantic linebreaks ( https://sembr.org/ ) -->
 
-![](docs/images/southesk-banner.svg)
+![Southesk banner](https://github.com/thomasa88/southesk/raw/main/docs/images/southesk-banner.svg)
 
 # southesk
 
@@ -97,7 +97,7 @@ SOFTWARE.
 
 ## License
 
-This software is licensed under the [MIT license](LICENSE).
+This software is licensed under the [MIT license](https://github.com/thomasa88/southesk/blob/main/LICENSE).
 
 ## What's in a name?
 
