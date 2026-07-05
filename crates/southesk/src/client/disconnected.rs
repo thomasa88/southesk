@@ -244,8 +244,8 @@ impl Client<Disconnected> {
             state: csrf_token,
         } = auth_handler.authenticate(&auth_url).await.map_err(|e| {
             ClientConnectError::AuthError {
-                source: Some(Box::new(e)),
                 msg: "Authentication handler failed to authenticate".to_string(),
+                source: Some(e.into()),
             }
         })?;
         info!("Received authorization code: {}", auth_code);

@@ -345,9 +345,7 @@ fn parse_result<T: DeserializeOwned>(res: &CallToolResult) -> Result<T, ClientCa
         .ok_or(ClientCallError::parse_err("No raw text in response"))?
         .text;
     if res.is_error.unwrap_or(false) {
-        return Err(ClientCallError::McpError(format!(
-            "Error from server: {text}"
-        )));
+        return Err(ClientCallError::McpError(text.clone()));
     }
     serde_json::from_str::<T>(text).map_err(|e| ClientCallError::ParseError {
         msg: format!("Failed to parse response text: {text}"),
