@@ -28,6 +28,8 @@ Headers:
 
 - Authentication handlers have their own error types that matches the errors
   betters and lets calling application disambiguate on the type of error. 
+- Errors no longer don't duplicate the inner error's message and they are all
+  lowercase, as prescribed by the Rust API guidelines.
 
 ## [0.0.6] - 2026-07-03
 

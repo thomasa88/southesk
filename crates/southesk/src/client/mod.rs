@@ -178,7 +178,7 @@ impl ClientBuilder {
             Some(store) => {
                 if self.cred_user.is_some() {
                     return Err(ClientBuildError::BuildError {
-                        msg: "Cannot specify both a custom credential store and a credential user"
+                        msg: "cannot specify both a custom credential store and a credential user"
                             .to_string(),
                         source: None,
                     });
@@ -192,7 +192,7 @@ impl ClientBuilder {
                     {
                         KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
                             ClientBuildError::BuildError {
-                                msg: "Failed to create keyring credential store".to_string(),
+                                msg: "failed to create keyring credential store".to_string(),
                                 source: Some(Box::new(e)),
                             }
                         })?
@@ -224,7 +224,7 @@ impl ClientBuilder {
                 .load()
                 .await
                 .map_err(|e| ClientBuildError::BuildError {
-                    msg: "Failed to load credentials for setting forced refresh".to_string(),
+                    msg: "failed to load credentials for setting forced refresh".to_string(),
                     source: Some(Box::new(e)),
                 })?;
             if let Some(mut creds) = creds {
@@ -239,7 +239,7 @@ impl ClientBuilder {
                     .save(creds)
                     .await
                     .map_err(|e| ClientBuildError::BuildError {
-                        msg: "Failed to save credentials for setting forced refresh".to_string(),
+                        msg: "failed to save credentials for setting forced refresh".to_string(),
                         source: Some(Box::new(e)),
                     })?;
             }

@@ -78,7 +78,7 @@ impl Client<Disconnected> {
                 }
                 Err(e) => {
                     return Err(ClientConnectError::ConnectionError {
-                        msg: "Failed to connect to MCP server".to_string(),
+                        msg: "failed to connect to MCP server".to_string(),
                         source: Some(e.into()),
                     });
                 }
@@ -134,7 +134,7 @@ impl Client<Disconnected> {
         let mut auth_mgr = AuthorizationManager::new(MCP_SERVER_URL)
             .await
             .map_err(|e| ClientConnectError::AuthError {
-                msg: "Failed to initialize authorization manager".to_string(),
+                msg: "failed to initialize authorization manager".to_string(),
                 source: Some(e.into()),
             })?;
 
@@ -167,11 +167,11 @@ impl Client<Disconnected> {
         let creds = cred_store
             .load()
             .await
-            .to_connect_err("Error while loading credentials from credential store")?;
+            .to_connect_err("error while loading credentials from credential store")?;
         let client_secret = cred_store
             .load_client_secret()
             .await
-            .to_connect_err("Error while loading client secret from credential store")?;
+            .to_connect_err("error while loading client secret from credential store")?;
 
         // Store is missing data. Cannot initialize the auth manager.
         let (Some(creds), Some(client_secret)) = (creds, client_secret) else {
@@ -189,13 +189,13 @@ impl Client<Disconnected> {
         let metadata = auth_mgr
             .discover_metadata()
             .await
-            .to_connect_err("Failed to discover authorization server metadata")?;
+            .to_connect_err("failed to discover authorization server metadata")?;
         auth_mgr.set_metadata(metadata);
 
         // // auth_mgr.configure_client_credentials(config) does basically the same as configure_client?
         auth_mgr
             .configure_client(oauth_config)
-            .to_connect_err("Failed to configure authorization manager with client credentials")?;
+            .to_connect_err("failed to configure authorization manager with client credentials")?;
 
         Ok(true)
     }
@@ -203,7 +203,7 @@ impl Client<Disconnected> {
     async fn authenticate_new_auth(&self) -> Result<AuthorizationManager, ClientConnectError> {
         let Some(auth_handler) = &self.auth_handler else {
             return Err(ClientConnectError::AuthError {
-                msg: "Need to do a new authentication, but interactive authentication is disabled."
+                msg: "need to do a new authentication, but interactive authentication is disabled."
                     .to_string(),
                 source: None,
             });
@@ -224,7 +224,7 @@ impl Client<Disconnected> {
         )
         .await
         .map_err(|e| ClientConnectError::AuthError {
-            msg: "Failed to start authorization".to_string(),
+            msg: "failed to start authorization".to_string(),
             source: Some(e.into()),
         })?;
 
@@ -232,7 +232,7 @@ impl Client<Disconnected> {
 
         let auth_url = oauth_state.get_authorization_url().await.map_err(|e| {
             ClientConnectError::AuthError {
-                msg: "Failed to get authorization URL".to_string(),
+                msg: "failed to get authorization URL".to_string(),
                 source: Some(e.into()),
             }
         })?;
@@ -244,7 +244,7 @@ impl Client<Disconnected> {
             state: csrf_token,
         } = auth_handler.authenticate(&auth_url).await.map_err(|e| {
             ClientConnectError::AuthError {
-                msg: "Authentication handler failed to authenticate".to_string(),
+                msg: "authentication handler failed to authenticate".to_string(),
                 source: Some(e.into()),
             }
         })?;
@@ -254,7 +254,7 @@ impl Client<Disconnected> {
         oauth_state
             .handle_callback(&auth_code, &csrf_token)
             .await
-            .to_connect_err("Failed to handle authorization callback")?;
+            .to_connect_err("failed to handle authorization callback")?;
 
         // OAuthState::handle_callback is the function that initially stores the credentials using the credential store.
         // So store the client secret now as well.
@@ -267,7 +267,7 @@ impl Client<Disconnected> {
 
         let auth_mgr = oauth_state.into_authorization_manager().ok_or_else(|| {
             ClientConnectError::AuthError {
-                msg: "Failed to convert OAuth state into authorization manager".to_string(),
+                msg: "failed to convert OAuth state into authorization manager".to_string(),
                 source: None,
             }
         })?;

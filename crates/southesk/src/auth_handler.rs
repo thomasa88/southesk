@@ -39,7 +39,7 @@ pub trait AuthHandler: Debug {
 }
 
 #[derive(Debug, thiserror::Error)]
-#[error("Initializing authentication handler failed: {msg}")]
+#[error("initializing authentication handler failed: {msg}")]
 pub struct AuthInitError {
     msg: String,
     source: Option<Box<dyn std::error::Error + Send + Sync>>,
@@ -49,21 +49,21 @@ pub struct AuthInitError {
 pub enum AuthFlowError {
     /// The data provided in the server callback, or the callback URL itself,
     /// was malformed or incomplete
-    #[error("Callback response malformed or incomplete: {msg}")]
+    #[error("callback response malformed or incomplete: {msg}")]
     BadResponse {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
     /// Authentication was aborted. For example by a timeout or the user
     /// canceling the authentication
-    #[error("Authentication aborted: {msg}")]
+    #[error("authentication aborted: {msg}")]
     Aborted {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
     /// An internal error. For example, failure to launch the browser or to read
     /// user input from the console.
-    #[error("Authentication process failed with internal error: {msg}")]
+    #[error("authentication process failed with internal error: {msg}")]
     Internal {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
@@ -116,11 +116,11 @@ impl BrowserAuth {
         // 0 means to bind to a random available port
         let addr = SocketAddr::from(([127, 0, 0, 1], 0));
         let listener = TcpListener::bind(addr).await.map_err(|e| AuthInitError {
-            msg: "Failed to bind callback server to a random port".to_string(),
+            msg: "failed to bind callback server to a random port".to_string(),
             source: Some(e.into()),
         })?;
         let addr = listener.local_addr().map_err(|e| AuthInitError {
-            msg: "Failed to get address of callback server".to_string(),
+            msg: "failed to get address of callback server".to_string(),
             source: Some(e.into()),
         })?;
         // The MCP server does not like an IP as the host in the callback server (HTTP/2 403)
@@ -143,7 +143,7 @@ impl BrowserAuth {
             let result = axum::serve(listener, app).await;
 
             if let Err(e) = result {
-                error!("Callback server error: {e}");
+                error!("callback server error: {e}");
             }
         });
 
@@ -178,7 +178,7 @@ impl AuthHandler for BrowserAuth {
         *self.cb_tx.lock().await = Some(cb_tx);
         info!("Opening authorization page in browser: {auth_url}");
         webbrowser::open(auth_url).map_err(|e| AuthFlowError::Internal {
-            msg: "Failed to open the authentication URL in a web browser".to_string(),
+            msg: "failed to open the authentication URL in a web browser".to_string(),
             source: Some(e.into()),
         })?;
         info!(
@@ -189,11 +189,11 @@ impl AuthHandler for BrowserAuth {
             timeout(self.auth_timeout, cb_rx)
                 .await
                 .map_err(|_| AuthFlowError::Aborted {
-                    msg: "Timeout while waiting for the user to authenticate".to_string(),
+                    msg: "timeout while waiting for the user to authenticate".to_string(),
                     source: None,
                 })?;
         let params = auth_result.map_err(|e| AuthFlowError::Internal {
-            msg: "Failed to receive parameters over callback channel".to_string(),
+            msg: "failed to receive parameters over callback channel".to_string(),
             source: Some(e.into()),
         })?;
         info!("Authentication completed.");
@@ -245,21 +245,19 @@ impl AuthHandler for ConsoleAuth {
             .read_line(&mut line)
             .await
             .map_err(|e| AuthFlowError::Internal {
-                msg: "Failed to read redirect URL from stdin".to_string(),
+                msg: "failed to read redirect URL from stdin".to_string(),
                 source: Some(e.into()),
             })?;
         let redirect_url = line.trim().to_string();
 
         let parsed = Url::parse(&redirect_url).map_err(|e| AuthFlowError::BadResponse {
-            msg: format!("Invalid redirect URL '{redirect_url}'"),
+            msg: format!("invalid redirect URL '{redirect_url}'"),
             source: Some(e.into()),
         })?;
 
         let grant = serde_urlencoded::from_str(parsed.query().unwrap_or("")).map_err(|e| {
             AuthFlowError::BadResponse {
-                msg: format!(
-                    "Failed to parse query parameters from redirect URL '{redirect_url}'"
-                ),
+                msg: format!("failed to parse query parameters from redirect URL '{redirect_url}'"),
                 source: Some(e.into()),
             }
         })?;

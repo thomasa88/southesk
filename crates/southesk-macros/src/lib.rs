@@ -31,13 +31,13 @@ struct McpSchema {
 impl Parse for McpSchema {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let top_dir =
-            std::env::var("CARGO_MANIFEST_DIR").expect("Needs to be run in a cargo project");
+            std::env::var("CARGO_MANIFEST_DIR").expect("needs to be run in a cargo project");
         let json_path_lit = input.parse::<syn::LitStr>()?;
         let json_path: PathBuf = [&top_dir, &json_path_lit.value()].iter().collect();
         let json = std::fs::File::open(&json_path)
-            .unwrap_or_else(|_| panic!("Cannot open {}", json_path.display()));
+            .unwrap_or_else(|_| panic!("cannot open {}", json_path.display()));
         let schema: McpSchema = serde_json::from_reader(json).map_err(|e| {
-            syn::Error::new(json_path_lit.span(), format!("Failed to parse JSON: {e}"))
+            syn::Error::new(json_path_lit.span(), format!("failed to parse JSON: {e}"))
         })?;
         Ok(schema)
     }
@@ -144,7 +144,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
     );
     assert!(
         output_has_ref == Some(HasRef::No),
-        "Must return owned values"
+        "must return owned values"
     );
 
     let func_comment = format!("Low-level API. {description}");
@@ -169,7 +169,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
 
     let long_func_body = quote! {
         let json_args = serde_json::to_value(args)
-            .map_err(|e| ClientCallError::InvalidArguments(format!("Failed to serialize arguments: {e}")))?
+            .map_err(|e| ClientCallError::InvalidArguments(format!("failed to serialize arguments: {e}")))?
             .as_object()
             .ok_or_else(|| ClientCallError::InvalidArguments(format!("JSON argument is not an object")))?
             .to_owned();

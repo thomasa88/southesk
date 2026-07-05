@@ -34,7 +34,7 @@ impl KeyringCredStore {
         let store = apple_native_keyring_store::Store::new();
         Ok(Self {
             store: store.map_err(|e| {
-                AuthError::InternalError(format!("Failed to initialize keyring store: {e}"))
+                AuthError::InternalError(format!("failed to initialize keyring store: {e}"))
             })?,
             service: service.into(),
             user: user.into(),
@@ -45,7 +45,7 @@ impl KeyringCredStore {
         self.store
             .build(&self.service, &self.user, None)
             .map_err(|e| {
-                AuthError::InternalError(format!("Failed to build keyring entry specifier: {e}"))
+                AuthError::InternalError(format!("failed to build keyring entry specifier: {e}"))
             })
     }
 
@@ -56,13 +56,13 @@ impl KeyringCredStore {
             Err(keyring_core::error::Error::NoEntry) => return Ok(None),
             Err(keyring_core::error::Error::Ambiguous(_)) => {
                 return Err(AuthError::InternalError(
-                    "Multiple matching entries in keyring when loading. Support not implemented."
+                    "multiple matching entries in keyring when loading is not supported"
                         .to_string(),
                 ));
             }
             Err(e) => {
                 return Err(AuthError::InternalError(format!(
-                    "Unhandled keyring error when loading: {e}"
+                    "unhandled keyring error when loading: {e}"
                 )));
             }
         };
@@ -76,11 +76,10 @@ impl KeyringCredStore {
         match entry.set_secret(&json) {
             Ok(_) => Ok(()),
             Err(Error::Ambiguous(_)) => Err(AuthError::InternalError(
-                "Multiple matching entries in keyring when saving. Support not implemented."
-                    .to_string(),
+                "multiple matching entries in keyring when saving is not supported".to_string(),
             )),
             Err(e) => Err(AuthError::InternalError(format!(
-                "Unhandled keyring error when saving: {e}"
+                "unhandled keyring error when saving: {e}"
             ))),
         }
     }
@@ -112,11 +111,11 @@ impl CredentialStore for KeyringCredStore {
                 Ok(())
             }
             Err(Error::Ambiguous(_)) => Err(AuthError::InternalError(
-                "Multiple matching entries in keyring when clearing. Support not implemented."
+                "multiple matching entries in keyring when clearing. Support not implemented."
                     .to_string(),
             )),
             Err(e) => Err(AuthError::InternalError(format!(
-                "Unhandled keyring error when clearing: {e}"
+                "unhandled keyring error when clearing: {e}"
             ))),
         }
     }

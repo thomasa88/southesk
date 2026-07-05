@@ -32,10 +32,10 @@ impl PlaintextCredStore {
             return Ok(None);
         }
         let file = std::fs::File::open(&self.path).map_err(|e| {
-            AuthError::InternalError(format!("Failed to open credentials file: {e}"))
+            AuthError::InternalError(format!("failed to open credentials file: {e}"))
         })?;
         let creds: CombinedStoredCreds = serde_json::from_reader(file).map_err(|e| {
-            AuthError::InternalError(format!("Failed to deserialize credentials: {e}"))
+            AuthError::InternalError(format!("failed to deserialize credentials: {e}"))
         })?;
         Ok(Some(creds))
     }
@@ -44,7 +44,7 @@ impl PlaintextCredStore {
         if let Some(parent) = self.path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| {
                 AuthError::InternalError(format!(
-                    "Failed to create directories for credentials file {:?}: {e}",
+                    "failed to create directories for credentials file {:?}: {e}",
                     self.path
                 ))
             })?;
@@ -59,12 +59,12 @@ impl PlaintextCredStore {
         }
         let file = options.open(&self.path).map_err(|e| {
             AuthError::InternalError(format!(
-                "Failed to create credentials file {:?}: {e}",
+                "failed to create credentials file {:?}: {e}",
                 self.path
             ))
         })?;
         serde_json::to_writer_pretty(file, &creds).map_err(|e| {
-            AuthError::InternalError(format!("Failed to serialize credentials: {e}"))
+            AuthError::InternalError(format!("failed to serialize credentials: {e}"))
         })?;
         Ok(())
     }

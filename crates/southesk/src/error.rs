@@ -6,14 +6,14 @@
 pub enum ClientCallError {
     #[error("MCP service communication error")]
     CommunicationError(#[from] rmcp::ServiceError),
-    #[error("Error response from MCP service: {0}")]
+    #[error("error response from MCP service: {0}")]
     McpError(String),
-    #[error("Failed to parse response: {msg}")]
+    #[error("failed to parse response: {msg}")]
     ParseError {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
-    #[error("Invalid arguments")]
+    #[error("invalid arguments")]
     InvalidArguments(String),
 }
 
@@ -29,12 +29,12 @@ impl ClientCallError {
 /// Errors that occur when connecting the client.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientConnectError {
-    #[error("Authentication failed: {msg}")]
+    #[error("authentication failed: {msg}")]
     AuthError {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
-    #[error("Connection failed: {msg}")]
+    #[error("connection failed: {msg}")]
     ConnectionError {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
@@ -57,7 +57,7 @@ impl<T> MapAuthToConnectError<T> for Result<T, rmcp::transport::AuthError> {
 /// Errors that occur when building the client.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientBuildError {
-    #[error("Failed to build client: {msg}")]
+    #[error("failed to build client: {msg}")]
     BuildError {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,

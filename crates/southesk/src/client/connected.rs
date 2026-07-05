@@ -101,19 +101,19 @@ impl Client<Connected> {
     ) -> Result<reqwest::Url, ClientCallError> {
         if args.currency == TradeCurrency::Account && args.account_id.is_none() {
             return Err(ClientCallError::InvalidArguments(
-                "Either currency or account_id must be set".to_string(),
+                "either currency or account_id must be set".to_string(),
             ));
         }
         let arg_map = match serde_json::to_value(args) {
             Ok(serde_json::Value::Object(map)) => map,
             Ok(_) => {
                 return Err(ClientCallError::InvalidArguments(
-                    "Could not convert args to JSON object".to_string(),
+                    "could not convert args to JSON object".to_string(),
                 ));
             }
             Err(_) => {
                 return Err(ClientCallError::InvalidArguments(
-                    "Could not convert args to JSON".to_string(),
+                    "could not convert args to JSON".to_string(),
                 ));
             }
         };
@@ -310,7 +310,7 @@ impl Client<Connected> {
             .state
             .client
             .peer_info()
-            .expect("Failed to get server info")
+            .expect("failed to get server info")
             .server_info;
         json_result.insert(
             "server".to_string(),
@@ -339,16 +339,16 @@ fn parse_result<T: DeserializeOwned>(res: &CallToolResult) -> Result<T, ClientCa
     let text = &res
         .content
         .first()
-        .ok_or(ClientCallError::parse_err("No content element in response"))?
+        .ok_or(ClientCallError::parse_err("no content element in response"))?
         .raw
         .as_text()
-        .ok_or(ClientCallError::parse_err("No raw text in response"))?
+        .ok_or(ClientCallError::parse_err("no raw text in response"))?
         .text;
     if res.is_error.unwrap_or(false) {
         return Err(ClientCallError::McpError(text.clone()));
     }
     serde_json::from_str::<T>(text).map_err(|e| ClientCallError::ParseError {
-        msg: format!("Failed to parse response text: {text}"),
+        msg: format!("failed to parse response text: {text}"),
         source: Some(e.into()),
     })
 }

@@ -414,16 +414,16 @@ pub mod error {
     /// Errors that can occur when parsing an account number.
     #[derive(Debug, thiserror::Error, PartialEq, Eq)]
     pub enum ParseAccountNumberError {
-        #[error("Invalid account number format")]
+        #[error("invalid account number format")]
         InvalidFormat,
-        #[error("Account number has a bad length")]
+        #[error("account number has a bad length")]
         BadLength,
     }
 
     /// Errors that can occur when parsing a currency code.
     #[derive(Debug, thiserror::Error, PartialEq, Eq)]
     pub enum ParseCurrencyError {
-        #[error("Invalid currency code")]
+        #[error("invalid currency code")]
         InvalidFormat,
     }
 }

@@ -81,13 +81,13 @@ pub(crate) struct CombinedStoredCreds {
 
 pub(crate) fn decode_json_creds(json: &[u8]) -> Result<Option<CombinedStoredCreds>, AuthError> {
     let creds: CombinedStoredCreds = serde_json::from_slice(json).map_err(|e| {
-        AuthError::InternalError(format!("Failed to deserialize credentials from JSON: {e}"))
+        AuthError::InternalError(format!("failed to deserialize credentials from JSON: {e}"))
     })?;
     Ok(Some(creds))
 }
 
 pub(crate) fn encode_json_creds(creds: &CombinedStoredCreds) -> Result<Vec<u8>, AuthError> {
     serde_json::to_vec(creds).map_err(|e| {
-        AuthError::InternalError(format!("Failed to serialize credentials to JSON: {e}"))
+        AuthError::InternalError(format!("failed to serialize credentials to JSON: {e}"))
     })
 }

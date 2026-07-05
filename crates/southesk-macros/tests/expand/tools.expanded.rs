@@ -19,7 +19,7 @@ fn main() {
                 .map_err(|e| ClientCallError::InvalidArguments(
                     ::alloc::__export::must_use({
                         ::alloc::fmt::format(
-                            format_args!("Failed to serialize arguments: {0}", e),
+                            format_args!("failed to serialize arguments: {0}", e),
                         )
                     }),
                 ))?
@@ -61,7 +61,7 @@ fn main() {
                 .map_err(|e| ClientCallError::InvalidArguments(
                     ::alloc::__export::must_use({
                         ::alloc::fmt::format(
-                            format_args!("Failed to serialize arguments: {0}", e),
+                            format_args!("failed to serialize arguments: {0}", e),
                         )
                     }),
                 ))?
