@@ -196,6 +196,7 @@ impl Client<Connected> {
 /// # Raw API
 ///
 /// The following methods provides raw API access to the MCP.
+#[cfg(feature = "raw-api")]
 impl Client<Connected> {
     /// Raw API. Calls the specified MCP tool with the given arguments.
     ///

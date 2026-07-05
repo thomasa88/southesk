@@ -98,6 +98,10 @@ name = "raw_api"
 required-features = ["raw-api"]
 
 [[example]]
+name = "clean_disconnect"
+required-features = ["raw-api"]
+
+[[example]]
 name = "devel-introspect"
 path = "examples/devel/introspect.rs"
 required-features = ["__dev"]

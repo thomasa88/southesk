@@ -289,6 +289,7 @@ fn process_type(
                         if member_has_ref == Some(HasRef::Yes) {
                             has_ref = HasRef::Yes;
                         }
+                        #[allow(unused_mut)]
                         let mut member_attrs = TokenStream::new();
                         if member_is_nullable || !js_type.required.contains(prop_name) {
                             member_type = quote! { Option<#member_type> };
