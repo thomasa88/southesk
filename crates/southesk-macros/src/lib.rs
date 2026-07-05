@@ -37,7 +37,7 @@ impl Parse for McpSchema {
         let json = std::fs::File::open(&json_path)
             .unwrap_or_else(|_| panic!("Cannot open {}", json_path.display()));
         let schema: McpSchema = serde_json::from_reader(json).map_err(|e| {
-            syn::Error::new(json_path_lit.span(), format!("Failed to parse JSON: {}", e))
+            syn::Error::new(json_path_lit.span(), format!("Failed to parse JSON: {e}"))
         })?;
         Ok(schema)
     }
@@ -256,7 +256,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
 /// The returned token stream matches what would be written as a struct member
 /// type. Examples: `i64`, `&'arg str`, `CallToolArgs`
 ///
-/// HasRef will only be correctly set if support types are generated.
+/// `HasRef` will only be correctly set if support types are generated.
 fn process_type(
     support_types: Option<&mut TokenStream>,
     type_name_hint: &str,
@@ -386,13 +386,11 @@ fn process_type(
                     });
                 }
                 quote! { #enum_ident }
+            } else if allow_ref {
+                has_ref = HasRef::Yes;
+                quote! { &'arg str }
             } else {
-                if allow_ref {
-                    has_ref = HasRef::Yes;
-                    quote! { &'arg str }
-                } else {
-                    quote! { String }
-                }
+                quote! { String }
             }
         }
         "number" => quote! { Decimal },
