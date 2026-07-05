@@ -314,7 +314,7 @@ impl Client<Connected> {
             .server_info;
         json_result.insert(
             "server".to_string(),
-            serde_json::to_value(&server_info).unwrap(),
+            serde_json::to_value(server_info).unwrap(),
         );
         parse(
             "tools",
