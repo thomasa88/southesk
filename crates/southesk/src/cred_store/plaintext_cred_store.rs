@@ -4,7 +4,10 @@
 //! A credential store that saves the credentials in a plaintext JSON file in
 //! the user's config directory.
 
-use std::path::PathBuf;
+use std::{
+    io::{Read, Write},
+    path::PathBuf,
+};
 use tracing::debug;
 
 use async_trait::async_trait;
@@ -16,36 +19,43 @@ use super::{CombinedStoredCreds, FullCredStore};
 /// the user's config directory.
 #[derive(Debug, Clone)]
 pub struct PlaintextCredStore {
-    path: PathBuf,
+    filename: PathBuf,
 }
 
 impl PlaintextCredStore {
-    /// Creates a new plaintext credential store at the given path.
+    /// Creates a new plaintext credential with the given filename.
     ///
     /// Use different paths for different Montrose accounts.
-    pub fn new(path: impl Into<PathBuf>) -> Self {
-        Self { path: path.into() }
+    pub fn new(filename: impl Into<PathBuf>) -> Self {
+        Self {
+            filename: filename.into(),
+        }
     }
 
     fn load_creds(&self) -> Result<Option<CombinedStoredCreds>, AuthError> {
-        if !self.path.exists() {
+        if !self.filename.exists() {
             return Ok(None);
         }
-        let file = std::fs::File::open(&self.path).map_err(|e| {
+        let mut file = std::fs::File::open(&self.filename).map_err(|e| {
             AuthError::InternalError(format!("failed to open credentials file: {e}"))
         })?;
-        let creds: CombinedStoredCreds = serde_json::from_reader(file).map_err(|e| {
-            AuthError::InternalError(format!("failed to deserialize credentials: {e}"))
+        let mut buf = Vec::new();
+        file.read_to_end(&mut buf).map_err(|e| {
+            AuthError::InternalError(format!(
+                "failed to read credentials from {}: {}",
+                self.filename.display(),
+                e
+            ))
         })?;
-        Ok(Some(creds))
+        super::decode_json_creds(&buf)
     }
 
     fn save_creds(&self, creds: CombinedStoredCreds) -> Result<(), AuthError> {
-        if let Some(parent) = self.path.parent() {
+        if let Some(parent) = self.filename.parent() {
             std::fs::create_dir_all(parent).map_err(|e| {
                 AuthError::InternalError(format!(
                     "failed to create directories for credentials file {:?}: {e}",
-                    self.path
+                    self.filename
                 ))
             })?;
         }
@@ -57,15 +67,20 @@ impl PlaintextCredStore {
             // Only the current user can access the file
             options.mode(0o600);
         }
-        let file = options.open(&self.path).map_err(|e| {
+        let mut file = options.open(&self.filename).map_err(|e| {
             AuthError::InternalError(format!(
                 "failed to create credentials file {:?}: {e}",
-                self.path
+                self.filename
             ))
         })?;
-        serde_json::to_writer_pretty(file, &creds).map_err(|e| {
-            AuthError::InternalError(format!("failed to serialize credentials: {e}"))
-        })?;
+        file.write_all(&super::encode_json_creds(&creds)?)
+            .map_err(|e| {
+                AuthError::InternalError(format!(
+                    "failed to write credentials to {}: {}",
+                    self.filename.display(),
+                    e
+                ))
+            })?;
         Ok(())
     }
 }
@@ -75,7 +90,7 @@ impl rmcp::transport::CredentialStore for PlaintextCredStore {
     async fn load(&self) -> Result<Option<StoredCredentials>, AuthError> {
         let creds = self.load_creds()?.and_then(|c| c.rmcp_creds);
         if creds.is_some() {
-            debug!("Loaded credentials from {:?}", self.path);
+            debug!("Loaded credentials from {:?}", self.filename);
         }
         Ok(creds)
     }
@@ -84,13 +99,13 @@ impl rmcp::transport::CredentialStore for PlaintextCredStore {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.rmcp_creds = Some(credentials);
         self.save_creds(creds)?;
-        debug!("Saved credentials to {:?}", self.path);
+        debug!("Saved credentials to {:?}", self.filename);
         Ok(())
     }
 
     async fn clear(&self) -> Result<(), AuthError> {
-        std::fs::remove_file(&self.path).ok();
-        debug!("Cleared credentials in {:?}", self.path);
+        std::fs::remove_file(&self.filename).ok();
+        debug!("Cleared credentials in {:?}", self.filename);
         Ok(())
     }
 }
@@ -101,13 +116,13 @@ impl FullCredStore for PlaintextCredStore {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());
         self.save_creds(creds)?;
-        debug!("Saved client secret to {:?}", self.path);
+        debug!("Saved client secret to {:?}", self.filename);
         Ok(())
     }
 
     async fn load_client_secret(&self) -> Result<Option<String>, AuthError> {
         let client_secret = self.load_creds()?.and_then(|c| c.client_secret);
-        debug!("Loaded client secret from {:?}", self.path);
+        debug!("Loaded client secret from {:?}", self.filename);
         Ok(client_secret)
     }
 }

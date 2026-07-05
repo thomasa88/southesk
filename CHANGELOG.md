@@ -31,6 +31,10 @@ Headers:
 - Errors no longer don't duplicate the inner error's message and they are all
   lowercase, as prescribed by the Rust API guidelines.
 
+## Fixed
+
+- Use shared cred store JSON encode/decode functions in plaintext cred store.
+
 ## [0.0.6] - 2026-07-03
 
 ## Fixed
