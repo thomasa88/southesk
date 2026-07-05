@@ -35,6 +35,7 @@ Headers:
 
 - Use shared cred store JSON encode/decode functions in plaintext cred store.
 - Build docs with all features and mark items with feature requirements.
+- Plaintext cred store fallback compiles when the `keyring` feature is unset.
 
 ## [0.0.6] - 2026-07-03
 

@@ -7,7 +7,7 @@ use {rmcp::transport::CredentialStore, tracing::warn};
 
 use crate::{
     auth_handler::{AuthHandler, BrowserAuth},
-    cred_store::{FullCredStore, KeyringCredStore, SharedCredStore},
+    cred_store::{FullCredStore, SharedCredStore},
     error::ClientBuildError,
 };
 
@@ -190,6 +190,8 @@ impl ClientBuilder {
                 SharedCredStore::new({
                     #[cfg(feature = "keyring")]
                     {
+                        use crate::cred_store::KeyringCredStore;
+
                         KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
                             ClientBuildError::BuildError {
                                 msg: "failed to create keyring credential store".to_string(),
@@ -199,6 +201,9 @@ impl ClientBuilder {
                     }
                     #[cfg(not(feature = "keyring"))]
                     {
+                        use crate::cred_store::PlaintextCredStore;
+                        use etcetera::AppStrategy;
+
                         let client_dirs =
                             etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
                                 top_level_domain: "".to_string(),
@@ -211,7 +216,15 @@ impl ClientBuilder {
                                     source: Some(Box::new(e)),
                                 }
                             })?;
-                        PlaintextCredStore::new(&client_dirs)
+                        PlaintextCredStore::new(
+                            &client_dirs
+                                .state_dir()
+                                .unwrap_or_else(|| client_dirs.data_dir())
+                                // TOOD: Sanitise the username. Right now, the
+                                // code will fail with an error if the username
+                                // cannot be used in a filename.
+                                .join(format!("{cred_user}_credentials.json")),
+                        )
                     }
                 })
             }
