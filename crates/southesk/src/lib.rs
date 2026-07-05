@@ -1,6 +1,10 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+// docs.rs uses the nightly toolchain, which supports marking items with feature
+// requirements
+#![cfg_attr(docsrs, feature(doc_cfg))]
+
 //! # southesk
 //!
 //! southesk is a library for creating clients for the [Montrose

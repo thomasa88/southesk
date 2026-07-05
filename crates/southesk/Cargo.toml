@@ -10,6 +10,14 @@ keywords.workspace = true
 categories.workspace = true
 readme.workspace = true
 
+# Configuration for https://docs.rs
+# To build locally, use the following command:
+# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc --workspace --all-features
+[package.metadata.docs.rs]
+# Build documentation with all features enabled
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [features]
 default = ["keyring", "high-api"]
 keyring = [

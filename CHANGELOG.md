@@ -34,6 +34,7 @@ Headers:
 ## Fixed
 
 - Use shared cred store JSON encode/decode functions in plaintext cred store.
+- Build docs with all features and mark items with feature requirements.
 
 ## [0.0.6] - 2026-07-03
 
