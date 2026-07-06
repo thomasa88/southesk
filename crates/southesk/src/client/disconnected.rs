@@ -41,48 +41,48 @@ impl Client<Disconnected> {
         info!("Connecting to the MCP server...");
         debug!("Using MCP server URL: {}", MCP_SERVER_URL);
 
-        // This is a call graph flattened into a (max two laps) loop.
-        //
-        // It tries the following steps:
-        // * Connect using stored credentials, if available.
-        // * Connect by letting the user authenticate
-        let mut auth_mgr = self.auth_mgr_from_creds().await?;
-        if auth_mgr.is_none() {
+        let mut mcp_client_res = None;
+
+        if let Some(auth_mgr) = self.auth_mgr_from_creds().await? {
+            info!("Authenticating using stored credentials");
+            let res = self.init_mcp_client(auth_mgr).await;
+            if let Err(e) = &res
+                && Self::is_auth_required_error(e)
+            {
+                info!("Authentication required error encountered");
+            } else {
+                mcp_client_res = Some(res);
+            }
+        } else {
             info!("No usable credentials found in the credential store.");
         }
-        let mut need_auth = auth_mgr.is_none();
-        loop {
-            if need_auth {
-                assert!(auth_mgr.is_none());
-                info!("Starting new authorization flow.",);
-                auth_mgr = Some(self.authenticate_new_auth().await?);
+
+        if mcp_client_res.is_none() {
+            info!("Starting new authorization flow.",);
+            let auth_mgr = self.authenticate_new_auth().await?;
+            mcp_client_res = Some(self.init_mcp_client(auth_mgr).await);
+        }
+
+        debug_assert!(mcp_client_res.is_some());
+        match mcp_client_res {
+            Some(Ok(mcp_client)) => {
+                info!("Successfully connected to the MCP server");
+
+                Ok(Client {
+                    client_name: self.client_name,
+                    auth_handler: self.auth_handler,
+                    cred_store: self.cred_store,
+                    state: Connected { client: mcp_client },
+                })
             }
-
-            let mcp_client_res = self.init_mcp_client(auth_mgr.take().unwrap()).await;
-            match mcp_client_res {
-                Ok(mcp_client) => {
-                    info!("Successfully connected to the MCP server");
-
-                    return Ok(Client {
-                        client_name: self.client_name,
-                        auth_handler: self.auth_handler,
-                        cred_store: self.cred_store,
-                        state: Connected { client: mcp_client },
-                    });
-                }
-                // Try to let the user authenticate - if the user has not
-                // already been asked to do that.
-                Err(e) if !need_auth && Self::is_auth_required_error(&e) => {
-                    info!("Authentication required error encountered");
-                    need_auth = true;
-                }
-                Err(e) => {
-                    return Err(ClientConnectError::ConnectionError {
-                        msg: "failed to connect to MCP server".to_string(),
-                        source: Some(e.into()),
-                    });
-                }
-            };
+            Some(Err(e)) => Err(ClientConnectError::ConnectionError {
+                msg: "failed to connect to MCP server".to_string(),
+                source: Some(e.into()),
+            }),
+            None => Err(ClientConnectError::ConnectionError {
+                msg: "Invalid client state".to_string(),
+                source: None,
+            }),
         }
     }
 
