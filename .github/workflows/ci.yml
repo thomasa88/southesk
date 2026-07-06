@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - dev
+
+env:
+  RUST_BACKTRACE: 1
+  # No need to generate data for incremental builds as all jobs start from a clean slate
+  CARGO_INCREMENTAL: 0
+  RUSTFLAGS: "-D dead_code -D unused_imports -D warnings -D clippy::all -D clippy::pedantic -A clippy::too_many_lines -A clippy::missing_errors_doc"
+
+jobs:
+  style:
+    name: Check Style
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - run: cargo fmt -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # Nightly should have the latest checks
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
+
+      - run: cargo clippy --all-targets
+      - run: cargo clippy --all-targets --all-features
+      - run: cargo clippy --all-targets --no-default-features
+
+  test:
+    # `cargo test` implicitly includes `cargo check`
+    name: "Test: ${{ matrix.name }}"
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+
+    strategy:
+      matrix:
+        name:
+          - linux / stable
+          - macOS / stable
+          - windows / stable-x86_64-msvc
+          - "features: all"
+          - "features: no-default"
+
+        include:
+          - name: linux / stable
+            os: ubuntu-latest
+          - name: macOS / stable
+            os: macOS-latest
+          - name: windows / stable-x86_64-msvc
+            os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - name: "features: all"
+            features: "--all-features"
+          - name: "features: no-default"
+            features: "--no-default-features"
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Install cargo expand
+        # cargo expand is needed by macrotest
+        uses: taiki-e/cache-cargo-install-action@v3
+        with:
+          tool: cargo-expand@1.0.108
+
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Run cargo test
+        run: |
+          set -euxo pipefail
+          # doc-tests are not included in `cargo ... --all-targets`
+          # but they are included when not using --all-targets.
+          # ( https://github.com/rust-lang/cargo/issues/6669 )
+          cargo test --locked --workspace ${{ matrix.features }}
+        shell: bash
+
+  check-features:
+    name: Check feature combinations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
+
+      - name: Set up Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - run: cargo hack --no-dev-deps --feature-powerset --exclude-features __dev-all-feats check --workspace
+
+      # Get the examples included into the check (all-targets).
+      - run: cargo check --workspace --all-targets
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      # Using nightly Rust to be able to have feature markers in the docs
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@nightly
+
+      - env:
+          RUSTDOCFLAGS: "--cfg docsrs -D warnings"
+        run: cargo doc --no-deps -p southesk --all-features
