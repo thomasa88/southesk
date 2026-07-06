@@ -107,7 +107,7 @@ async fn browser_callback_handler(
 }
 
 impl BrowserAuth {
-    pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(120);
+    pub const DEFAULT_TIMEOUT: Duration = Duration::from_mins(2);
 
     /// Creates a new browser authentication handler and starts a callback server.
     ///
@@ -159,6 +159,7 @@ impl BrowserAuth {
     /// Defaults to [`DEFAULT_TIMEOUT`](Self::DEFAULT_TIMEOUT). Note that the
     /// Montrose web page login times out after 1 minute, but the user can wait
     /// longer before approving the MCP client.
+    #[must_use]
     pub fn with_timeout(self, timeout: Duration) -> Self {
         Self {
             auth_timeout: timeout,
@@ -218,6 +219,7 @@ impl ConsoleAuth {
     const REDIRECT_BASE_URL: &str = "http://localhost:7878/callback";
 
     /// Creates a new console authentication callback handler.
+    #[must_use]
     pub fn new() -> Self {
         ConsoleAuth {}
     }

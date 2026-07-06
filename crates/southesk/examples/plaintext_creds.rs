@@ -18,8 +18,8 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let dirs = etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
-        top_level_domain: "".to_string(),
-        author: "".to_string(),
+        top_level_domain: String::new(),
+        author: String::new(),
         app_name: "southesk-sample".to_string(),
     })?;
     let creds_file = dirs

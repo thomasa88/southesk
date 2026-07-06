@@ -72,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
     let mut i = 3;
     let mut total_percentage = Decimal::ZERO;
     while i + 1 < args.len() {
-        let ticker = args.get(i).context("Missing ticker")?.to_string();
+        let ticker = args.get(i).context("Missing ticker")?.clone();
         let percentage: Decimal = args.get(i + 1).context("Missing percentage")?.parse()?;
         trades.push(Trade {
             ticker,
@@ -153,7 +153,7 @@ async fn main() -> anyhow::Result<()> {
     std::io::stdout().flush()?;
     let mut buf = [0; 1];
     std::io::stdin().read_exact(&mut buf)?;
-    if buf != [b'y'] {
+    if buf != *b"y" {
         println!("Aborting");
         return Ok(());
     }
@@ -168,7 +168,7 @@ async fn main() -> anyhow::Result<()> {
                 account_id: Some(account.account_id),
                 volume: TradeVolume::Amount(trade.amount_sek.expect("Amount should be set")),
                 currency: TradeCurrency::Account,
-                instrument: Instrument::Ticker(trade.ticker.to_string()),
+                instrument: Instrument::Ticker(trade.ticker.clone()),
                 price: None,
             })
             .await?;

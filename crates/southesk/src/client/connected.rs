@@ -36,11 +36,11 @@ impl Client<Connected> {
             Ok(None) => warn!("MCP service did not shut down cleanly"),
             Ok(Some(quit_reason)) => debug!("MCP service exited: {quit_reason:?}"),
             Err(e) => error!("Failed to join MCP service task: {e}"),
-        };
+        }
         info!("Disconnected from the MCP server");
 
         Client {
-            client_name: self.client_name,
+            name: self.name,
             auth_handler: self.auth_handler,
             cred_store: self.cred_store,
             state: Disconnected,

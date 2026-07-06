@@ -69,12 +69,12 @@ impl KeyringCredStore {
         super::decode_json_creds(json.as_slice())
     }
 
-    fn save_creds(&self, creds: CombinedStoredCreds) -> Result<(), AuthError> {
-        let entry = self.get_keyring_entry()?;
-        let json = super::encode_json_creds(&creds)?;
+    fn save_creds(&self, creds: &CombinedStoredCreds) -> Result<(), AuthError> {
         use keyring_core::error::Error;
+        let entry = self.get_keyring_entry()?;
+        let json = super::encode_json_creds(creds)?;
         match entry.set_secret(&json) {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(Error::Ambiguous(_)) => Err(AuthError::InternalError(
                 "multiple matching entries in keyring when saving is not supported".to_string(),
             )),
@@ -98,7 +98,7 @@ impl CredentialStore for KeyringCredStore {
     async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.rmcp_creds = Some(credentials);
-        self.save_creds(creds)?;
+        self.save_creds(&creds)?;
         debug!("Saved credentials to keyring");
         Ok(())
     }
@@ -106,7 +106,7 @@ impl CredentialStore for KeyringCredStore {
     async fn clear(&self) -> Result<(), AuthError> {
         use keyring_core::error::Error;
         match self.get_keyring_entry()?.delete_credential() {
-            Ok(_) | Err(Error::NoEntry) => {
+            Ok(()) | Err(Error::NoEntry) => {
                 debug!("Cleared credentials from keyring");
                 Ok(())
             }
@@ -126,7 +126,7 @@ impl FullCredStore for KeyringCredStore {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());
-        self.save_creds(creds)?;
+        self.save_creds(&creds)?;
         debug!("Saved client secret to keyring");
         Ok(())
     }

@@ -52,7 +52,7 @@ mod disconnected;
 /// ```
 #[derive(Debug)]
 pub struct Client<S: State = Disconnected> {
-    client_name: String,
+    name: String,
     auth_handler: Option<Box<dyn AuthHandler>>,
     cred_store: SharedCredStore,
     state: S,
@@ -113,6 +113,7 @@ impl ClientBuilder {
     /// Overrides how the user is requested to authenticate.
     ///
     /// [`BrowserAuth`] is used by default.
+    #[must_use]
     pub fn auth_handler(mut self, handler: impl AuthHandler + 'static) -> Self {
         self.auth_handler = Some(Box::new(handler));
         self
@@ -125,6 +126,7 @@ impl ClientBuilder {
     /// session). This can be useful for long-running background programs.
     /// [`Client::connect`] will fail if the server denies the existing OAuth
     /// credentials.
+    #[must_use]
     pub fn no_auth(mut self) -> Self {
         self.interactive_auth = false;
         self
@@ -138,12 +140,14 @@ impl ClientBuilder {
     ///
     /// This option is not valid if a custom credential store is provided with
     /// [`ClientBuilder::cred_store`].
+    #[must_use]
     pub fn cred_user(mut self, user: impl Into<String>) -> Self {
         self.cred_user = Some(user.into());
         self
     }
 
     /// Overrides the credential store used to store the user's OAuth credentials
+    #[must_use]
     pub fn cred_store(mut self, cred_store: impl FullCredStore + 'static) -> Self {
         self.cred_store = Some(SharedCredStore::new(cred_store));
         self
@@ -151,6 +155,7 @@ impl ClientBuilder {
 
     #[cfg(feature = "__dev")]
     /// Makes the client force an OAuth token refresh when connecting.
+    #[must_use]
     pub fn dev_force_token_refresh(mut self) -> Self {
         self.force_token_refresh = true;
         self
@@ -174,60 +179,54 @@ impl ClientBuilder {
             None
         };
 
-        let cred_store = match self.cred_store {
-            Some(store) => {
-                if self.cred_user.is_some() {
-                    return Err(ClientBuildError::BuildError {
-                        msg: "cannot specify both a custom credential store and a credential user"
-                            .to_string(),
-                        source: None,
-                    });
+        let cred_store = if let Some(store) = self.cred_store {
+            if self.cred_user.is_some() {
+                return Err(ClientBuildError::BuildError {
+                    msg: "cannot specify both a custom credential store and a credential user"
+                        .to_string(),
+                    source: None,
+                });
+            }
+            store
+        } else {
+            let cred_user = self.cred_user.unwrap_or(DEFAULT_CRED_USER.to_string());
+            SharedCredStore::new({
+                #[cfg(feature = "keyring")]
+                {
+                    use crate::cred_store::KeyringCredStore;
+
+                    KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
+                        ClientBuildError::BuildError {
+                            msg: "failed to create keyring credential store".to_string(),
+                            source: Some(Box::new(e)),
+                        }
+                    })?
                 }
-                store
-            }
-            None => {
-                let cred_user = self.cred_user.unwrap_or(DEFAULT_CRED_USER.to_string());
-                SharedCredStore::new({
-                    #[cfg(feature = "keyring")]
-                    {
-                        use crate::cred_store::KeyringCredStore;
+                #[cfg(not(feature = "keyring"))]
+                {
+                    use crate::cred_store::PlaintextCredStore;
+                    use etcetera::AppStrategy;
 
-                        KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
-                            ClientBuildError::BuildError {
-                                msg: "failed to create keyring credential store".to_string(),
-                                source: Some(Box::new(e)),
-                            }
-                        })?
-                    }
-                    #[cfg(not(feature = "keyring"))]
-                    {
-                        use crate::cred_store::PlaintextCredStore;
-                        use etcetera::AppStrategy;
-
-                        let client_dirs =
-                            etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
-                                top_level_domain: "".to_string(),
-                                author: "".to_string(),
-                                app_name: self.client_name.clone(),
-                            })
-                            .map_err(|e| {
-                                ClientBuildError::BuildError {
-                                    msg: e.to_string(),
-                                    source: Some(Box::new(e)),
-                                }
-                            })?;
-                        PlaintextCredStore::new(
-                            &client_dirs
-                                .state_dir()
-                                .unwrap_or_else(|| client_dirs.data_dir())
-                                // TOOD: Sanitise the username. Right now, the
-                                // code will fail with an error if the username
-                                // cannot be used in a filename.
-                                .join(format!("{cred_user}_credentials.json")),
-                        )
-                    }
-                })
-            }
+                    let client_dirs = etcetera::choose_app_strategy(etcetera::AppStrategyArgs {
+                        top_level_domain: String::new(),
+                        author: String::new(),
+                        app_name: self.client_name.clone(),
+                    })
+                    .map_err(|e| ClientBuildError::BuildError {
+                        msg: e.to_string(),
+                        source: Some(Box::new(e)),
+                    })?;
+                    PlaintextCredStore::new(
+                        client_dirs
+                            .state_dir()
+                            .unwrap_or_else(|| client_dirs.data_dir())
+                            // TOOD: Sanitise the username. Right now, the
+                            // code will fail with an error if the username
+                            // cannot be used in a filename.
+                            .join(format!("{cred_user}_credentials.json")),
+                    )
+                }
+            })
         };
 
         #[cfg(feature = "__dev")]
@@ -246,7 +245,10 @@ impl ClientBuilder {
                 creds
                     .token_response
                     .as_mut()
-                    .unwrap()
+                    .ok_or_else(|| ClientBuildError::BuildError {
+                        msg: "no token response in stored credentials".to_string(),
+                        source: None,
+                    })?
                     .set_expires_in(Some(&Duration::ZERO));
                 cred_store
                     .save(creds)
@@ -259,7 +261,7 @@ impl ClientBuilder {
         }
 
         Ok(Client {
-            client_name: self.client_name,
+            name: self.client_name,
             auth_handler,
             cred_store,
             state: Disconnected,

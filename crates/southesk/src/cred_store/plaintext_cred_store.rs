@@ -50,12 +50,12 @@ impl PlaintextCredStore {
         super::decode_json_creds(&buf)
     }
 
-    fn save_creds(&self, creds: CombinedStoredCreds) -> Result<(), AuthError> {
+    fn save_creds(&self, creds: &CombinedStoredCreds) -> Result<(), AuthError> {
         if let Some(parent) = self.filename.parent() {
             std::fs::create_dir_all(parent).map_err(|e| {
                 AuthError::InternalError(format!(
-                    "failed to create directories for credentials file {:?}: {e}",
-                    self.filename
+                    "failed to create directories for credentials file {}: {e}",
+                    self.filename.display()
                 ))
             })?;
         }
@@ -69,11 +69,11 @@ impl PlaintextCredStore {
         }
         let mut file = options.open(&self.filename).map_err(|e| {
             AuthError::InternalError(format!(
-                "failed to create credentials file {:?}: {e}",
-                self.filename
+                "failed to create credentials file {}: {e}",
+                self.filename.display()
             ))
         })?;
-        file.write_all(&super::encode_json_creds(&creds)?)
+        file.write_all(&super::encode_json_creds(creds)?)
             .map_err(|e| {
                 AuthError::InternalError(format!(
                     "failed to write credentials to {}: {}",
@@ -98,7 +98,7 @@ impl rmcp::transport::CredentialStore for PlaintextCredStore {
     async fn save(&self, credentials: StoredCredentials) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.rmcp_creds = Some(credentials);
-        self.save_creds(creds)?;
+        self.save_creds(&creds)?;
         debug!("Saved credentials to {:?}", self.filename);
         Ok(())
     }
@@ -115,7 +115,7 @@ impl FullCredStore for PlaintextCredStore {
     async fn save_client_secret(&self, secret: &str) -> Result<(), AuthError> {
         let mut creds = self.load_creds()?.unwrap_or_default();
         creds.client_secret = Some(secret.into());
-        self.save_creds(creds)?;
+        self.save_creds(&creds)?;
         debug!("Saved client secret to {:?}", self.filename);
         Ok(())
     }

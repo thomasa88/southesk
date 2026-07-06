@@ -69,7 +69,7 @@ impl Client<Disconnected> {
                 info!("Successfully connected to the MCP server");
 
                 Ok(Client {
-                    client_name: self.client_name,
+                    name: self.name,
                     auth_handler: self.auth_handler,
                     cred_store: self.cred_store,
                     state: Connected { client: mcp_client },
@@ -115,14 +115,16 @@ impl Client<Disconnected> {
     async fn init_mcp_client(
         &self,
         auth_mgr: AuthorizationManager,
-    ) -> Result<McpClient, rmcp::service::ClientInitializeError> {
+    ) -> Result<McpClient, Box<rmcp::service::ClientInitializeError>> {
         let auth_client = AuthClient::new(reqwest::Client::default(), auth_mgr);
         let transport = StreamableHttpClientTransport::with_client(
             auth_client,
             StreamableHttpClientTransportConfig::with_uri(MCP_SERVER_URL),
         );
         let client_service = ClientInfo::default();
-        client_service.serve(transport).await
+        // The error type is boxed since it is very large (> 700 bytes), to
+        // avoid creating a gigantic Result type.
+        client_service.serve(transport).await.map_err(Box::new)
     }
 
     async fn auth_mgr_from_creds(
@@ -219,7 +221,7 @@ impl Client<Disconnected> {
         let (mut oauth_state, client_secret) = Self::auth_mgr_start_authorization_with_secret(
             wanted_scopes,
             redirect_uri,
-            &self.client_name,
+            &self.name,
             self.cred_store.clone(),
         )
         .await

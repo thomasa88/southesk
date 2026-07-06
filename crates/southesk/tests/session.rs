@@ -22,17 +22,17 @@ async fn access_token_timeout() -> anyhow::Result<()> {
         .await?
         .connect()
         .await?;
-    warn!("MCP use attempt 1");
+    warn!("MCP use attempt 1: Instantly");
     montrose.get_user_accounts().await?;
 
-    sleep(Duration::from_secs(3600)).await;
+    sleep(Duration::from_hours(1)).await;
 
-    warn!("MCP use attempt 2");
+    warn!("MCP use attempt 2: After 1 hour");
     montrose.get_user_accounts().await?;
 
-    sleep(Duration::from_secs(25 * 3600)).await;
+    sleep(Duration::from_hours(25)).await;
 
-    warn!("MCP use attempt 3");
+    warn!("MCP use attempt 3: After 25 hours");
     montrose.get_user_accounts().await?;
 
     Ok(())

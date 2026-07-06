@@ -40,7 +40,7 @@ impl AccountNumber {
         } else if !num.chars().all(|c| c.is_ascii_digit()) {
             Err(error::ParseAccountNumberError::InvalidFormat)
         } else {
-            Ok(AccountNumber(num.to_string()))
+            Ok(AccountNumber(num))
         }
     }
 }

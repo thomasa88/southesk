@@ -202,7 +202,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
             let prop_ident = Ident::new(&arg_name, Span::call_site());
             let (mut prop_type_quote, _has_ref, _is_nullable) = process_type(
                 None,
-                &format!("{}{}", &args_struct_name, camel_to_pascal_case(prop_name)),
+                &format!("{}{}", args_struct_name, camel_to_pascal_case(prop_name)),
                 prop_js_type,
                 None,
                 true,

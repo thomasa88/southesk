@@ -24,7 +24,7 @@ async fn main() -> anyhow::Result<()> {
 
     let account = &montrose.low_get_user_accounts().await?[0];
     let holdings: Vec<_> = montrose
-        .low_get_holdings(Some(&account.account_id.to_string()))
+        .low_get_holdings(Some(&account.account_id.clone()))
         .await?
         .into_iter()
         .filter(|h| h.account_type.as_deref() == Some("ISK"))
