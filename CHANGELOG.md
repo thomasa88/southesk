@@ -24,6 +24,10 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## Added
+
+- Show currency positions in the `show_data` example.
+
 ## Changed
 
 - Authentication handlers have their own error types that matches the errors

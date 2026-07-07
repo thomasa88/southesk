@@ -71,6 +71,14 @@ async fn main() -> anyhow::Result<()> {
                 account.summary.available_for_purchase, currency, weight
             );
         }
+        let currency_positions = &account.currency_positions;
+        for curr_pos in currency_positions {
+            println!("  Currency Position: {}", curr_pos.currency_code);
+            println!(
+                "    Balance: {} {}",
+                curr_pos.balance, curr_pos.currency_code
+            );
+        }
         let mut positions = account.positions;
         positions.sort_by(|a, b| a.instrument_name.cmp(&b.instrument_name));
         for position in positions {
