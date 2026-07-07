@@ -169,11 +169,11 @@ impl Client<Disconnected> {
         let creds = cred_store
             .load()
             .await
-            .to_connect_err("error while loading credentials from credential store")?;
+            .to_connect_auth_err("error while loading credentials from credential store")?;
         let client_secret = cred_store
             .load_client_secret()
             .await
-            .to_connect_err("error while loading client secret from credential store")?;
+            .to_connect_auth_err("error while loading client secret from credential store")?;
 
         // Store is missing data. Cannot initialize the auth manager.
         let (Some(creds), Some(client_secret)) = (creds, client_secret) else {
@@ -191,13 +191,15 @@ impl Client<Disconnected> {
         let metadata = auth_mgr
             .discover_metadata()
             .await
-            .to_connect_err("failed to discover authorization server metadata")?;
+            .to_connect_auth_err("failed to discover authorization server metadata")?;
         auth_mgr.set_metadata(metadata);
 
         // // auth_mgr.configure_client_credentials(config) does basically the same as configure_client?
         auth_mgr
             .configure_client(oauth_config)
-            .to_connect_err("failed to configure authorization manager with client credentials")?;
+            .to_connect_auth_err(
+                "failed to configure authorization manager with client credentials",
+            )?;
 
         Ok(true)
     }
@@ -256,7 +258,7 @@ impl Client<Disconnected> {
         oauth_state
             .handle_callback(&auth_code, &csrf_token)
             .await
-            .to_connect_err("failed to handle authorization callback")?;
+            .to_connect_auth_err("failed to handle authorization callback")?;
 
         // OAuthState::handle_callback is the function that initially stores the credentials using the credential store.
         // So store the client secret now as well.

@@ -42,11 +42,11 @@ pub enum ClientConnectError {
 }
 
 pub(crate) trait MapAuthToConnectError<T> {
-    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, ClientConnectError>;
+    fn to_connect_auth_err(self, msg: impl Into<String>) -> Result<T, ClientConnectError>;
 }
 
 impl<T> MapAuthToConnectError<T> for Result<T, rmcp::transport::AuthError> {
-    fn to_connect_err(self, msg: impl Into<String>) -> Result<T, ClientConnectError> {
+    fn to_connect_auth_err(self, msg: impl Into<String>) -> Result<T, ClientConnectError> {
         self.map_err(|e| ClientConnectError::AuthError {
             msg: msg.into(),
             source: Some(Box::new(e)),
