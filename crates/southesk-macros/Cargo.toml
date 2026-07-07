@@ -15,6 +15,11 @@ proc-macro = true
 # Limits the number of derives in the generated code, to make it easier to read
 # the cargo expand output.
 __dev-macros = []
+# Testing with --all-features will enable __dev-macros, making the test fails
+# due to missing derives. To avoid that, we have the below feature, which will
+# enable the derives even though __dev-macros is set. Using
+# #[cfg(any(not(feature=...), test)] in the library code did not work.
+__dev-all-feats = []
 
 [dependencies]
 quote = { workspace = true }

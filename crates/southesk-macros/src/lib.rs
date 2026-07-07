@@ -293,7 +293,10 @@ fn process_type(
                         let mut member_attrs = TokenStream::new();
                         if member_is_nullable || !js_type.required.contains(prop_name) {
                             member_type = quote! { Option<#member_type> };
-                            #[cfg(not(feature = "__dev-macros"))]
+                            #[cfg(any(
+                                not(feature = "__dev-macros"),
+                                feature = "__dev-all-feats"
+                            ))]
                             member_attrs.extend(quote! {
                                 #[serde(skip_serializing_if = "Option::is_none")]
                             });
@@ -324,7 +327,7 @@ fn process_type(
                 support_types.extend(quote! {
                     #[doc = #comment]
                 });
-                #[cfg(not(feature = "__dev-macros"))]
+                #[cfg(any(not(feature = "__dev-macros"), feature = "__dev-all-feats"))]
                 {
                     let mut struct_derives = quote! { Debug, Clone, PartialEq, serde::Serialize };
                     if !allow_ref {
@@ -374,7 +377,7 @@ fn process_type(
                     support_types.extend(quote! {
                         #[doc = #comment]
                     });
-                    #[cfg(not(feature = "__dev-macros"))]
+                    #[cfg(any(not(feature = "__dev-macros"), feature = "__dev-all-feats"))]
                     {
                         support_types.extend(quote! {
                             #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
