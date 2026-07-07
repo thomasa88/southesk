@@ -31,7 +31,7 @@ impl KeyringCredStore {
         #[cfg(target_os = "windows")]
         let store = windows_native_keyring_store::Store::new();
         #[cfg(target_os = "macos")]
-        let store = apple_native_keyring_store::Store::new();
+        let store = apple_native_keyring_store::keychain::Store::new();
         Ok(Self {
             store: store.map_err(|e| {
                 AuthError::InternalError(format!("failed to initialize keyring store: {e}"))
