@@ -3,6 +3,15 @@ resolver = "3"
 members = ["crates/southesk", "crates/southesk-macros"]
 default-members = ["crates/southesk"]
 
+[workspace.lints.clippy]
+# Groups are set to lower priority than the individual lints that we allow.
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "allow"
+too_many_lines = "allow"
+
+[workspace.lints.rust]
+
 [workspace.package]
 version = "0.0.6"
 edition = "2024"

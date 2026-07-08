@@ -11,7 +11,7 @@ env:
   RUST_BACKTRACE: 1
   # No need to generate data for incremental builds as all jobs start from a clean slate
   CARGO_INCREMENTAL: 0
-  RUSTFLAGS: "-D dead_code -D unused_imports -D warnings -D clippy::all -D clippy::pedantic -A clippy::too_many_lines -A clippy::missing_errors_doc"
+  RUSTFLAGS: "-D warnings"
 
 jobs:
   style:
