@@ -137,3 +137,26 @@ jobs:
       - env:
           RUSTDOCFLAGS: "--cfg docsrs -D warnings"
         run: cargo doc --no-deps -p southesk --all-features
+
+  # Verifies that the readme has been updated with build-time information
+  readme-build:
+    name: Check readme updated
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build and check readme for changes
+        run: |
+          set -euxo pipefail
+          cargo build -p southesk --locked
+          # Check that no files where modified. If they were, the README.md was changed.
+          if ! git diff-index --quiet HEAD; then
+            echo "::error file=README.md,title=File not up-to-date::Building resulted in modified files. README.md has likely not been generated (cargo b) before commiting."
+            exit 1
+          fi
+        shell: bash
