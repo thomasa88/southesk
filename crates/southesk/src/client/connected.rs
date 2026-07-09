@@ -52,6 +52,8 @@ impl Client<Connected> {
 ///
 /// Each method maps directly to a Montrose MCP tool of the same name.
 impl Client<Connected> {
+    // BUILD: HIGH-LEVEL START
+
     /// Returns holdings for either one account (when
     /// [`AccountFilter::AccountId`] is provided) or all accessible accounts.
     /// Each account includes
@@ -191,6 +193,8 @@ impl Client<Connected> {
         arg_map.insert("orderbookIds".to_string(), orderbook_ids.into());
         self.api_call("remove_from_watchlist", Some(arg_map)).await
     }
+
+    // BUILD: HIGH-LEVEL END
 }
 
 /// # Raw API

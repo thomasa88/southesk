@@ -17,7 +17,7 @@ The available APIs of the Montrose MCP service has been fetched by asking the se
 Since the API has no versioning and AI agents should be able to adopt to changing APIs,
 one should not expect the API to be stable.
 
-## API levels
+## API Levels
 
 To handle moving underlying APIs, the idea is to provide three API levels:
 
@@ -26,6 +26,22 @@ To handle moving underlying APIs, the idea is to provide three API levels:
 * Raw API: Direct calls to the MCP API using JSON data.
 
 The lower levels can be used before southesk has implemented support for the calls in the high-level API.
+
+## High-level API Functions
+
+The following high-level API functions are provided:
+
+<!-- BUILD: HIGH-LEVEL START -->
+* [get_holdings](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.get_holdings)
+* [get_user_accounts](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.get_user_accounts)
+* [create_trade_ticket](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.create_trade_ticket)
+* [search_instruments](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.search_instruments)
+* [get_watchlists](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.get_watchlists)
+* [get_watchlist](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.get_watchlist)
+* [create_watchlist](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.create_watchlist)
+* [add_to_watchlist](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.add_to_watchlist)
+* [remove_from_watchlist](https://docs.rs/southesk/latest/southesk/struct.Client.html#method.remove_from_watchlist)
+<!-- BUILD: HIGH-LEVEL END -->
 
 ## Getting Started
 
