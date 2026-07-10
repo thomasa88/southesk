@@ -19,7 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v7
+        # @v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -34,7 +35,8 @@ jobs:
 
     steps:
       - name: Check out
-        uses: actions/checkout@v7
+        # @v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       # Nightly should have the latest checks
       - name: Install Rust
@@ -75,7 +77,8 @@ jobs:
 
     steps:
       - name: Check out
-        uses: actions/checkout@v7
+        # @v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
@@ -85,12 +88,14 @@ jobs:
 
       - name: Install cargo expand
         # cargo expand is needed by macrotest
-        uses: taiki-e/cache-cargo-install-action@v3
+        # @v3
+        uses: taiki-e/cache-cargo-install-action@417450f3c33ee20393705369577571770643d4c7
         with:
           tool: cargo-expand@1.0.108
 
       - name: Set up Rust cache
-        uses: Swatinem/rust-cache@v2
+        # @v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
 
       - name: Run cargo test
         run: |
@@ -106,16 +111,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v7
+        # @v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install cargo-hack
-        uses: taiki-e/install-action@cargo-hack
+        # @cargo-hack
+        uses: taiki-e/install-action@21a189af180aa6f2c24819952c0803c9b2b7f614
 
       - name: Set up Rust cache
-        uses: Swatinem/rust-cache@v2
+        # @v2
+        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32
 
       - run: cargo hack --no-dev-deps --feature-powerset --exclude-features __dev-all-feats check --workspace
 
@@ -128,7 +136,8 @@ jobs:
 
     steps:
       - name: Check out
-        uses: actions/checkout@v7
+        # @v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       # Using nightly Rust to be able to have feature markers in the docs
       - name: Install Rust
@@ -145,7 +154,8 @@ jobs:
 
     steps:
       - name: Check out
-        uses: actions/checkout@v7
+        # @v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
