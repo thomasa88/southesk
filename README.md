@@ -77,9 +77,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Documentation
+
+Crate documentation is available at [docs.rs](https://docs.rs/southesk/).
+
 ## Examples
 
-A set of examples using `southesk` is available in the [examples](crates/southesk/examples) directory.
+A set of examples using `southesk` is available in the [examples](https://github.com/thomasa88/southesk/tree/dev/crates) directory.
 They can be run as follows:
 
 ```bash
@@ -99,7 +103,7 @@ cargo run -p southesk --example=show_data
 The MCP API does not permit any actions taken on your behalf,
 but a malicious actor can extract information about your Montrose account and investments.
 **You should never trust third party code, such as the code in this repository,
-without examing the source code carefully.**
+without examining the source code carefully.**
 
 To re-iterate from the license:
 
