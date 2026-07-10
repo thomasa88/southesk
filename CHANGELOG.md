@@ -24,18 +24,18 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
-## Added
+### Added
 
 - Show currency positions in the `show_data` example.
 
-## Changed
+### Changed
 
 - Authentication handlers have their own error types that matches the errors
   betters and lets calling application disambiguate on the type of error. 
 - Errors no longer don't duplicate the inner error's message and they are all
   lowercase, as prescribed by the Rust API guidelines.
 
-## Fixed
+### Fixed
 
 - Use shared cred store JSON encode/decode functions in plaintext cred store.
 - Build docs with all features and mark items with feature requirements.
@@ -45,19 +45,19 @@ Headers:
 
 ## [0.0.6] - 2026-07-03
 
-## Fixed
+### Fixed
 
 - Point to correct README.md for southesk on crates.io.
 
 ## [0.0.5] - 2026-07-03
 
-## Added
+### Added
 
 - Low-level API that provides automatically generated functions from the MCP schema using `southesk-macros`.
   Feature flag: `low-api`.
 - Server version is now included in the MCP introspection dump.
 
-## Changed
+### Changed
 
 - Moved southesk into a Cargo workspace.
 - southesk error types are now found in `error`.
@@ -65,7 +65,7 @@ Headers:
 
 ## [0.0.4] - 2026-06-26
 
-## Added
+### Added
 
 - Timeout option to `BrowserAuth` authentication callback handler.
 - `Client::disconnect()`, for clean disconnects.
@@ -73,14 +73,14 @@ Headers:
 
 ## [0.0.3] - 2026-06-13
 
-## Added
+### Added
 
 - Quickstart example added to the readme and top Rust documentation.
 - no_auth() option, for non-interactive sessions. Requires an existing access token.
 - Documentation of many more types.
 - Banner/logo image.
 
-## Changed
+### Changed
 
 - Simplified module path to credential store implementations.
 - Montrose API updated to the 2026-06-11 version. Includes `CurrencyPosition`.
@@ -88,20 +88,20 @@ Headers:
 - Renamed `HoldingsSelector` to `AccountFilter`.
 - Turn account number and currency into their own types.
 
-## Fixed
+### Fixed
 
 - Removed left-over oauth2 dependency.
 
 ## [0.0.2] - 2026-06-02
 
-## Added
+### Added
 
 - API: Add missing `add_to_watchlist()`.
 - Raw API calls using `raw_api_call()`.
 - Downstream libraries used in function signatures are re-exported.
 - Added a lot more rustdoc documentation.
 
-## Changed
+### Changed
 
 - Recommended standard traits added to all API types.
 - Feature `keyring-creds` renamed to `keyring`.
