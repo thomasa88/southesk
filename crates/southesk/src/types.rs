@@ -83,7 +83,7 @@ impl<'de> Deserialize<'de> for Currency {
 pub struct AccountHoldings {
     /// Unique account ID. Not visible to the user.
     ///
-    /// Example: `d075c5d4-222f-4ba9-b973-10bb9aeea705`
+    /// Example: `771c4286-991c-48aa-965e-c7dd62e31735`
     pub account_id: Uuid,
     /// Account number.
     ///
@@ -207,7 +207,7 @@ pub struct InstrumentValue {
 pub struct AccountIdentifiers {
     /// Unique account ID. Not visible to the user.
     ///
-    /// Example: `d075c5d4-222f-4ba9-b973-10bb9aeea705`
+    /// Example: `771c4286-991c-48aa-965e-c7dd62e31735`
     pub account_id: Uuid,
     /// Account number
     ///

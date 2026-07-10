@@ -1,0 +1,51 @@
+# Copyright 2026 Thomas Axelsson
+# SPDX-License-Identifier: MIT
+
+# If we touch prefilter or filter, we will overwrite the values from the default
+# betterleaks config.
+
+# Individual code lines can be allowed by adding "betterleaks:allow" on the same
+# line.
+
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '^target/',
+  '(^|/)tmp',
+  '^.jj'
+  ]
+
+[[rules]]
+# GUIDs are used for client and account IDs,
+# as well as being a substring of the OAuth tokens.
+id = "guid"
+description = "GUID"
+regex = '''(?i)[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}'''
+
+# 771c4286-991c-48aa-965e-c7dd62e31735: example account ID
+# d075c5d4-222f-4ba9-b973-10bb9aeea705: previously used example account ID
+# 3fa85f64-5717-4562-b3fc-2c963f66afa6: example account ID used by Montrose APIs
+filter = '''
+finding["secret"] == "771c4286-991c-48aa-965e-c7dd62e31735"
+|| finding["secret"] == "d075c5d4-222f-4ba9-b973-10bb9aeea705"
+|| finding["secret"] == "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+'''
+
+[[rules]]
+id = "client-secret"
+regex = '''(?i)(?:\W|^)([-_a-z0-9]{43})(?:\W|$)'''
+filter = '''
+entropy(finding["secret"]) <= 3.9
+|| failsTokenEfficiency(finding["secret"])
+'''
+
+[[rules]]
+id = "account-number"
+regex = '''(?:\W|^)([0-9]{7,12})(?:\W|$)'''
+# Ignore numbers used in examples and tests
+filter = '''
+finding["secret"] == "1234567"
+|| finding["secret"] == "1111233"
+'''
