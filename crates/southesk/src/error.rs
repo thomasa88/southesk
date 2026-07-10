@@ -54,12 +54,10 @@ impl<T> MapAuthToConnectError<T> for Result<T, rmcp::transport::AuthError> {
     }
 }
 
-/// Errors that occur when building the client.
+/// An error occured when building the client.
 #[derive(Debug, thiserror::Error)]
-pub enum ClientBuildError {
-    #[error("failed to build client: {msg}")]
-    BuildError {
-        msg: String,
-        source: Option<Box<dyn std::error::Error + Send + Sync>>,
-    },
+#[error("failed to build client: {msg}")]
+pub struct ClientBuildError {
+    pub msg: String,
+    pub source: Option<Box<dyn std::error::Error + Send + Sync>>,
 }

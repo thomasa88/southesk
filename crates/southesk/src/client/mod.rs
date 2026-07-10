@@ -168,11 +168,9 @@ impl ClientBuilder {
         let auth_handler = if self.interactive_auth {
             Some(match self.auth_handler {
                 Some(handler) => handler,
-                None => Box::new(BrowserAuth::new().await.map_err(|e| {
-                    ClientBuildError::BuildError {
-                        msg: e.to_string(),
-                        source: Some(Box::new(e)),
-                    }
+                None => Box::new(BrowserAuth::new().await.map_err(|e| ClientBuildError {
+                    msg: e.to_string(),
+                    source: Some(Box::new(e)),
                 })?),
             })
         } else {
@@ -181,7 +179,7 @@ impl ClientBuilder {
 
         let cred_store = if let Some(store) = self.cred_store {
             if self.cred_user.is_some() {
-                return Err(ClientBuildError::BuildError {
+                return Err(ClientBuildError {
                     msg: "cannot specify both a custom credential store and a credential user"
                         .to_string(),
                     source: None,
@@ -196,7 +194,7 @@ impl ClientBuilder {
                     use crate::cred_store::KeyringCredStore;
 
                     KeyringCredStore::new(&self.client_name, &cred_user).map_err(|e| {
-                        ClientBuildError::BuildError {
+                        ClientBuildError {
                             msg: "failed to create keyring credential store".to_string(),
                             source: Some(Box::new(e)),
                         }
@@ -212,7 +210,7 @@ impl ClientBuilder {
                         author: String::new(),
                         app_name: self.client_name.clone(),
                     })
-                    .map_err(|e| ClientBuildError::BuildError {
+                    .map_err(|e| ClientBuildError {
                         msg: e.to_string(),
                         source: Some(Box::new(e)),
                     })?;
@@ -232,31 +230,25 @@ impl ClientBuilder {
         #[cfg(feature = "__dev")]
         if self.force_token_refresh {
             warn!("Force token refresh enabled");
-            let creds = cred_store
-                .load()
-                .await
-                .map_err(|e| ClientBuildError::BuildError {
-                    msg: "failed to load credentials for setting forced refresh".to_string(),
-                    source: Some(Box::new(e)),
-                })?;
+            let creds = cred_store.load().await.map_err(|e| ClientBuildError {
+                msg: "failed to load credentials for setting forced refresh".to_string(),
+                source: Some(Box::new(e)),
+            })?;
             if let Some(mut creds) = creds {
                 use std::time::Duration;
 
                 creds
                     .token_response
                     .as_mut()
-                    .ok_or_else(|| ClientBuildError::BuildError {
+                    .ok_or_else(|| ClientBuildError {
                         msg: "no token response in stored credentials".to_string(),
                         source: None,
                     })?
                     .set_expires_in(Some(&Duration::ZERO));
-                cred_store
-                    .save(creds)
-                    .await
-                    .map_err(|e| ClientBuildError::BuildError {
-                        msg: "failed to save credentials for setting forced refresh".to_string(),
-                        source: Some(Box::new(e)),
-                    })?;
+                cred_store.save(creds).await.map_err(|e| ClientBuildError {
+                    msg: "failed to save credentials for setting forced refresh".to_string(),
+                    source: Some(Box::new(e)),
+                })?;
             }
         }
 
