@@ -246,12 +246,7 @@ impl Client<Disconnected> {
         let auth_handler::AuthGrant {
             code: auth_code,
             state: csrf_token,
-        } = auth_handler.authenticate(&auth_url).await.map_err(|e| {
-            ClientConnectError::AuthError {
-                msg: "authentication handler failed to authenticate".to_string(),
-                source: Some(e.into()),
-            }
-        })?;
+        } = auth_handler.authenticate(&auth_url).await?;
         info!("Received authorization code: {}", auth_code);
 
         info!("Exchanging authorization code for access token...");

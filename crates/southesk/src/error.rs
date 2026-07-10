@@ -1,18 +1,26 @@
 // Copyright 2026 Thomas Axelsson
 // SPDX-License-Identifier: MIT
 
+//! Errors that are not tied to specific modules.
+
+use crate::auth_handler;
+
 /// Errors that occur when doing calls to the MCP API.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientCallError {
+    /// Problems when communicating with the MCP server.
     #[error("MCP service communication error")]
     CommunicationError(#[from] rmcp::ServiceError),
+    /// The MCP service returned an error response.
     #[error("error response from MCP service: {0}")]
     McpError(String),
+    /// Failure to parse the response from the MCP service.
     #[error("failed to parse response: {msg}")]
     ParseError {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
+    /// The arguments provided to the tool function are invalid.
     #[error("invalid arguments")]
     InvalidArguments(String),
 }
@@ -29,11 +37,21 @@ impl ClientCallError {
 /// Errors that occur when connecting the client.
 #[derive(Debug, thiserror::Error)]
 pub enum ClientConnectError {
+    /// A step of the authentication process failed.
     #[error("authentication failed: {msg}")]
     AuthError {
         msg: String,
         source: Option<Box<dyn std::error::Error + Send + Sync>>,
     },
+    /// A step of the authentication process failed, inside the
+    /// [authentication handler](auth_handler).
+    ///
+    /// [`AuthFlowError::Aborted`](auth_handler::AuthFlowError::Aborted)
+    ///  can indicate that the user cancelled or failed the authentication
+    /// steps.
+    #[error("authentication handler failed")]
+    AuthHandlerError(#[from] auth_handler::AuthFlowError),
+    /// Failed to set up a connection to the MCP servic.
     #[error("connection failed: {msg}")]
     ConnectionError {
         msg: String,

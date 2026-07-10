@@ -36,6 +36,8 @@ Headers:
   lowercase, as prescribed by the Rust API guidelines.
 - Collapse `ClientBuildError::BuildError` into `ClientBuildError`. The enum only
   had one member.
+- Separate error for authentication handler failure during connect:
+  `ClientConnectError::AuthHandlerError`.
 
 ### Fixed
 

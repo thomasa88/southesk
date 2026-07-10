@@ -174,6 +174,10 @@ impl ClientBuilder {
                 })?),
             })
         } else {
+            // Having no authentication handler is better than having one that
+            // instantly returns an error, as there are some communication with
+            // the authentication server before the authentication handler is
+            // called.
             None
         };
 
