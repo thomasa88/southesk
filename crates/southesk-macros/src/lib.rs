@@ -82,7 +82,7 @@ enum HasRef {
     No,
 }
 
-fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: &mut TokenStream) {
+fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, support_types: &mut TokenStream) {
     let Tool {
         name: tool_name,
         description,
@@ -97,7 +97,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
 
     // Generate all argument types
     let (arg_struct_ident, input_has_ref, _is_nullable) = process_type(
-        Some(&mut support_types),
+        Some(support_types),
         &args_struct_name,
         input_schema,
         Some(&format!(
@@ -134,7 +134,7 @@ fn tokenize_tool(tool: &Tool, client_impl: &mut TokenStream, mut support_types: 
 
     // Generate all return types
     let (ret_struct_ident, output_has_ref, _is_nullable) = process_type(
-        Some(&mut support_types),
+        Some(support_types),
         &ret_struct_name,
         output_schema,
         Some(&format!(
