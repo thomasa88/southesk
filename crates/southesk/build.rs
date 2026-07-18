@@ -20,14 +20,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn update_api_functions_in_readme() -> Result<(), Box<dyn std::error::Error>> {
     let api_code_file = "src/client/connected.rs";
-    let readme_path = "../../README.md";
+    // CARGO_WORKSPACE_DIR is set up in .cargo/config.toml
+    let readme_path = concat!(env!("CARGO_WORKSPACE_DIR"), "/README.md");
     println!("cargo::rerun-if-changed={api_code_file}");
+    println!("Readme path: {readme_path}");
+    println!("Code path: {api_code_file}");
 
     let start = "// BUILD: HIGH-LEVEL START";
     let end = "// BUILD: HIGH-LEVEL END";
     let readme_start = "<!-- BUILD: HIGH-LEVEL START -->";
     let readme_end = "<!-- BUILD: HIGH-LEVEL END -->";
     let func_prefix = "    pub async fn ";
+
     let mut file = BufReader::new(File::open(api_code_file)?);
     let mut read_state = ApiFunctionsState::Before;
     let mut func_names = Vec::new();
