@@ -24,6 +24,10 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+### Fixed
+
+- Move Montrose API dump into southesk crate. Make the crate build without the workspace.
+
 ## [0.0.8] - 2026-07-19
 
 ### Fixed
