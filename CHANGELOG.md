@@ -24,6 +24,8 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.7] - 2026-07-19
+
 ### Added
 
 - Show currency positions in the `show_data` example.
@@ -117,7 +119,8 @@ Headers:
 First public release.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.6...HEAD
+[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.7...HEAD
+[0.0.7]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.6...southesk-v0.0.7
 [0.0.6]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.5...southesk-v0.0.6
 [0.0.5]: https://github.com/thomasa88/southesk/compare/v0.0.4...southesk-v0.0.5
 [0.0.4]: https://github.com/thomasa88/southesk/compare/v0.0.3...v0.0.4
