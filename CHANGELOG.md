@@ -24,6 +24,8 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.9] - 2026-07-19
+
 ### Fixed
 
 - Move Montrose API dump into southesk crate. Make the crate build without the workspace.
@@ -130,7 +132,8 @@ Headers:
 First public release.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.8...HEAD
+[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.9...HEAD
+[0.0.9]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.8...southesk-v0.0.9
 [0.0.8]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.7...southesk-v0.0.8
 [0.0.7]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.6...southesk-v0.0.7
 [0.0.6]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.5...southesk-v0.0.6
