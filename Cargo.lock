@@ -2321,7 +2321,7 @@ dependencies = [
 
 [[package]]
 name = "southesk"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "anyhow",
  "apple-native-keyring-store",
@@ -2351,7 +2351,7 @@ dependencies = [
 
 [[package]]
 name = "southesk-macros"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "indexmap 2.14.0",
  "macrotest",

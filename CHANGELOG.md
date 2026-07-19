@@ -24,6 +24,8 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+## [0.0.8] - 2026-07-19
+
 ### Fixed
 
 - Avoid trying to update the list of API functions in the readme when building
@@ -124,7 +126,8 @@ Headers:
 First public release.
 
 <!-- next-url -->
-[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.7...HEAD
+[Unreleased]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.8...HEAD
+[0.0.8]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.7...southesk-v0.0.8
 [0.0.7]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.6...southesk-v0.0.7
 [0.0.6]: https://github.com/thomasa88/southesk/compare/southesk-v0.0.5...southesk-v0.0.6
 [0.0.5]: https://github.com/thomasa88/southesk/compare/v0.0.4...southesk-v0.0.5
