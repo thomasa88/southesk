@@ -83,7 +83,7 @@ Crate documentation is available at [docs.rs](https://docs.rs/southesk/).
 
 ## Examples
 
-A set of examples using `southesk` is available in the [examples](https://github.com/thomasa88/southesk/tree/dev/crates) directory.
+A set of examples using `southesk` is available in the [examples](https://github.com/thomasa88/southesk/tree/main/crates/southesk/examples) directory.
 They can be run as follows:
 
 ```bash
