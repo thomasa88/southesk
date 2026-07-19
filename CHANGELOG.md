@@ -24,6 +24,11 @@ Headers:
 
 ## [Unreleased] - ReleaseDate
 
+### Fixed
+
+- Avoid trying to update the list of API functions in the readme when building
+  southesk as a dependency to another create. Avoids the build script failing to find the readme file.
+
 ## [0.0.7] - 2026-07-19
 
 ### Added

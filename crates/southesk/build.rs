@@ -19,9 +19,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn update_api_functions_in_readme() -> Result<(), Box<dyn std::error::Error>> {
+    // SOUTHESK_WORKSPACE_DIR is set up in .cargo/config.toml
+    let Ok(ws_dir) = std::env::var("SOUTHESK_WORKSPACE_DIR") else {
+        println!("Not updating README.md as this is not a top-level southesk build");
+        return Ok(());
+    };
     let api_code_file = "src/client/connected.rs";
-    // CARGO_WORKSPACE_DIR is set up in .cargo/config.toml
-    let readme_path = concat!(env!("CARGO_WORKSPACE_DIR"), "/README.md");
+    let readme_path = &format!("{ws_dir}/README.md");
     println!("cargo::rerun-if-changed={api_code_file}");
     println!("Readme path: {readme_path}");
     println!("Code path: {api_code_file}");
