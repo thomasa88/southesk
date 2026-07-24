@@ -1,11 +1,14 @@
 {
   "server": {
     "name": "montrose-mcp",
-    "version": "1.0.0"
+    "title": "Montrose MCP",
+    "version": "1.0.0",
+    "description": "Carnegie Montrose tools for accounts, holdings, watchlists, and pre-filled trade tickets."
   },
   "tools": [
     {
       "name": "get_holdings",
+      "title": "Get holdings",
       "description": "Returns holdings for either one account (when accountId is provided) or all accessible accounts. Each account includes currencyPositions: the account's multi-currency cash balances with the amount available for purchase per currency. An empty currencyPositions list means the account holds cash only in its main currency (see the summary). Use GetUserAccounts first to find valid account IDs.",
       "inputSchema": {
         "type": "object",
@@ -244,8 +247,10 @@
         ]
       },
       "annotations": {
+        "title": "Get holdings",
         "readOnlyHint": true,
         "destructiveHint": false,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
@@ -254,6 +259,7 @@
     },
     {
       "name": "add_to_watchlist",
+      "title": "Add to watchlist",
       "description": "Adds one or more instruments to an existing watchlist by orderbookId. Use SearchInstruments to find the correct orderbookId for a ticker or name. Instruments already on the watchlist are silently skipped.",
       "inputSchema": {
         "type": "object",
@@ -294,8 +300,10 @@
         ]
       },
       "annotations": {
+        "title": "Add to watchlist",
         "readOnlyHint": false,
         "destructiveHint": false,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
@@ -304,6 +312,7 @@
     },
     {
       "name": "search_instruments",
+      "title": "Search instruments",
       "description": "Searches instruments by ticker or name and returns matching orderbookIds, tickers, and names. Use this tool before CreateTradeTicket when multiple instruments have similar names.",
       "inputSchema": {
         "type": "object",
@@ -348,8 +357,10 @@
         ]
       },
       "annotations": {
+        "title": "Search instruments",
         "readOnlyHint": true,
         "destructiveHint": false,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
@@ -358,6 +369,7 @@
     },
     {
       "name": "create_trade_ticket",
+      "title": "Create trade ticket",
       "description": "Creates a pre-filled trade ticket URL for the Montrose app. Specify side (Buy/Sell), quantity or amount, and an instrument identifier. Use orderbookId directly when known, since it is the safest identifier. If you only know a ticker or name and it may be ambiguous, call SearchInstruments first to find the correct orderbookId, then call CreateTradeTicket. Returns a URL that opens the trade ticket in the Montrose app with the order details pre-filled.",
       "inputSchema": {
         "type": "object",
@@ -453,8 +465,10 @@
         ]
       },
       "annotations": {
+        "title": "Create trade ticket",
         "readOnlyHint": false,
         "destructiveHint": false,
+        "idempotentHint": false,
         "openWorldHint": false
       },
       "execution": {
@@ -463,6 +477,7 @@
     },
     {
       "name": "get_watchlists",
+      "title": "Get watchlists",
       "description": "Returns the authenticated user's watchlists with their ID, name, and the number of instruments on each list. Use GetWatchlist with a listId to read the instruments on a specific watchlist.",
       "inputSchema": {
         "type": "object",
@@ -499,8 +514,10 @@
         ]
       },
       "annotations": {
+        "title": "Get watchlists",
         "readOnlyHint": true,
         "destructiveHint": false,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
@@ -509,6 +526,7 @@
     },
     {
       "name": "create_watchlist",
+      "title": "Create watchlist",
       "description": "Creates a new watchlist with the given name for the authenticated user. If a watchlist with the same name already exists, returns that existing watchlist.",
       "inputSchema": {
         "type": "object",
@@ -542,8 +560,10 @@
         ]
       },
       "annotations": {
+        "title": "Create watchlist",
         "readOnlyHint": false,
         "destructiveHint": false,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
@@ -552,6 +572,7 @@
     },
     {
       "name": "get_watchlist",
+      "title": "Get watchlist",
       "description": "Returns the instruments on a single watchlist, identified by listId. Each instrument is enriched with its orderbookId, ticker and name. Use GetWatchlists first to discover valid listIds.",
       "inputSchema": {
         "type": "object",
@@ -610,8 +631,10 @@
         ]
       },
       "annotations": {
+        "title": "Get watchlist",
         "readOnlyHint": true,
         "destructiveHint": false,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
@@ -620,6 +643,7 @@
     },
     {
       "name": "remove_from_watchlist",
+      "title": "Remove from watchlist",
       "description": "Removes one or more instruments from a watchlist by orderbookId. Returns the orderbookIds that were actually removed; orderbookIds that were not on the watchlist are silently ignored and excluded from the response.",
       "inputSchema": {
         "type": "object",
@@ -660,8 +684,10 @@
         ]
       },
       "annotations": {
+        "title": "Remove from watchlist",
         "readOnlyHint": false,
         "destructiveHint": true,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
@@ -670,6 +696,7 @@
     },
     {
       "name": "get_user_accounts",
+      "title": "Get user accounts",
       "description": "Returns all user accounts with stable account IDs and display names. Use this tool to discover valid account IDs before calling GetHoldings for a specific account.",
       "inputSchema": {
         "type": "object",
@@ -710,8 +737,10 @@
         ]
       },
       "annotations": {
+        "title": "Get user accounts",
         "readOnlyHint": true,
         "destructiveHint": false,
+        "idempotentHint": true,
         "openWorldHint": false
       },
       "execution": {
