@@ -258,7 +258,6 @@
             "description": "The side of the order: Buy or Sell.",
             "type": "string",
             "enum": [
-              "Unknown",
               "Buy",
               "Sell"
             ]
@@ -500,7 +499,7 @@
     {
       "name": "get_credit",
       "title": "Get credit",
-      "description": "Returns credit information for the authenticated user's single credit account. Each customer has at most one credit account; do not pass an account ID. Includes the full published interest-rate ladder for the user's price plan (every LTV band, not only the current rate). Fields are null when the user has no credit account or the value is unknown. Use get_user_accounts to find account types and get_holdings for per-position collateral factors and market values.",
+      "description": "Returns credit information for the authenticated user's single credit account. Each customer has at most one credit account; do not pass an account ID. Includes the full published interest-rate ladder for the user's price plan (every LTV band, not only the current rate); other price plans' rates and the plan name are not returned. Fields are null when the user has no credit account or the value is unknown. The interest rate follows loanToValueRatio: selling pledged instruments with market value X changes it to usedCredit / (pledge-group instrument market value - X), and the new rate is the interestLevels row whose band contains that ratio. The loanToValue on get_holdings positions is a different ratio, the instrument's collateral factor: a position contributes roughly marketValue * loanToValue to collateral, which bounds the credit limit but does not enter loanToValueRatio. Market value in a non-pledged kapitalförsäkring (KF) is not collateral. Pledging a KF to the credit account adds collateral, but from 2026 interest paid while a KF is pledged gets a reduced tax deduction; moving holdings from a KF into a pledged ISK or depot account adds collateral without that effect. Use get_user_accounts to find account types and get_holdings for per-position collateral factors and market values.",
       "inputSchema": {
         "type": "object",
         "properties": {}
@@ -554,6 +553,7 @@
             ]
           },
           "loanToValueRatio": {
+            "description": "usedCredit divided by the market value of the instruments in the credit account's pledge group; cash is excluded. Determines which interestLevels row applies.",
             "type": [
               "number",
               "null"
@@ -620,6 +620,7 @@
             ]
           },
           "hasNonPledgedKfAccounts": {
+            "description": "True when the user has kapitalförsäkring (KF) accounts that are not pledged to the credit account; their market value is not collateral.",
             "type": [
               "boolean",
               "null"
@@ -631,15 +632,18 @@
               "type": "object",
               "properties": {
                 "minLoanToValueRatio": {
+                  "description": "Exclusive lower bound of the band.",
                   "type": "number"
                 },
                 "maxLoanToValueRatio": {
+                  "description": "Inclusive upper bound of the band. The last band uses 10 when the published table has no upper bound.",
                   "type": "number"
                 },
                 "interestRate": {
                   "type": "number"
                 },
                 "isActive": {
+                  "description": "True for the band that contains the current loanToValueRatio.",
                   "type": "boolean"
                 }
               },
@@ -1206,12 +1210,6 @@
       }
     }
   ],
-  "prompts": [
-    {
-      "name": "credit_guide",
-      "description": "Domain guide for credit, collateral, interest tiers, and KF (kapitalforsakring) pledging. Use this prompt when the user asks about their credit account, loan-to-value ratio, interest rates, collateral, or pledging strategy.",
-      "arguments": []
-    }
-  ],
+  "prompts": null,
   "resources": null
 }
