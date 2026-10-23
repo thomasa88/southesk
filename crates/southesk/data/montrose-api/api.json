@@ -7,101 +7,76 @@
   },
   "tools": [
     {
-      "name": "get_transactions",
-      "title": "Get transactions",
-      "description": "Returns a page of the authenticated user's transactions. Use get_user_accounts first to discover account IDs, and get_transactions_categories to discover valid category types. Pass pagination.nextCursor as cursor to fetch the next page while nextCursor is present. For CurrencyExchange rows, code KV is a buy of FX and SV is a sell.",
+      "name": "get_user_accounts",
+      "title": "Get user accounts",
+      "description": "Returns all user accounts with stable account IDs, display names, and account types. Credit (DEPCR) accounts include credit.usedCredit (drawn credit balance), credit.interestRate (current interest rate), and credit.loanToValueRatio (used credit / pledge-group instrument market value). For all other account types credit is null; a credit account may also have credit null when its credit data is unavailable. Use this tool to discover valid account IDs before calling get_holdings.",
       "inputSchema": {
         "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
         "properties": {
-          "accountIds": {
-            "description": "Optional account IDs as UUID/GUID strings. Use get_user_accounts to find valid IDs. If omitted, transactions are returned for all accessible accounts. IDs the user cannot access are silently ignored; an error is returned only when no ID matches.",
-            "type": [
-              "array",
-              "null"
-            ],
+          "result": {
+            "type": "array",
             "items": {
-              "type": [
-                "string",
-                "null"
+              "type": "object",
+              "properties": {
+                "accountId": {
+                  "type": "string"
+                },
+                "accountNumber": {
+                  "type": "string"
+                },
+                "accountName": {
+                  "type": "string"
+                },
+                "accountType": {
+                  "type": "string"
+                },
+                "credit": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "usedCredit": {
+                      "type": "number"
+                    },
+                    "currencyCode": {
+                      "type": "string"
+                    },
+                    "interestRate": {
+                      "type": "number"
+                    },
+                    "loanToValueRatio": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "usedCredit",
+                    "currencyCode",
+                    "interestRate",
+                    "loanToValueRatio"
+                  ]
+                }
+              },
+              "required": [
+                "accountId",
+                "accountNumber",
+                "accountName",
+                "accountType",
+                "credit"
               ]
-            },
-            "default": null
-          },
-          "from": {
-            "description": "Inclusive start date as ISO yyyy-MM-dd. If omitted, no lower bound is applied.",
-            "type": [
-              "string",
-              "null"
-            ],
-            "default": null
-          },
-          "to": {
-            "description": "Inclusive end date as ISO yyyy-MM-dd. If omitted, no upper bound is applied.",
-            "type": [
-              "string",
-              "null"
-            ],
-            "default": null
-          },
-          "categories": {
-            "description": "Optional category types from get_transactions_categories (e.g. Buy, Withdrawal, CurrencyExchange).",
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "default": null
-          },
-          "instrumentIds": {
-            "description": "Optional instrument IDs as UUID/GUID strings.",
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "default": null
-          },
-          "orderbookIds": {
-            "description": "Optional orderbook IDs.",
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": "integer"
-            },
-            "default": null
-          },
-          "cursor": {
-            "description": "Opaque cursor from a previous page's pagination.nextCursor.",
-            "type": [
-              "string",
-              "null"
-            ],
-            "default": null
-          },
-          "pageSize": {
-            "description": "Page size (1-50, default 50).",
-            "type": [
-              "integer",
-              "null"
-            ],
-            "default": null
+            }
           }
-        }
+        },
+        "required": [
+          "result"
+        ]
       },
       "annotations": {
-        "title": "Get transactions",
+        "title": "Get user accounts",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
@@ -128,119 +103,6 @@
       },
       "annotations": {
         "title": "Get holdings",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      }
-    },
-    {
-      "name": "add_to_watchlist",
-      "title": "Add to watchlist",
-      "description": "Adds one or more instruments to an existing watchlist by orderbookId. Use search_instruments to find the correct orderbookId for a ticker or name. Instruments already on the watchlist are silently skipped.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "listId": {
-            "description": "The watchlist ID returned by get_watchlists.",
-            "type": "integer"
-          },
-          "orderbookIds": {
-            "description": "OrderbookIds (int) of the instruments to add. Use search_instruments to find the correct orderbookId.",
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          }
-        },
-        "required": [
-          "listId",
-          "orderbookIds"
-        ]
-      },
-      "outputSchema": {
-        "type": "object",
-        "properties": {
-          "listId": {
-            "type": "integer"
-          },
-          "orderbookIds": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          }
-        },
-        "required": [
-          "listId",
-          "orderbookIds"
-        ]
-      },
-      "annotations": {
-        "title": "Add to watchlist",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      }
-    },
-    {
-      "name": "search_instruments",
-      "title": "Search instruments",
-      "description": "Searches instruments by ticker, name, or orderbookId and returns matching orderbookIds, tickers, and names. Use this tool before create_trade_ticket when multiple instruments have similar names.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "query": {
-            "description": "Ticker or instrument name to search for. Required when orderbookId is not provided.",
-            "type": [
-              "string",
-              "null"
-            ],
-            "default": null
-          },
-          "orderbookId": {
-            "description": "Exact orderbookId to look up.",
-            "type": [
-              "integer",
-              "null"
-            ],
-            "default": null
-          }
-        }
-      },
-      "outputSchema": {
-        "type": "object",
-        "properties": {
-          "result": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "orderbookId": {
-                  "type": "integer"
-                },
-                "ticker": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "orderbookId",
-                "ticker",
-                "name"
-              ]
-            }
-          }
-        },
-        "required": [
-          "result"
-        ]
-      },
-      "annotations": {
-        "title": "Search instruments",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
@@ -352,44 +214,72 @@
       }
     },
     {
-      "name": "delete_price_alert",
-      "title": "Delete price alert",
-      "description": "Deletes a price alert (Swedish: \"kurslarm\") by its id, as returned by create_price_alert or get_price_alerts. Use get_price_alerts or get_price_alerts_for_orderbook first to find the id of the alert to delete.",
+      "name": "search_instruments",
+      "title": "Search instruments",
+      "description": "Searches instruments by ticker, name, or orderbookId and returns matching orderbookIds, tickers, and names. Use this tool before create_trade_ticket when multiple instruments have similar names.",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "id": {
-            "description": "The id of the price alert to delete, as returned by create_price_alert, get_price_alerts, or get_price_alerts_for_orderbook.",
-            "type": "integer"
+          "query": {
+            "description": "Ticker or instrument name to search for. Required when orderbookId is not provided.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "orderbookId": {
+            "description": "Exact orderbookId to look up.",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
           }
-        },
-        "required": [
-          "id"
-        ]
+        }
       },
       "outputSchema": {
         "type": "object",
         "properties": {
-          "alertId": {
-            "type": "integer"
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderbookId": {
+                  "type": "integer"
+                },
+                "ticker": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "orderbookId",
+                "ticker",
+                "name"
+              ]
+            }
           }
         },
         "required": [
-          "alertId"
+          "result"
         ]
       },
       "annotations": {
-        "title": "Delete price alert",
-        "readOnlyHint": false,
-        "destructiveHint": true,
+        "title": "Search instruments",
+        "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       }
     },
     {
-      "name": "get_price_alerts",
-      "title": "Get price alerts",
-      "description": "Returns all price alerts (Swedish: \"kurslarm\") for the authenticated user across all instruments. Each alert includes the instrument ticker and name, trigger price(s), direction, status, and expiry. Use get_price_alerts_for_orderbook to filter by a specific instrument.",
+      "name": "get_watchlists",
+      "title": "Get watchlists",
+      "description": "Returns the authenticated user's watchlists with their ID, name, and the number of instruments on each list. Use get_watchlist with a listId to read the instruments on a specific watchlist.",
       "inputSchema": {
         "type": "object",
         "properties": {}
@@ -402,84 +292,20 @@
             "items": {
               "type": "object",
               "properties": {
-                "id": {
+                "listId": {
                   "type": "integer"
                 },
-                "orderbookId": {
+                "name": {
+                  "type": "string"
+                },
+                "orderbookCount": {
                   "type": "integer"
-                },
-                "ticker": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "instrumentName": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "direction": {
-                  "type": "string"
-                },
-                "status": {
-                  "type": "string"
-                },
-                "alertType": {
-                  "type": "string"
-                },
-                "priceUp": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
-                },
-                "priceDown": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
-                },
-                "percentage": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
-                },
-                "isRepeating": {
-                  "type": [
-                    "boolean",
-                    "null"
-                  ]
-                },
-                "validUntil": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "createdAt": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
                 }
               },
               "required": [
-                "id",
-                "orderbookId",
-                "ticker",
-                "instrumentName",
-                "direction",
-                "status",
-                "alertType",
-                "priceUp",
-                "priceDown",
-                "percentage",
-                "isRepeating",
-                "validUntil",
-                "createdAt"
+                "listId",
+                "name",
+                "orderbookCount"
               ]
             }
           }
@@ -489,7 +315,362 @@
         ]
       },
       "annotations": {
-        "title": "Get price alerts",
+        "title": "Get watchlists",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_watchlist",
+      "title": "Get watchlist",
+      "description": "Returns the instruments on a single watchlist, identified by listId. Each instrument is enriched with its orderbookId, ticker and name. Use get_watchlists first to discover valid listIds.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "description": "The watchlist ID returned by get_watchlists.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "listId"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderbookId": {
+                  "type": "integer"
+                },
+                "ticker": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "orderbookId",
+                "ticker",
+                "name"
+              ]
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "name",
+          "items"
+        ]
+      },
+      "annotations": {
+        "title": "Get watchlist",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "create_watchlist",
+      "title": "Create watchlist",
+      "description": "Creates a new watchlist with the given name for the authenticated user. If a watchlist with the same name already exists, returns that existing watchlist.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the watchlist to create.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "orderbookCount": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "listId",
+          "name",
+          "orderbookCount"
+        ]
+      },
+      "annotations": {
+        "title": "Create watchlist",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "add_to_watchlist",
+      "title": "Add to watchlist",
+      "description": "Adds one or more instruments to an existing watchlist by orderbookId. Use search_instruments to find the correct orderbookId for a ticker or name. Instruments already on the watchlist are silently skipped.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "description": "The watchlist ID returned by get_watchlists.",
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "description": "OrderbookIds (int) of the instruments to add. Use search_instruments to find the correct orderbookId.",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "annotations": {
+        "title": "Add to watchlist",
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "remove_from_watchlist",
+      "title": "Remove from watchlist",
+      "description": "Removes one or more instruments from a watchlist by orderbookId. Returns the orderbookIds that were actually removed; orderbookIds that were not on the watchlist are silently ignored and excluded from the response.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "description": "The watchlist ID returned by get_watchlists.",
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "description": "OrderbookIds (int) of the instruments to remove.",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "listId": {
+            "type": "integer"
+          },
+          "orderbookIds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        },
+        "required": [
+          "listId",
+          "orderbookIds"
+        ]
+      },
+      "annotations": {
+        "title": "Remove from watchlist",
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_transactions_categories",
+      "title": "Get transaction categories",
+      "description": "Returns the transaction categories that can be used to filter get_transactions. Each entry has a type (pass this as a categories value) and a short description. Call this before filtering get_transactions by category.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "description"
+              ]
+            }
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "annotations": {
+        "title": "Get transaction categories",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "get_transactions",
+      "title": "Get transactions",
+      "description": "Returns a page of the authenticated user's transactions. Use get_user_accounts first to discover account IDs, and get_transactions_categories to discover valid category types. Pass pagination.nextCursor as cursor to fetch the next page while nextCursor is present. For CurrencyExchange rows, code KV is a buy of FX and SV is a sell.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "accountIds": {
+            "description": "Optional account IDs as UUID/GUID strings. Use get_user_accounts to find valid IDs. If omitted, transactions are returned for all accessible accounts. IDs the user cannot access are silently ignored; an error is returned only when no ID matches.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "default": null
+          },
+          "from": {
+            "description": "Inclusive start date as ISO yyyy-MM-dd. If omitted, no lower bound is applied.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "to": {
+            "description": "Inclusive end date as ISO yyyy-MM-dd. If omitted, no upper bound is applied.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "categories": {
+            "description": "Optional category types from get_transactions_categories (e.g. Buy, Withdrawal, CurrencyExchange).",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "default": null
+          },
+          "instrumentIds": {
+            "description": "Optional instrument IDs as UUID/GUID strings.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "default": null
+          },
+          "orderbookIds": {
+            "description": "Optional orderbook IDs.",
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            },
+            "default": null
+          },
+          "cursor": {
+            "description": "Opaque cursor from a previous page's pagination.nextCursor.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "pageSize": {
+            "description": "Page size (1-50, default 50).",
+            "type": [
+              "integer",
+              "null"
+            ],
+            "default": null
+          }
+        }
+      },
+      "annotations": {
+        "title": "Get transactions",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
@@ -681,9 +862,9 @@
       }
     },
     {
-      "name": "get_watchlists",
-      "title": "Get watchlists",
-      "description": "Returns the authenticated user's watchlists with their ID, name, and the number of instruments on each list. Use get_watchlist with a listId to read the instruments on a specific watchlist.",
+      "name": "get_price_alerts",
+      "title": "Get price alerts",
+      "description": "Returns all price alerts (Swedish: \"kurslarm\") for the authenticated user across all instruments. Each alert includes the instrument ticker and name, trigger price(s), direction, status, and expiry. Use get_price_alerts_for_orderbook to filter by a specific instrument.",
       "inputSchema": {
         "type": "object",
         "properties": {}
@@ -696,236 +877,9 @@
             "items": {
               "type": "object",
               "properties": {
-                "listId": {
+                "id": {
                   "type": "integer"
                 },
-                "name": {
-                  "type": "string"
-                },
-                "orderbookCount": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "listId",
-                "name",
-                "orderbookCount"
-              ]
-            }
-          }
-        },
-        "required": [
-          "result"
-        ]
-      },
-      "annotations": {
-        "title": "Get watchlists",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      }
-    },
-    {
-      "name": "get_transactions_categories",
-      "title": "Get transaction categories",
-      "description": "Returns the transaction categories that can be used to filter get_transactions. Each entry has a type (pass this as a categories value) and a short description. Call this before filtering get_transactions by category.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {}
-      },
-      "outputSchema": {
-        "type": "object",
-        "properties": {
-          "result": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string"
-                },
-                "description": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "type",
-                "description"
-              ]
-            }
-          }
-        },
-        "required": [
-          "result"
-        ]
-      },
-      "annotations": {
-        "title": "Get transaction categories",
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      }
-    },
-    {
-      "name": "create_watchlist",
-      "title": "Create watchlist",
-      "description": "Creates a new watchlist with the given name for the authenticated user. If a watchlist with the same name already exists, returns that existing watchlist.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the watchlist to create.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ]
-      },
-      "outputSchema": {
-        "type": "object",
-        "properties": {
-          "listId": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "orderbookCount": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "listId",
-          "name",
-          "orderbookCount"
-        ]
-      },
-      "annotations": {
-        "title": "Create watchlist",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": false
-      }
-    },
-    {
-      "name": "create_price_alert",
-      "title": "Create price alert",
-      "description": "Creates a new price alert (Swedish: \"kurslarm\") for an instrument. Three alert types are supported:\n- \"price\": triggers when the price crosses a fixed threshold. Requires \"price\". \"direction\" is optional here: if omitted, it's inferred by comparing \"price\" to the instrument's last known price (which may be delayed up to ~15 minutes).\n- \"percentage\": triggers when the price moves by a given percentage from a reference price. Requires \"price\" (the reference price) and \"percentage\". Optionally \"repeating\" to re-trigger at each new level. \"direction\" is optional and defaults to \"both\" (trigger on a move in either direction) when omitted.\n- \"trailing\": triggers when the price drops X% from its peak (direction \"below\") or rises X% from its trough (direction \"above\"), measured from a reference price. Requires \"price\" (the reference price), \"percentage\", and an explicit \"direction\".",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "orderbookId": {
-            "description": "The orderbookId of the instrument. Use search_instruments to find it.",
-            "type": "integer"
-          },
-          "alertType": {
-            "description": "Alert type: \"price\", \"percentage\", or \"trailing\".",
-            "type": "string"
-          },
-          "direction": {
-            "description": "Trigger direction: \"above\" (alert when price goes above threshold), \"below\" (alert when price goes below threshold), or \"both\" (only valid when alertType is \"percentage\"). Optional for alertType \"price\" (inferred from the instrument's last known price) and \"percentage\" (defaults to \"both\"). Required for alertType \"trailing\". Set this explicitly to override the inferred/default direction.",
-            "type": [
-              "string",
-              "null"
-            ],
-            "default": null
-          },
-          "validUntil": {
-            "description": "Expiry date in YYYY-MM-DD format. The alert will no longer trigger after this date. Optional; defaults to one year from today when omitted.",
-            "type": [
-              "string",
-              "null"
-            ],
-            "default": null
-          },
-          "price": {
-            "description": "Reference/threshold price, required for all alert types. For alertType \"price\" this is the fixed trigger threshold. For alertType \"percentage\" and \"trailing\" this is the reference price the percentage move is measured from (trigger levels are computed as this price × (1 ± percentage/100)). For direction \"above\" this is the reference for the upper trigger; for \"below\" the lower; for \"both\" it is used for both.",
-            "type": [
-              "number",
-              "null"
-            ],
-            "default": null
-          },
-          "percentage": {
-            "description": "Percentage change threshold, e.g. 5.0 for 5% (must be greater than 0 and less than 100). Required for alertType \"percentage\" and \"trailing\".",
-            "type": [
-              "number",
-              "null"
-            ],
-            "default": null
-          },
-          "repeating": {
-            "description": "Whether the percentage alert should re-trigger at each new price level. Only applies to alertType \"percentage\".",
-            "type": [
-              "boolean",
-              "null"
-            ],
-            "default": null
-          },
-          "preAndPostMarket": {
-            "description": "Whether to include pre-market and post-market prices when evaluating the alert. Defaults to false.",
-            "type": "boolean",
-            "default": false
-          }
-        },
-        "required": [
-          "orderbookId",
-          "alertType"
-        ]
-      },
-      "outputSchema": {
-        "type": "object",
-        "properties": {
-          "alertId": {
-            "type": "integer"
-          }
-        },
-        "required": [
-          "alertId"
-        ]
-      },
-      "annotations": {
-        "title": "Create price alert",
-        "readOnlyHint": false,
-        "destructiveHint": false,
-        "idempotentHint": false,
-        "openWorldHint": false
-      }
-    },
-    {
-      "name": "get_watchlist",
-      "title": "Get watchlist",
-      "description": "Returns the instruments on a single watchlist, identified by listId. Each instrument is enriched with its orderbookId, ticker and name. Use get_watchlists first to discover valid listIds.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "listId": {
-            "description": "The watchlist ID returned by get_watchlists.",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "listId"
-        ]
-      },
-      "outputSchema": {
-        "type": "object",
-        "properties": {
-          "listId": {
-            "type": "integer"
-          },
-          "name": {
-            "type": "string"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
                 "orderbookId": {
                   "type": "integer"
                 },
@@ -935,7 +889,52 @@
                     "null"
                   ]
                 },
-                "name": {
+                "instrumentName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "direction": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "alertType": {
+                  "type": "string"
+                },
+                "priceUp": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "priceDown": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "percentage": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "isRepeating": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "validUntil": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "createdAt": {
                   "type": [
                     "string",
                     "null"
@@ -943,21 +942,29 @@
                 }
               },
               "required": [
+                "id",
                 "orderbookId",
                 "ticker",
-                "name"
+                "instrumentName",
+                "direction",
+                "status",
+                "alertType",
+                "priceUp",
+                "priceDown",
+                "percentage",
+                "isRepeating",
+                "validUntil",
+                "createdAt"
               ]
             }
           }
         },
         "required": [
-          "listId",
-          "name",
-          "items"
+          "result"
         ]
       },
       "annotations": {
-        "title": "Get watchlist",
+        "title": "Get price alerts",
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
@@ -1083,128 +1090,121 @@
       }
     },
     {
-      "name": "remove_from_watchlist",
-      "title": "Remove from watchlist",
-      "description": "Removes one or more instruments from a watchlist by orderbookId. Returns the orderbookIds that were actually removed; orderbookIds that were not on the watchlist are silently ignored and excluded from the response.",
+      "name": "create_price_alert",
+      "title": "Create price alert",
+      "description": "Creates a new price alert (Swedish: \"kurslarm\") for an instrument. Three alert types are supported:\n- \"price\": triggers when the price crosses a fixed threshold. Requires \"price\". \"direction\" is optional here: if omitted, it's inferred by comparing \"price\" to the instrument's last known price (which may be delayed up to ~15 minutes).\n- \"percentage\": triggers when the price moves by a given percentage from a reference price. Requires \"price\" (the reference price) and \"percentage\". Optionally \"repeating\" to re-trigger at each new level. \"direction\" is optional and defaults to \"both\" (trigger on a move in either direction) when omitted.\n- \"trailing\": triggers when the price drops X% from its peak (direction \"below\") or rises X% from its trough (direction \"above\"), measured from a reference price. Requires \"price\" (the reference price), \"percentage\", and an explicit \"direction\".",
       "inputSchema": {
         "type": "object",
         "properties": {
-          "listId": {
-            "description": "The watchlist ID returned by get_watchlists.",
+          "orderbookId": {
+            "description": "The orderbookId of the instrument. Use search_instruments to find it.",
             "type": "integer"
           },
-          "orderbookIds": {
-            "description": "OrderbookIds (int) of the instruments to remove.",
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
+          "alertType": {
+            "description": "Alert type: \"price\", \"percentage\", or \"trailing\".",
+            "type": "string"
+          },
+          "direction": {
+            "description": "Trigger direction: \"above\" (alert when price goes above threshold), \"below\" (alert when price goes below threshold), or \"both\" (only valid when alertType is \"percentage\"). Optional for alertType \"price\" (inferred from the instrument's last known price) and \"percentage\" (defaults to \"both\"). Required for alertType \"trailing\". Set this explicitly to override the inferred/default direction.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "validUntil": {
+            "description": "Expiry date in YYYY-MM-DD format. The alert will no longer trigger after this date. Optional; defaults to one year from today when omitted.",
+            "type": [
+              "string",
+              "null"
+            ],
+            "default": null
+          },
+          "price": {
+            "description": "Reference/threshold price, required for all alert types. For alertType \"price\" this is the fixed trigger threshold. For alertType \"percentage\" and \"trailing\" this is the reference price the percentage move is measured from (trigger levels are computed as this price × (1 ± percentage/100)). For direction \"above\" this is the reference for the upper trigger; for \"below\" the lower; for \"both\" it is used for both.",
+            "type": [
+              "number",
+              "null"
+            ],
+            "default": null
+          },
+          "percentage": {
+            "description": "Percentage change threshold, e.g. 5.0 for 5% (must be greater than 0 and less than 100). Required for alertType \"percentage\" and \"trailing\".",
+            "type": [
+              "number",
+              "null"
+            ],
+            "default": null
+          },
+          "repeating": {
+            "description": "Whether the percentage alert should re-trigger at each new price level. Only applies to alertType \"percentage\".",
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "default": null
+          },
+          "preAndPostMarket": {
+            "description": "Whether to include pre-market and post-market prices when evaluating the alert. Defaults to false.",
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [
-          "listId",
-          "orderbookIds"
+          "orderbookId",
+          "alertType"
         ]
       },
       "outputSchema": {
         "type": "object",
         "properties": {
-          "listId": {
+          "alertId": {
             "type": "integer"
-          },
-          "orderbookIds": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
           }
         },
         "required": [
-          "listId",
-          "orderbookIds"
+          "alertId"
         ]
       },
       "annotations": {
-        "title": "Remove from watchlist",
+        "title": "Create price alert",
         "readOnlyHint": false,
-        "destructiveHint": true,
-        "idempotentHint": true,
+        "destructiveHint": false,
+        "idempotentHint": false,
         "openWorldHint": false
       }
     },
     {
-      "name": "get_user_accounts",
-      "title": "Get user accounts",
-      "description": "Returns all user accounts with stable account IDs, display names, and account types. Credit (DEPCR) accounts include credit.usedCredit (drawn credit balance), credit.interestRate (current interest rate), and credit.loanToValueRatio (used credit / pledge-group instrument market value). For all other account types credit is null; a credit account may also have credit null when its credit data is unavailable. Use this tool to discover valid account IDs before calling get_holdings.",
+      "name": "delete_price_alert",
+      "title": "Delete price alert",
+      "description": "Deletes a price alert (Swedish: \"kurslarm\") by its id, as returned by create_price_alert or get_price_alerts. Use get_price_alerts or get_price_alerts_for_orderbook first to find the id of the alert to delete.",
       "inputSchema": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "id": {
+            "description": "The id of the price alert to delete, as returned by create_price_alert, get_price_alerts, or get_price_alerts_for_orderbook.",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id"
+        ]
       },
       "outputSchema": {
         "type": "object",
         "properties": {
-          "result": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "accountId": {
-                  "type": "string"
-                },
-                "accountNumber": {
-                  "type": "string"
-                },
-                "accountName": {
-                  "type": "string"
-                },
-                "accountType": {
-                  "type": "string"
-                },
-                "credit": {
-                  "type": [
-                    "object",
-                    "null"
-                  ],
-                  "properties": {
-                    "usedCredit": {
-                      "type": "number"
-                    },
-                    "currencyCode": {
-                      "type": "string"
-                    },
-                    "interestRate": {
-                      "type": "number"
-                    },
-                    "loanToValueRatio": {
-                      "type": "number"
-                    }
-                  },
-                  "required": [
-                    "usedCredit",
-                    "currencyCode",
-                    "interestRate",
-                    "loanToValueRatio"
-                  ]
-                }
-              },
-              "required": [
-                "accountId",
-                "accountNumber",
-                "accountName",
-                "accountType",
-                "credit"
-              ]
-            }
+          "alertId": {
+            "type": "integer"
           }
         },
         "required": [
-          "result"
+          "alertId"
         ]
       },
       "annotations": {
-        "title": "Get user accounts",
-        "readOnlyHint": true,
-        "destructiveHint": false,
+        "title": "Delete price alert",
+        "readOnlyHint": false,
+        "destructiveHint": true,
         "idempotentHint": true,
         "openWorldHint": false
       }
