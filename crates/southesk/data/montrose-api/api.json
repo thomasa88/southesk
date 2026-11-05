@@ -149,7 +149,7 @@
             "default": null
           },
           "quantity": {
-            "description": "Optional number of shares to trade. Exactly one of quantity or amount must be provided.",
+            "description": "Optional number of shares to trade. Exactly one of quantity or amount must be provided. Not for a fund, which is traded by amount.",
             "type": [
               "number",
               "null"
@@ -199,10 +199,56 @@
         "properties": {
           "url": {
             "type": "string"
+          },
+          "orderType": {
+            "type": "string",
+            "enum": [
+              "Limit",
+              "Iceberg",
+              "GoodTillCrossing",
+              "StopMarket",
+              "Funds"
+            ]
+          },
+          "percentage": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "price": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "stopPrice": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "openVolume": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "validUntil": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
-          "url"
+          "url",
+          "orderType",
+          "percentage",
+          "price",
+          "stopPrice",
+          "openVolume",
+          "validUntil"
         ]
       },
       "annotations": {
